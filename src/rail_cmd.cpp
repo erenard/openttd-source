@@ -1,4 +1,4 @@
-/* $Id: rail_cmd.cpp 25339 2013-06-09 09:33:06Z rubidium $ */
+/* $Id: rail_cmd.cpp 25993 2013-11-13 22:04:22Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -842,8 +842,6 @@ static CommandCost CmdRailTrackHelper(TileIndex tile, DoCommandFlag flags, uint3
 
 	CommandCost ret = ValidateAutoDrag(&trackdir, tile, end_tile);
 	if (ret.Failed()) return ret;
-
-	if ((flags & DC_EXEC) && _settings_client.sound.confirm) SndPlayTileFx(SND_20_SPLAT_2, tile);
 
 	bool had_success = false;
 	CommandCost last_error = CMD_ERROR;

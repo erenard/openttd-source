@@ -1,4 +1,4 @@
-/* $Id: town_gui.cpp 24900 2013-01-08 22:46:42Z planetmaker $ */
+/* $Id: town_gui.cpp 25978 2013-11-13 21:21:47Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -681,7 +681,10 @@ private:
 	/** Sort by population */
 	static int CDECL TownPopulationSorter(const Town * const *a, const Town * const *b)
 	{
-		return (*a)->cache.population - (*b)->cache.population;
+		uint32 a_population = (*a)->cache.population;
+		uint32 b_population = (*b)->cache.population;
+		if (a_population == b_population) return TownDirectoryWindow::TownNameSorter(a, b);
+		return (a_population < b_population) ? -1 : 1;
 	}
 
 public:

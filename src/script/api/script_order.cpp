@@ -1,4 +1,4 @@
-/* $Id: script_order.cpp 24353 2012-06-23 15:02:20Z michi_cc $ */
+/* $Id: script_order.cpp 25977 2013-11-13 21:17:29Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -627,6 +627,7 @@ static void _DoCommandReturnSetOrderFlags(class ScriptInstance *instance)
 
 	EnforcePrecondition(false, IsValidVehicleOrder(vehicle_id, order_position_move));
 	EnforcePrecondition(false, IsValidVehicleOrder(vehicle_id, order_position_target));
+	EnforcePrecondition(false, order_position_move != order_position_target);
 
 	int order_pos_move = ScriptOrderPositionToRealOrderPosition(vehicle_id, order_position_move);
 	int order_pos_target = ScriptOrderPositionToRealOrderPosition(vehicle_id, order_position_target);

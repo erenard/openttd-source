@@ -1,4 +1,4 @@
-/* $Id: script_controller.hpp 24900 2013-01-08 22:46:42Z planetmaker $ */
+/* $Id: script_controller.hpp 26021 2013-11-17 11:29:44Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -127,7 +127,8 @@ public:
 
 	/**
 	 * Import a library.
-	 * @param library The name of the library to import.
+	 * @param library The name of the library to import. The name should be composed as ScriptInfo::GetCategory() + "." +
+	 * ScriptInfo::CreateInstance().
 	 * @param class_name Under which name you want it to be available (or "" if you just want the returning object).
 	 * @param version Which version you want specifically.
 	 * @return The loaded library object. If class_name is set, it is also available (under the scope of the import) under that name.

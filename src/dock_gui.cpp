@@ -1,4 +1,4 @@
-/* $Id: dock_gui.cpp 25496 2013-06-28 19:09:47Z rubidium $ */
+/* $Id: dock_gui.cpp 26025 2013-11-17 13:53:33Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -163,7 +163,7 @@ struct BuildDocksToolbarWindow : Window {
 		this->last_clicked_widget = (DockToolbarWidgets)widget;
 	}
 
-	virtual EventState OnKeyPress(uint16 key, uint16 keycode)
+	virtual EventState OnKeyPress(WChar key, uint16 keycode)
 	{
 		int num = CheckHotkeyMatch(dockstoolbar_hotkeys, keycode, this);
 		if (num == -1) return ES_NOT_HANDLED;
@@ -335,7 +335,7 @@ Window *ShowBuildDocksToolbar()
 	return AllocateWindowDescFront<BuildDocksToolbarWindow>(&_build_docks_toolbar_desc, TRANSPORT_WATER);
 }
 
-EventState DockToolbarGlobalHotkeys(uint16 key, uint16 keycode)
+EventState DockToolbarGlobalHotkeys(WChar key, uint16 keycode)
 {
 	int num = CheckHotkeyMatch<BuildDocksToolbarWindow>(_dockstoolbar_hotkeys, keycode, NULL, true);
 	if (num == -1) return ES_NOT_HANDLED;

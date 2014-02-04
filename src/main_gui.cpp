@@ -1,4 +1,4 @@
-/* $Id: main_gui.cpp 24900 2013-01-08 22:46:42Z planetmaker $ */
+/* $Id: main_gui.cpp 26025 2013-11-17 13:53:33Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -269,7 +269,7 @@ struct MainWindow : Window
 		}
 	}
 
-	virtual EventState OnKeyPress(uint16 key, uint16 keycode)
+	virtual EventState OnKeyPress(WChar key, uint16 keycode)
 	{
 		int num = CheckHotkeyMatch(global_hotkeys, keycode, this);
 		if (num == GHK_QUIT) {

@@ -1,4 +1,4 @@
-/* $Id: afterload.cpp 25170 2013-04-08 20:59:42Z rubidium $ */
+/* $Id: afterload.cpp 25991 2013-11-13 22:00:46Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -1196,11 +1196,15 @@ bool AfterLoadGame()
 			switch (GetTileType(t)) {
 				case MP_RAILWAY:
 					if (HasSignals(t)) {
+						/* Original signal type/variant was stored in m4 but since saveload
+						 * version 48 they are in m2. The bits has been already moved to m2
+						 * (see the code somewhere above) so don't use m4, use m2 instead. */
+
 						/* convert PBS signals to combo-signals */
-						if (HasBit(_m[t].m2, 2)) SetSignalType(t, TRACK_X, SIGTYPE_COMBO);
+						if (HasBit(_m[t].m2, 2)) SB(_m[t].m2, 0, 2, SIGTYPE_COMBO);
 
 						/* move the signal variant back */
-						SetSignalVariant(t, TRACK_X, HasBit(_m[t].m2, 3) ? SIG_SEMAPHORE : SIG_ELECTRIC);
+						SB(_m[t].m2, 2, 1, HasBit(_m[t].m2, 3) ? SIG_SEMAPHORE : SIG_ELECTRIC);
 						ClrBit(_m[t].m2, 3);
 					}
 
@@ -1480,13 +1484,15 @@ bool AfterLoadGame()
 	}
 
 	if (IsSavegameVersionBefore(64)) {
-		/* copy the signal type/variant and move signal states bits */
+		/* Since now we allow different signal types and variants on a single tile.
+		 * Move signal states to m4 to make room and clone the signal type/variant. */
 		for (TileIndex t = 0; t < map_size; t++) {
 			if (IsTileType(t, MP_RAILWAY) && HasSignals(t)) {
+				/* move signal states */
 				SetSignalStates(t, GB(_m[t].m2, 4, 4));
-				SetSignalVariant(t, INVALID_TRACK, GetSignalVariant(t, TRACK_X));
-				SetSignalType(t, INVALID_TRACK, GetSignalType(t, TRACK_X));
-				ClrBit(_m[t].m2, 7);
+				SB(_m[t].m2, 4, 4, 0);
+				/* clone signal type and variant */
+				SB(_m[t].m2, 4, 3, GB(_m[t].m2, 0, 3));
 			}
 		}
 	}

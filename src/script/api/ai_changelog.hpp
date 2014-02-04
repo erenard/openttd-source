@@ -1,4 +1,4 @@
-/* $Id: ai_changelog.hpp 25529 2013-06-30 09:05:55Z rubidium $ */
+/* $Id: ai_changelog.hpp 26032 2013-11-17 17:31:51Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -14,6 +14,10 @@
  * bug fixes can be found in the normal changelog. Note that removed API
  * functions may still be available if you return an older API version
  * in GetAPIVersion() in info.nut.
+ *
+ * \b 1.3.3
+ *
+ * No changes
  *
  * \b 1.3.2
  *
@@ -72,10 +76,10 @@
  * \li AIOrder::SetOrderRefit
  * \li AIRail::GetMaintenanceCostFactor
  * \li AIRoad::GetMaintenanceCostFactor
+ * \li AITile::GetTownAuthority
  * \li AITown::GetCargoGoal
  * \li AITown::GetGrowthRate
  * \li AITown::GetLastMonthReceived
- * \li AITown::GetTownAuthority
  * \li AITownEffectList (to walk over all available town effects)
  * \li AIVehicle::ERR_VEHICLE_TOO_LONG in case vehicle length limit is reached
  * \li AIVehicle::GetMaximumOrderDistance
@@ -95,7 +99,7 @@
  * Other changes:
  * \li AITown::GetLastMonthProduction no longer has prerequisites based on town
  *     effects.
- * \li AITown::GetLastMonthTransported no longer has prerequisites based on
+ * \li AITown::GetLastMonthTransported resp. AITown::GetLastMonthSupplied no longer has prerequisites based on
  *     town effects.
  * \li AITown::GetLastMonthTransportedPercentage no longer has prerequisites
  *     based on town effects.

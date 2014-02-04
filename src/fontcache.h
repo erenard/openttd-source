@@ -1,4 +1,4 @@
-/* $Id: fontcache.h 25502 2013-06-28 19:44:28Z rubidium $ */
+/* $Id: fontcache.h 25987 2013-11-13 21:53:40Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -159,7 +159,8 @@ static inline void InitializeUnicodeGlyphMap()
 	}
 }
 
-static inline void ClearFontCache() {
+static inline void ClearFontCache()
+{
 	for (FontSize fs = FS_BEGIN; fs < FS_END; fs++) {
 		FontCache::Get(fs)->ClearFontCache();
 	}

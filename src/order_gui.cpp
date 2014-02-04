@@ -1,4 +1,4 @@
-/* $Id: order_gui.cpp 25498 2013-06-28 19:21:24Z rubidium $ */
+/* $Id: order_gui.cpp 26025 2013-11-17 13:53:33Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -481,6 +481,7 @@ struct OrdersWindow : public Window {
 private:
 	/** Under what reason are we using the PlaceObject functionality? */
 	enum OrderPlaceObjectState {
+		OPOS_NONE,
 		OPOS_GOTO,
 		OPOS_CONDITIONAL,
 		OPOS_SHARE,
@@ -631,7 +632,6 @@ private:
 	 */
 	void OrderClick_Conditional(int i)
 	{
-		this->LowerWidget(WID_O_GOTO);
 		this->SetWidgetDirty(WID_O_GOTO);
 		SetObjectToPlaceWnd(ANIMCURSOR_PICKSTATION, PAL_NONE, HT_NONE, this);
 		this->goto_type = OPOS_CONDITIONAL;
@@ -643,7 +643,6 @@ private:
 	 */
 	void OrderClick_Share(int i)
 	{
-		this->LowerWidget(WID_O_GOTO);
 		this->SetWidgetDirty(WID_O_GOTO);
 		SetObjectToPlaceWnd(ANIMCURSOR_PICKSTATION, PAL_NONE, HT_VEHICLE, this);
 		this->goto_type = OPOS_SHARE;
@@ -810,6 +809,7 @@ public:
 
 		this->selected_order = -1;
 		this->order_over = INVALID_VEH_ORDER_ID;
+		this->goto_type = OPOS_NONE;
 		this->owner = v->owner;
 
 		this->UpdateAutoRefitState();
@@ -1101,7 +1101,11 @@ public:
 
 	virtual void OnPaint()
 	{
-		if (this->vehicle->owner != _local_company) this->selected_order = -1; // Disable selection any selected row at a competitor order window.
+		if (this->vehicle->owner != _local_company) {
+			this->selected_order = -1; // Disable selection any selected row at a competitor order window.
+		} else {
+			this->SetWidgetLoweredState(WID_O_GOTO, this->goto_type != OPOS_NONE);
+		}
 		this->DrawWidgets();
 	}
 
@@ -1189,7 +1193,6 @@ public:
 		switch (widget) {
 			case WID_O_ORDER_LIST: {
 				if (this->goto_type == OPOS_CONDITIONAL) {
-					this->goto_type = OPOS_GOTO;
 					VehicleOrderID order_id = this->GetOrderFromPt(_cursor.pos.y - this->top);
 					if (order_id != INVALID_VEH_ORDER_ID) {
 						Order order;
@@ -1437,7 +1440,7 @@ public:
 		}
 	}
 
-	virtual EventState OnKeyPress(uint16 key, uint16 keycode)
+	virtual EventState OnKeyPress(WChar key, uint16 keycode)
 	{
 		if (this->vehicle->owner != _local_company) return ES_NOT_HANDLED;
 
@@ -1477,7 +1480,7 @@ public:
 
 	virtual void OnPlaceObjectAbort()
 	{
-		this->RaiseWidget(WID_O_GOTO);
+		this->goto_type = OPOS_NONE;
 		this->SetWidgetDirty(WID_O_GOTO);
 
 		/* Remove drag highlighting if it exists. */

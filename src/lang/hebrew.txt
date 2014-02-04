@@ -12,7 +12,7 @@
 ##case singular plural gen
 
 
-# $Id: hebrew.txt 25528 2013-06-30 08:58:35Z rubidium $
+# $Id: hebrew.txt 26031 2013-11-17 17:30:42Z rubidium $
 
 # This file is part of OpenTTD.
 # OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -1337,8 +1337,6 @@ STR_CONFIG_SETTING_DATE_FORMAT_IN_SAVE_NAMES_ISO                :ISO (2008-12-31
 
 STR_CONFIG_SETTING_NEWGRF_DEFAULT_PALETTE                       :לוח צבעים ברירת מחדל שיש להניח עבור NewGRF-ים אשר אינם מפרטים לוח צבעים: {STRING}
 STR_CONFIG_SETTING_NEWGRF_DEFAULT_PALETTE_HELPTEXT              :לוח צבעים ברירת מחדל לשימוש עבור NewGRF-ים אשר אינם מפרטים איזה לוח צבעים הם צריכים
-STR_CONFIG_SETTING_NEWGRF_DEFAULT_PALETTE_DOS                   :לוח צבעים DOS
-STR_CONFIG_SETTING_NEWGRF_DEFAULT_PALETTE_WIN                   :לוח צבעים Windows
 
 STR_CONFIG_SETTING_PAUSE_ON_NEW_GAME                            :עצור משחק אוטומטית אחרי התחלת משחק חדש: {STRING}
 STR_CONFIG_SETTING_PAUSE_ON_NEW_GAME_HELPTEXT                   :כאשר מאופשר, המשחק יושהה אוטומטית בעת התחלת משחק חדש, דבר המאפשר בחינה מדוקדקת יותר של המפה
@@ -2811,6 +2809,8 @@ STR_NEWGRF_INVALID_CARGO_ABBREV                                 :??
 STR_NEWGRF_INVALID_CARGO_QUANTITY                               :{COMMA} של <מטען לא חוקי>
 STR_NEWGRF_INVALID_ENGINE                                       :<דגם כלי רכב לא תקין>
 STR_NEWGRF_INVALID_INDUSTRYTYPE                                 :<תעשייה לא תקינה>
+
+# Placeholders for other invalid stuff, e.g. vehicles that have gone (Game Script).
 
 # NewGRF scanning window
 STR_NEWGRF_SCAN_CAPTION                                         :{WHITE}סורק NewGRF-ים

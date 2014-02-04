@@ -1,4 +1,4 @@
-/* $Id: 32bpp_simple.cpp 24111 2012-04-10 20:16:51Z rubidium $ */
+/* $Id: 32bpp_simple.cpp 25987 2013-11-13 21:53:40Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -92,7 +92,7 @@ void Blitter_32bppSimple::DrawColourMappingRect(void *dst, int width, int height
 	DEBUG(misc, 0, "32bpp blitter doesn't know how to draw this colour table ('%d')", pal);
 }
 
-Sprite *Blitter_32bppSimple::Encode(SpriteLoader::Sprite *sprite, AllocatorProc *allocator)
+Sprite *Blitter_32bppSimple::Encode(const SpriteLoader::Sprite *sprite, AllocatorProc *allocator)
 {
 	Blitter_32bppSimple::Pixel *dst;
 	Sprite *dest_sprite = (Sprite *)allocator(sizeof(*dest_sprite) + sprite->height * sprite->width * sizeof(*dst));

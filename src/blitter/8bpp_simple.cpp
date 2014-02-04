@@ -1,4 +1,4 @@
-/* $Id: 8bpp_simple.cpp 22397 2011-05-01 10:15:33Z rubidium $ */
+/* $Id: 8bpp_simple.cpp 25987 2013-11-13 21:53:40Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -55,7 +55,7 @@ void Blitter_8bppSimple::Draw(Blitter::BlitterParams *bp, BlitterMode mode, Zoom
 	}
 }
 
-Sprite *Blitter_8bppSimple::Encode(SpriteLoader::Sprite *sprite, AllocatorProc *allocator)
+Sprite *Blitter_8bppSimple::Encode(const SpriteLoader::Sprite *sprite, AllocatorProc *allocator)
 {
 	Sprite *dest_sprite;
 	dest_sprite = (Sprite *)allocator(sizeof(*dest_sprite) + sprite->height * sprite->width);

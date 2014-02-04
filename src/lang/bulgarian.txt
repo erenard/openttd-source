@@ -12,7 +12,7 @@
 ##case m f n p
 
 
-# $Id: bulgarian.txt 25528 2013-06-30 08:58:35Z rubidium $
+# $Id: bulgarian.txt 26031 2013-11-17 17:30:42Z rubidium $
 
 # This file is part of OpenTTD.
 # OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -1333,8 +1333,6 @@ STR_CONFIG_SETTING_DATE_FORMAT_IN_SAVE_NAMES_ISO                :ISO (2008-12-31
 
 STR_CONFIG_SETTING_NEWGRF_DEFAULT_PALETTE                       :Палитра по подразбиране за NewGRF, които не са задали палитра: {STRING}
 STR_CONFIG_SETTING_NEWGRF_DEFAULT_PALETTE_HELPTEXT              :Палитра по подразбиране за NewGRF, за които е зададена от коя се нуждаят
-STR_CONFIG_SETTING_NEWGRF_DEFAULT_PALETTE_DOS                   :DOS палитра
-STR_CONFIG_SETTING_NEWGRF_DEFAULT_PALETTE_WIN                   :Windows палитра
 
 STR_CONFIG_SETTING_PAUSE_ON_NEW_GAME                            :Игрите започват в пауза: {STRING}
 STR_CONFIG_SETTING_PAUSE_ON_NEW_GAME_HELPTEXT                   :Ако тази опция бъде активирана, играта автоматично ще бъде паузирана, когато започнете нова игра, това ще ви позволи да изучите по-подробно картата
@@ -2810,6 +2808,8 @@ STR_NEWGRF_INVALID_CARGO_ABBREV                                 :??
 STR_NEWGRF_INVALID_CARGO_QUANTITY                               :{COMMA} на <невалиден товар>
 STR_NEWGRF_INVALID_ENGINE                                       :<невалидна машина>
 STR_NEWGRF_INVALID_INDUSTRYTYPE                                 :<невалдна индустрия>
+
+# Placeholders for other invalid stuff, e.g. vehicles that have gone (Game Script).
 
 # NewGRF scanning window
 STR_NEWGRF_SCAN_CAPTION                                         :{WHITE}Търси NewGRF-и

@@ -1,4 +1,4 @@
-/* $Id: 8bpp_optimized.cpp 23989 2012-02-25 17:39:34Z frosch $ */
+/* $Id: 8bpp_optimized.cpp 25987 2013-11-13 21:53:40Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -112,7 +112,7 @@ void Blitter_8bppOptimized::Draw(Blitter::BlitterParams *bp, BlitterMode mode, Z
 	}
 }
 
-Sprite *Blitter_8bppOptimized::Encode(SpriteLoader::Sprite *sprite, AllocatorProc *allocator)
+Sprite *Blitter_8bppOptimized::Encode(const SpriteLoader::Sprite *sprite, AllocatorProc *allocator)
 {
 	/* Make memory for all zoom-levels */
 	uint memory = sizeof(SpriteData);

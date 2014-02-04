@@ -1,4 +1,4 @@
-/* $Id: terraform_gui.cpp 24846 2012-12-23 21:09:09Z frosch $ */
+/* $Id: terraform_gui.cpp 26025 2013-11-17 13:53:33Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -218,7 +218,7 @@ struct TerraformToolbarWindow : Window {
 		}
 	}
 
-	virtual EventState OnKeyPress(uint16 key, uint16 keycode)
+	virtual EventState OnKeyPress(WChar key, uint16 keycode)
 	{
 		int num = CheckHotkeyMatch(terraform_hotkeys, keycode, this);
 		if (num == -1) return ES_NOT_HANDLED;
@@ -377,7 +377,7 @@ Window *ShowTerraformToolbar(Window *link)
 	return w;
 }
 
-EventState TerraformToolbarGlobalHotkeys(uint16 key, uint16 keycode)
+EventState TerraformToolbarGlobalHotkeys(WChar key, uint16 keycode)
 {
 	int num = CheckHotkeyMatch<TerraformToolbarWindow>(_terraform_hotkeys, keycode, NULL, true);
 	if (num == -1) return ES_NOT_HANDLED;
@@ -571,7 +571,7 @@ struct ScenarioEditorLandscapeGenerationWindow : Window {
 		} while (--n);
 	}
 
-	virtual EventState OnKeyPress(uint16 key, uint16 keycode)
+	virtual EventState OnKeyPress(WChar key, uint16 keycode)
 	{
 		int num = CheckHotkeyMatch(terraform_editor_hotkeys, keycode, this);
 		if (num == -1) return ES_NOT_HANDLED;
@@ -755,7 +755,7 @@ Window *ShowEditorTerraformToolbar()
 	return AllocateWindowDescFront<ScenarioEditorLandscapeGenerationWindow>(&_scen_edit_land_gen_desc, 0);
 }
 
-EventState TerraformToolbarEditorGlobalHotkeys(uint16 key, uint16 keycode)
+EventState TerraformToolbarEditorGlobalHotkeys(WChar key, uint16 keycode)
 {
 	int num = CheckHotkeyMatch<ScenarioEditorLandscapeGenerationWindow>(_terraform_editor_hotkeys, keycode, NULL, true);
 	if (num == -1) return ES_NOT_HANDLED;

@@ -1,4 +1,4 @@
-/* $Id: macos.h 22893 2011-09-04 17:49:08Z planetmaker $ */
+/* $Id: macos.h 25981 2013-11-13 21:30:39Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -11,32 +11,6 @@
 
 #ifndef MACOS_H
 #define MACOS_H
-
-/* It would seem that to ensure backward compability we have to ensure that we have defined MAC_OS_X_VERSION_10_x everywhere */
-#ifndef MAC_OS_X_VERSION_10_3
-#define MAC_OS_X_VERSION_10_3 1030
-#endif
-
-#ifndef MAC_OS_X_VERSION_10_4
-#define MAC_OS_X_VERSION_10_4 1040
-#endif
-
-#ifndef MAC_OS_X_VERSION_10_5
-#define MAC_OS_X_VERSION_10_5 1050
-#endif
-
-#ifndef MAC_OS_X_VERSION_10_6
-#define MAC_OS_X_VERSION_10_6 1060
-#endif
-
-#ifndef MAC_OS_X_VERSION_10_7
-#define MAC_OS_X_VERSION_10_7 1070
-#endif
-
-#ifndef MAC_OS_X_VERSION_10_8
-#define MAC_OS_X_VERSION_10_8 1080
-#endif
-
 
 /** Helper function displaying a message the best possible way. */
 void ShowMacDialog(const char *title, const char *message, const char *button_label);
@@ -61,5 +35,7 @@ static inline bool MacOSVersionIsAtLeast(long major, long minor, long bugfix)
 
 	return true;
 }
+
+bool IsMonospaceFont(CFStringRef name);
 
 #endif /* MACOS_H */

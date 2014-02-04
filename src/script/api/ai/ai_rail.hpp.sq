@@ -1,4 +1,4 @@
-/* $Id: ai_rail.hpp.sq 23416 2011-12-03 23:40:57Z michi_cc $ */
+/* $Id: ai_rail.hpp.sq 25978 2013-11-13 21:21:47Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -53,6 +53,9 @@ void SQAIRail_Register(Squirrel *engine)
 
 	ScriptError::RegisterErrorMap(STR_ERROR_CROSSING_ON_ONEWAY_ROAD,    ScriptRail::ERR_CROSSING_ON_ONEWAY_ROAD);
 	ScriptError::RegisterErrorMap(STR_ERROR_NO_SUITABLE_RAILROAD_TRACK, ScriptRail::ERR_UNSUITABLE_TRACK);
+	ScriptError::RegisterErrorMap(STR_ERROR_THERE_IS_NO_RAILROAD_TRACK, ScriptRail::ERR_UNSUITABLE_TRACK);
+	ScriptError::RegisterErrorMap(STR_ERROR_THERE_ARE_NO_SIGNALS,       ScriptRail::ERR_UNSUITABLE_TRACK);
+	ScriptError::RegisterErrorMap(STR_ERROR_THERE_IS_NO_STATION,        ScriptRail::ERR_UNSUITABLE_TRACK);
 	ScriptError::RegisterErrorMap(STR_ERROR_CROSSING_DISALLOWED,        ScriptRail::ERR_RAILTYPE_DISALLOWS_CROSSING);
 
 	ScriptError::RegisterErrorMapString(ScriptRail::ERR_CROSSING_ON_ONEWAY_ROAD,     "ERR_CROSSING_ON_ONEWAY_ROAD");

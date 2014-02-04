@@ -1,4 +1,4 @@
-/* $Id: misc_gui.cpp 25529 2013-06-30 09:05:55Z rubidium $ */
+/* $Id: misc_gui.cpp 26024 2013-11-17 13:35:48Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -715,56 +715,6 @@ void GuiShowTooltips(Window *parent, StringID str, uint paramcount, const uint64
 	new TooltipsWindow(parent, str, paramcount, params, close_tooltip);
 }
 
-HandleEditBoxResult QueryString::HandleEditBoxKey(Window *w, int wid, uint16 key, uint16 keycode, EventState &state)
-{
-	if (!w->IsWidgetGloballyFocused(wid)) return HEBR_NOT_FOCUSED;
-
-	state = ES_HANDLED;
-
-	bool edited = false;
-
-	switch (keycode) {
-		case WKC_ESC: return HEBR_CANCEL;
-
-		case WKC_RETURN: case WKC_NUM_ENTER: return HEBR_CONFIRM;
-
-#ifdef WITH_COCOA
-		case (WKC_META | 'V'):
-#endif
-		case (WKC_CTRL | 'V'):
-			edited = this->text.InsertClipboard();
-			break;
-
-#ifdef WITH_COCOA
-		case (WKC_META | 'U'):
-#endif
-		case (WKC_CTRL | 'U'):
-			this->text.DeleteAll();
-			edited = true;
-			break;
-
-		case WKC_BACKSPACE: case WKC_DELETE:
-		case WKC_CTRL | WKC_BACKSPACE: case WKC_CTRL | WKC_DELETE:
-			edited = this->text.DeleteChar(keycode);
-			break;
-
-		case WKC_LEFT: case WKC_RIGHT: case WKC_END: case WKC_HOME:
-		case WKC_CTRL | WKC_LEFT: case WKC_CTRL | WKC_RIGHT:
-			this->text.MovePos(keycode);
-			break;
-
-		default:
-			if (IsValidChar(key, this->text.afilter)) {
-				edited = this->text.InsertChar(key);
-			} else {
-				state = ES_NOT_HANDLED;
-			}
-			break;
-	}
-
-	return edited ? HEBR_EDITING : HEBR_CURSOR;
-}
-
 void QueryString::HandleEditBox(Window *w, int wid)
 {
 	if (w->IsWidgetGloballyFocused(wid) && this->text.HandleCaret()) {
@@ -814,6 +764,9 @@ void QueryString::DrawEditBox(const Window *w, int wid) const
 
 	if (tb->caretxoffs + delta < 0) delta = -tb->caretxoffs;
 
+	/* If we have a marked area, draw a background highlight. */
+	if (tb->marklength != 0) GfxFillRect(delta + tb->markxoffs, 0, delta + tb->markxoffs + tb->marklength - 1, bottom - top, PC_GREY);
+
 	DrawString(delta, tb->pixels, 0, tb->buf, TC_YELLOW);
 	bool focussed = w->IsWidgetGloballyFocused(wid) || IsOSKOpenedFor(w, wid);
 	if (focussed && tb->caret) {
@@ -822,6 +775,105 @@ void QueryString::DrawEditBox(const Window *w, int wid) const
 	}
 
 	_cur_dpi = old_dpi;
+}
+
+/**
+ * Get the current caret position.
+ * @param w Window the edit box is in.
+ * @param wid Widget index.
+ * @return Top-left location of the caret, relative to the window.
+ */
+Point QueryString::GetCaretPosition(const Window *w, int wid) const
+{
+	const NWidgetLeaf *wi = w->GetWidget<NWidgetLeaf>(wid);
+
+	assert((wi->type & WWT_MASK) == WWT_EDITBOX);
+
+	bool rtl = _current_text_dir == TD_RTL;
+	Dimension sprite_size = GetSpriteSize(rtl ? SPR_IMG_DELETE_RIGHT : SPR_IMG_DELETE_LEFT);
+	int clearbtn_width = sprite_size.width + WD_IMGBTN_LEFT + WD_IMGBTN_RIGHT;
+
+	int left   = wi->pos_x + (rtl ? clearbtn_width : 0);
+	int right  = wi->pos_x + (rtl ? wi->current_x : wi->current_x - clearbtn_width) - 1;
+
+	/* Clamp caret position to be inside out current width. */
+	const Textbuf *tb = &this->text;
+	int delta = min(0, (right - left) - tb->pixels - 10);
+	if (tb->caretxoffs + delta < 0) delta = -tb->caretxoffs;
+
+	Point pt = {left + WD_FRAMERECT_LEFT + tb->caretxoffs + delta, wi->pos_y + WD_FRAMERECT_TOP};
+	return pt;
+}
+
+/**
+ * Get the bounding rectangle for a range of the query string.
+ * @param w Window the edit box is in.
+ * @param wid Widget index.
+ * @param from Start of the string range.
+ * @param to End of the string range.
+ * @return Rectangle encompassing the string range, relative to the window.
+ */
+Rect QueryString::GetBoundingRect(const Window *w, int wid, const char *from, const char *to) const
+{
+	const NWidgetLeaf *wi = w->GetWidget<NWidgetLeaf>(wid);
+
+	assert((wi->type & WWT_MASK) == WWT_EDITBOX);
+
+	bool rtl = _current_text_dir == TD_RTL;
+	Dimension sprite_size = GetSpriteSize(rtl ? SPR_IMG_DELETE_RIGHT : SPR_IMG_DELETE_LEFT);
+	int clearbtn_width = sprite_size.width + WD_IMGBTN_LEFT + WD_IMGBTN_RIGHT;
+
+	int left   = wi->pos_x + (rtl ? clearbtn_width : 0);
+	int right  = wi->pos_x + (rtl ? wi->current_x : wi->current_x - clearbtn_width) - 1;
+
+	int top    = wi->pos_y + WD_FRAMERECT_TOP;
+	int bottom = wi->pos_y + wi->current_y - 1 - WD_FRAMERECT_BOTTOM;
+
+	/* Clamp caret position to be inside our current width. */
+	const Textbuf *tb = &this->text;
+	int delta = min(0, (right - left) - tb->pixels - 10);
+	if (tb->caretxoffs + delta < 0) delta = -tb->caretxoffs;
+
+	/* Get location of first and last character. */
+	Point p1 = GetCharPosInString(tb->buf, from, FS_NORMAL);
+	Point p2 = from != to ? GetCharPosInString(tb->buf, to, FS_NORMAL) : p1;
+
+	Rect r = { Clamp(left + p1.x + delta + WD_FRAMERECT_LEFT, left, right), top, Clamp(left + p2.x + delta + WD_FRAMERECT_LEFT, left, right - WD_FRAMERECT_RIGHT), bottom };
+
+	return r;
+}
+
+/**
+ * Get the character that is rendered at a position.
+ * @param w Window the edit box is in.
+ * @param wid Widget index.
+ * @param pt Position to test.
+ * @return Pointer to the character at the position or NULL if no character is at the position.
+ */
+const char *QueryString::GetCharAtPosition(const Window *w, int wid, const Point &pt) const
+{
+	const NWidgetLeaf *wi = w->GetWidget<NWidgetLeaf>(wid);
+
+	assert((wi->type & WWT_MASK) == WWT_EDITBOX);
+
+	bool rtl = _current_text_dir == TD_RTL;
+	Dimension sprite_size = GetSpriteSize(rtl ? SPR_IMG_DELETE_RIGHT : SPR_IMG_DELETE_LEFT);
+	int clearbtn_width = sprite_size.width + WD_IMGBTN_LEFT + WD_IMGBTN_RIGHT;
+
+	int left   = wi->pos_x + (rtl ? clearbtn_width : 0);
+	int right  = wi->pos_x + (rtl ? wi->current_x : wi->current_x - clearbtn_width) - 1;
+
+	int top    = wi->pos_y + WD_FRAMERECT_TOP;
+	int bottom = wi->pos_y + wi->current_y - 1 - WD_FRAMERECT_BOTTOM;
+
+	if (!IsInsideMM(pt.y, top, bottom)) return NULL;
+
+	/* Clamp caret position to be inside our current width. */
+	const Textbuf *tb = &this->text;
+	int delta = min(0, (right - left) - tb->pixels - 10);
+	if (tb->caretxoffs + delta < 0) delta = -tb->caretxoffs;
+
+	return ::GetCharAtPosition(tb->buf, pt.x - delta - left);
 }
 
 void QueryString::ClickEditBox(Window *w, Point pt, int wid, int click_count, bool focus_changed)
@@ -1066,7 +1118,7 @@ struct QueryWindow : public Window {
 		}
 	}
 
-	virtual EventState OnKeyPress(uint16 key, uint16 keycode)
+	virtual EventState OnKeyPress(WChar key, uint16 keycode)
 	{
 		/* ESC closes the window, Enter confirms the action */
 		switch (keycode) {

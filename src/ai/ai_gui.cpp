@@ -1,4 +1,4 @@
-/* $Id: ai_gui.cpp 25055 2013-02-28 06:55:22Z rubidium $ */
+/* $Id: ai_gui.cpp 26025 2013-11-17 13:53:33Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -1303,7 +1303,7 @@ struct AIDebugWindow : public Window {
 		}
 	}
 
-	virtual EventState OnKeyPress(uint16 key, uint16 keycode)
+	virtual EventState OnKeyPress(WChar key, uint16 keycode)
 	{
 		EventState state = ES_NOT_HANDLED;
 		int num = CheckHotkeyMatch(aidebug_hotkeys, keycode, this);
@@ -1514,7 +1514,7 @@ Window *ShowAIDebugWindow(CompanyID show_company)
 /**
  * Handler for global AI debug window hotkeys.
  */
-EventState AIDebugGlobalHotkeys(uint16 key, uint16 keycode)
+EventState AIDebugGlobalHotkeys(WChar key, uint16 keycode)
 {
 	int num = CheckHotkeyMatch<AIDebugWindow>(_aidebug_hotkeys, keycode, NULL, true);
 	if (num == -1) return ES_NOT_HANDLED;

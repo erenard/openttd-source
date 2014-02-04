@@ -1,4 +1,4 @@
-/* $Id: bridge_gui.cpp 24900 2013-01-08 22:46:42Z planetmaker $ */
+/* $Id: bridge_gui.cpp 25982 2013-11-13 21:35:44Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -249,7 +249,7 @@ public:
 		}
 	}
 
-	virtual EventState OnKeyPress(uint16 key, uint16 keycode)
+	virtual EventState OnKeyPress(WChar key, uint16 keycode)
 	{
 		const uint8 i = keycode - '1';
 		if (i < 9 && i < this->bridges->Length()) {

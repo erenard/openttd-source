@@ -1,4 +1,4 @@
-/* $Id: object_cmd.cpp 23842 2012-01-22 21:26:42Z rubidium $ */
+/* $Id: object_cmd.cpp 25984 2013-11-13 21:43:16Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -391,7 +391,7 @@ static void DrawTile_Object(TileInfo *ti)
 		DrawNewObjectTile(ti, spec);
 	}
 
-	if (spec->flags & OBJECT_FLAG_ALLOW_UNDER_BRIDGE) DrawBridgeMiddle(ti);
+	DrawBridgeMiddle(ti);
 }
 
 static int GetSlopePixelZ_Object(TileIndex tile, uint x, uint y)

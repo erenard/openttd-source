@@ -1,4 +1,4 @@
-/* $Id: spritecache.cpp 25102 2013-03-17 20:58:40Z rubidium $ */
+/* $Id: spritecache.cpp 25987 2013-11-13 21:53:40Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -118,9 +118,10 @@ bool SkipSpriteData(byte type, uint16 num)
 /* Check if the given Sprite ID exists */
 bool SpriteExists(SpriteID id)
 {
+	if (id >= _spritecache_items) return false;
+
 	/* Special case for Sprite ID zero -- its position is also 0... */
 	if (id == 0) return true;
-	if (id >= _spritecache_items) return false;
 	return !(GetSpriteCache(id)->file_pos == 0 && GetSpriteCache(id)->file_slot == 0);
 }
 

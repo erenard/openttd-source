@@ -1,4 +1,4 @@
-/* $Id: newgrf.cpp 25168 2013-04-08 20:52:32Z rubidium $ */
+/* $Id: newgrf.cpp 25992 2013-11-13 22:03:26Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -3965,8 +3965,8 @@ static ChangeInfoResult RailTypeChangeInfo(uint id, int numinfo, int prop, ByteR
 					RailType rt = GetRailTypeByLabel(BSWAP32(label), false);
 					if (rt != INVALID_RAILTYPE) {
 						switch (prop) {
+							case 0x0F: SetBit(rti->powered_railtypes, rt); // Powered implies compatible.
 							case 0x0E: SetBit(rti->compatible_railtypes, rt);            break;
-							case 0x0F: SetBit(rti->powered_railtypes, rt);               break;
 							case 0x18: SetBit(rti->introduction_required_railtypes, rt); break;
 							case 0x19: SetBit(rti->introduces_railtypes, rt);            break;
 						}

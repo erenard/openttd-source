@@ -1,4 +1,4 @@
-/* $Id: 32bpp_optimized.hpp 22397 2011-05-01 10:15:33Z rubidium $ */
+/* $Id: 32bpp_optimized.hpp 25987 2013-11-13 21:53:40Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -24,7 +24,7 @@ public:
 	};
 
 	/* virtual */ void Draw(Blitter::BlitterParams *bp, BlitterMode mode, ZoomLevel zoom);
-	/* virtual */ Sprite *Encode(SpriteLoader::Sprite *sprite, AllocatorProc *allocator);
+	/* virtual */ Sprite *Encode(const SpriteLoader::Sprite *sprite, AllocatorProc *allocator);
 
 	/* virtual */ const char *GetName() { return "32bpp-optimized"; }
 

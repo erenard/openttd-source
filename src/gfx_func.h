@@ -1,4 +1,4 @@
-/* $Id: gfx_func.h 25502 2013-06-28 19:44:28Z rubidium $ */
+/* $Id: gfx_func.h 26024 2013-11-17 13:35:48Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -44,6 +44,7 @@
 
 #include "gfx_type.h"
 #include "strings_type.h"
+#include "string_type.h"
 
 void GameLoop();
 
@@ -69,7 +70,8 @@ extern Dimension _resolutions[32];
 extern Dimension _cur_resolution;
 extern Palette _cur_palette; ///< Current palette
 
-void HandleKeypress(uint32 key);
+void HandleKeypress(uint keycode, WChar key);
+void HandleTextInput(const char *str, bool marked = false, const char *caret = NULL, const char *insert_location = NULL, const char *replacement_end = NULL);
 void HandleCtrlChanged();
 void HandleMouseEvents();
 void CSleep(int milliseconds);
@@ -126,6 +128,8 @@ int GetStringLineCount(StringID str, int maxw);
 Dimension GetStringMultiLineBoundingBox(StringID str, const Dimension &suggestion);
 Dimension GetStringMultiLineBoundingBox(const char *str, const Dimension &suggestion);
 void LoadStringWidthTable(bool monospace = false);
+Point GetCharPosInString(const char *str, const char *ch, FontSize start_fontsize = FS_NORMAL);
+const char *GetCharAtPosition(const char *str, int x, FontSize start_fontsize = FS_NORMAL);
 
 void DrawDirtyBlocks();
 void SetDirtyBlocks(int left, int top, int right, int bottom);

@@ -1,4 +1,4 @@
-/* $Id: vehicle.cpp 25241 2013-05-13 19:22:08Z rubidium $ */
+/* $Id: vehicle.cpp 25986 2013-11-13 21:49:31Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -87,14 +87,24 @@ bool Vehicle::NeedsAutorenewing(const Company *c, bool use_renew_setting) const
 	return true;
 }
 
+/**
+ * Service a vehicle and all subsequent vehicles in the consist
+ *
+ * @param *v The vehicle or vehicle chain being serviced
+ */
 void VehicleServiceInDepot(Vehicle *v)
 {
-	v->date_of_last_service = _date;
-	v->breakdowns_since_last_service = 0;
-	v->reliability = v->GetEngine()->reliability;
-	/* Prevent vehicles from breaking down directly after exiting the depot. */
-	v->breakdown_chance /= 4;
+	assert(v != NULL);
 	SetWindowDirty(WC_VEHICLE_DETAILS, v->index); // ensure that last service date and reliability are updated
+
+	do {
+		v->date_of_last_service = _date;
+		v->breakdowns_since_last_service = 0;
+		v->reliability = v->GetEngine()->reliability;
+		/* Prevent vehicles from breaking down directly after exiting the depot. */
+		v->breakdown_chance /= 4;
+		v = v->Next();
+	} while (v != NULL && v->HasEngineType());
 }
 
 /**
@@ -839,7 +849,7 @@ static void RunVehicleDayProc()
 				if (HasBit(callback, 0)) {
 					/* After a vehicle trigger, the graphics and properties of the vehicle could change. */
 					TriggerVehicle(v, VEHICLE_TRIGGER_CALLBACK_32); // Trigger vehicle trigger 10
-					v->MarkDirty();
+					v->First()->MarkDirty();
 				}
 				if (HasBit(callback, 1)) v->colourmap = PAL_NONE;
 

@@ -10,7 +10,7 @@
 ##grflangid 0x26
 
 
-# $Id: macedonian.txt 25528 2013-06-30 08:58:35Z rubidium $
+# $Id: macedonian.txt 26031 2013-11-17 17:30:42Z rubidium $
 
 # This file is part of OpenTTD.
 # OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -1272,6 +1272,8 @@ STR_NEWGRF_INVALID_CARGO_ABBREV                                 :??
 STR_NEWGRF_INVALID_CARGO_QUANTITY                               :{COMMA} на <неважечки товар>
 STR_NEWGRF_INVALID_ENGINE                                       :<валиден возило модел>
 STR_NEWGRF_INVALID_INDUSTRYTYPE                                 :<валиден индустрија>
+
+# Placeholders for other invalid stuff, e.g. vehicles that have gone (Game Script).
 
 # NewGRF scanning window
 

@@ -1,4 +1,4 @@
-/* $Id: object_gui.cpp 24900 2013-01-08 22:46:42Z planetmaker $ */
+/* $Id: object_gui.cpp 25983 2013-11-13 21:39:14Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -176,7 +176,7 @@ public:
 					if (objclass->GetUISpecCount() == 0) continue;
 					if (!this->vscroll->IsVisible(pos++)) continue;
 					SetDParam(0, objclass->name);
-					DrawString(r.left + WD_MATRIX_LEFT, r.right + WD_MATRIX_RIGHT, y + WD_MATRIX_TOP, STR_JUST_STRING,
+					DrawString(r.left + WD_MATRIX_LEFT, r.right - WD_MATRIX_RIGHT, y + WD_MATRIX_TOP, STR_JUST_STRING,
 							((int)i == _selected_object_class) ? TC_WHITE : TC_BLACK);
 					y += this->line_height;
 				}

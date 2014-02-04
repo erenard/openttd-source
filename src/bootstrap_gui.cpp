@@ -1,4 +1,4 @@
-/* $Id: bootstrap_gui.cpp 24900 2013-01-08 22:46:42Z planetmaker $ */
+/* $Id: bootstrap_gui.cpp 25981 2013-11-13 21:30:39Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -218,7 +218,7 @@ bool HandleBootstrap()
 	if (BlitterFactoryBase::GetCurrentBlitter()->GetScreenDepth() == 0) goto failure;
 
 	/* If there is no network or no freetype, then there is nothing we can do. Go straight to failure. */
-#if defined(ENABLE_NETWORK) && defined(WITH_FREETYPE) && !defined(__APPLE__) && (defined(WITH_FONTCONFIG) || defined(WIN32))
+#if defined(ENABLE_NETWORK) && defined(WITH_FREETYPE) && (defined(WITH_FONTCONFIG) || defined(WIN32) || defined(__APPLE__))
 	if (!_network_available) goto failure;
 
 	/* First tell the game we're bootstrapping. */

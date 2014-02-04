@@ -1,4 +1,4 @@
-/* $Id: hotkeys.cpp 24900 2013-01-08 22:46:42Z planetmaker $ */
+/* $Id: hotkeys.cpp 26025 2013-11-17 13:53:33Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -48,8 +48,7 @@ static const KeycodeNames _keycode_to_name[] = {
 	{"F11", WKC_F11},
 	{"F12", WKC_F12},
 	{"PAUSE", WKC_PAUSE},
-	{"PLUS", (WindowKeyCodes)'+'},
-	{"COMMA", (WindowKeyCodes)','},
+	{"COMMA", WKC_COMMA},
 	{"NUM_PLUS", WKC_NUM_PLUS},
 	{"NUM_MINUS", WKC_NUM_MINUS},
 	{"=", WKC_EQUALS},
@@ -295,7 +294,7 @@ void SaveHotkeysToConfig()
 	SaveLoadHotkeys(true);
 }
 
-typedef EventState GlobalHotkeyHandler(uint16, uint16);
+typedef EventState GlobalHotkeyHandler(WChar, uint16);
 
 GlobalHotkeyHandler RailToolbarGlobalHotkeys;
 GlobalHotkeyHandler DockToolbarGlobalHotkeys;
@@ -324,7 +323,7 @@ GlobalHotkeyHandler *_global_hotkey_handlers_editor[] = {
 };
 
 
-void HandleGlobalHotkeys(uint16 key, uint16 keycode)
+void HandleGlobalHotkeys(WChar key, uint16 keycode)
 {
 	if (_game_mode == GM_NORMAL) {
 		for (uint i = 0; i < lengthof(_global_hotkey_handlers); i++) {

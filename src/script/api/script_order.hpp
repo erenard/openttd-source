@@ -1,4 +1,4 @@
-/* $Id: script_order.hpp 24900 2013-01-08 22:46:42Z planetmaker $ */
+/* $Id: script_order.hpp 25977 2013-11-13 21:17:29Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -524,6 +524,7 @@ public:
 	 * @param order_position_target The target order
 	 * @pre IsValidVehicleOrder(vehicle_id, order_position_move).
 	 * @pre IsValidVehicleOrder(vehicle_id, order_position_target).
+	 * @pre order_position_move != order_position_target.
 	 * @exception ScriptError::ERR_OWNED_BY_ANOTHER_COMPANY
 	 * @return True if and only if the order was moved.
 	 * @note If the order is moved to a lower place (e.g. from 7 to 2)

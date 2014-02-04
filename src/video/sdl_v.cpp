@@ -1,4 +1,4 @@
-/* $Id: sdl_v.cpp 25528 2013-06-30 08:58:35Z rubidium $ */
+/* $Id: sdl_v.cpp 25993 2013-11-13 22:04:22Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -495,7 +495,7 @@ static const VkMapping _vk_mapping[] = {
 	AS(SDLK_PERIOD,  WKC_PERIOD)
 };
 
-static uint32 ConvertSdlKeyIntoMy(SDL_keysym *sym)
+static uint ConvertSdlKeyIntoMy(SDL_keysym *sym, WChar *character)
 {
 	const VkMapping *map;
 	uint key = 0;
@@ -531,7 +531,8 @@ static uint32 ConvertSdlKeyIntoMy(SDL_keysym *sym)
 	if (sym->mod & KMOD_CTRL)  key |= WKC_CTRL;
 	if (sym->mod & KMOD_ALT)   key |= WKC_ALT;
 
-	return (key << 16) + sym->unicode;
+	*character = sym->unicode;
+	return key;
 }
 
 int VideoDriver_SDL::PollEvent()
@@ -617,7 +618,9 @@ int VideoDriver_SDL::PollEvent()
 					(ev.key.keysym.sym == SDLK_RETURN || ev.key.keysym.sym == SDLK_f)) {
 				ToggleFullScreen(!_fullscreen);
 			} else {
-				HandleKeypress(ConvertSdlKeyIntoMy(&ev.key.keysym));
+				WChar character;
+				uint keycode = ConvertSdlKeyIntoMy(&ev.key.keysym, &character);
+				HandleKeypress(keycode, character);
 			}
 			break;
 
@@ -834,7 +837,7 @@ bool VideoDriver_SDL::ToggleFullscreen(bool fullscreen)
 
 bool VideoDriver_SDL::AfterBlitterChange()
 {
-	return this->ChangeResolution(_screen.width, _screen.height);
+	return CreateMainSurface(_screen.width, _screen.height);
 }
 
 #endif /* WITH_SDL */

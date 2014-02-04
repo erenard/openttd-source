@@ -1,4 +1,4 @@
-/* $Id: script_tile.cpp 25240 2013-05-13 19:18:10Z rubidium $ */
+/* $Id: script_tile.cpp 25986 2013-11-13 21:49:31Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -43,10 +43,11 @@
 
 /* static */ bool ScriptTile::IsBuildableRectangle(TileIndex tile, uint width, uint height)
 {
-	uint tx, ty;
+	/* Check whether we can extract valid X and Y */
+	if (!::IsValidTile(tile)) return false;
 
-	tx = ScriptMap::GetTileX(tile);
-	ty = ScriptMap::GetTileY(tile);
+	uint tx = ScriptMap::GetTileX(tile);
+	uint ty = ScriptMap::GetTileY(tile);
 
 	for (uint x = tx; x < width + tx; x++) {
 		for (uint y = ty; y < height + ty; y++) {

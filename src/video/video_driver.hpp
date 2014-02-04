@@ -1,4 +1,4 @@
-/* $Id: video_driver.hpp 23241 2011-11-17 21:09:08Z rubidium $ */
+/* $Id: video_driver.hpp 26024 2013-11-17 13:35:48Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -73,6 +73,11 @@ public:
 	{
 		return true;
 	}
+
+	/**
+	 * An edit box lost the input focus. Abort character compositing if necessary.
+	 */
+	virtual void EditBoxLostFocus() {}
 };
 
 /** Base of the factory for the video drivers. */

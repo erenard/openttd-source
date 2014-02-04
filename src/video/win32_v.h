@@ -1,4 +1,4 @@
-/* $Id: win32_v.h 23241 2011-11-17 21:09:08Z rubidium $ */
+/* $Id: win32_v.h 26024 2013-11-17 13:35:48Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -32,6 +32,8 @@ public:
 	/* virtual */ bool AfterBlitterChange();
 
 	/* virtual */ bool ClaimMousePointer();
+
+	/* virtual */ void EditBoxLostFocus();
 
 	/* virtual */ const char *GetName() const { return "win32"; }
 

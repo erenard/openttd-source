@@ -1,4 +1,4 @@
-/* $Id: signs_gui.cpp 25102 2013-03-17 20:58:40Z rubidium $ */
+/* $Id: signs_gui.cpp 26025 2013-11-17 13:53:33Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -198,7 +198,7 @@ struct SignListWindow : Window, SignList {
 				uint y = r.top + WD_FRAMERECT_TOP; // Offset from top of widget.
 				/* No signs? */
 				if (this->vscroll->GetCount() == 0) {
-					DrawString(r.left + WD_FRAMETEXT_LEFT, r.right, y, STR_STATION_LIST_NONE);
+					DrawString(r.left + WD_FRAMETEXT_LEFT, r.right - WD_FRAMETEXT_RIGHT, y, STR_STATION_LIST_NONE);
 					return;
 				}
 
@@ -281,7 +281,7 @@ struct SignListWindow : Window, SignList {
 		}
 	}
 
-	virtual EventState OnKeyPress(uint16 key, uint16 keycode)
+	virtual EventState OnKeyPress(WChar key, uint16 keycode)
 	{
 		EventState state = ES_NOT_HANDLED;
 		if (CheckHotkeyMatch(signlist_hotkeys, keycode, this) == SLHK_FOCUS_FILTER_BOX) {
@@ -386,7 +386,7 @@ Window *ShowSignList()
 	return AllocateWindowDescFront<SignListWindow>(&_sign_list_desc, 0);
 }
 
-EventState SignListGlobalHotkeys(uint16 key, uint16 keycode)
+EventState SignListGlobalHotkeys(WChar key, uint16 keycode)
 {
 	int num = CheckHotkeyMatch<SignListWindow>(_signlist_hotkeys, keycode, NULL, true);
 	if (num == -1) return ES_NOT_HANDLED;
@@ -532,7 +532,7 @@ static const NWidgetPart _nested_query_sign_edit_widgets[] = {
 };
 
 static const WindowDesc _query_sign_edit_desc(
-	WDP_AUTO, 0, 0,
+	WDP_CENTER, 0, 0,
 	WC_QUERY_STRING, WC_NONE,
 	WDF_CONSTRUCTION,
 	_nested_query_sign_edit_widgets, lengthof(_nested_query_sign_edit_widgets)

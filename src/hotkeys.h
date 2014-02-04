@@ -1,4 +1,4 @@
-/* $Id: hotkeys.h 23704 2012-01-01 17:22:32Z alberth $ */
+/* $Id: hotkeys.h 25982 2013-11-13 21:35:44Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -14,6 +14,7 @@
 
 #include "core/smallvec_type.hpp"
 #include "gfx_type.h"
+#include "string_type.h"
 
 /**
  * All data for a single hotkey. The name (for saving/loading a configfile),
@@ -130,6 +131,6 @@ void LoadHotkeysFromConfig();
 void SaveHotkeysToConfig();
 
 
-void HandleGlobalHotkeys(uint16 key, uint16 keycode);
+void HandleGlobalHotkeys(WChar key, uint16 keycode);
 
 #endif /* HOTKEYS_H */

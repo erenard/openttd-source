@@ -1,4 +1,4 @@
-/* $Id: window.cpp 24900 2013-01-08 22:46:42Z planetmaker $ */
+/* $Id: window.cpp 26024 2013-11-17 13:35:48Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -33,6 +33,7 @@
 #include "statusbar_gui.h"
 #include "error.h"
 #include "game/game.hpp"
+#include "video/video_driver.hpp"
 
 /** Values for _settings_client.gui.auto_scrolling */
 enum ViewportAutoscrolling {
@@ -249,6 +250,89 @@ QueryString *Window::GetQueryString(uint widnum)
 	return query != this->querystrings.End() ? query->second : NULL;
 }
 
+/**
+ * Get the current input text if an edit box has the focus.
+ * @return The currently focused input text or NULL if no input focused.
+ */
+/* virtual */ const char *Window::GetFocusedText() const
+{
+	if (this->nested_focus != NULL && this->nested_focus->type == WWT_EDITBOX) {
+		return this->GetQueryString(this->nested_focus->index)->GetText();
+	}
+
+	return NULL;
+}
+
+/**
+ * Get the string at the caret if an edit box has the focus.
+ * @return The text at the caret or NULL if no edit box is focused.
+ */
+/* virtual */ const char *Window::GetCaret() const
+{
+	if (this->nested_focus != NULL && this->nested_focus->type == WWT_EDITBOX) {
+		return this->GetQueryString(this->nested_focus->index)->GetCaret();
+	}
+
+	return NULL;
+}
+
+/**
+ * Get the range of the currently marked input text.
+ * @param[out] length Length of the marked text.
+ * @return Pointer to the start of the marked text or NULL if no text is marked.
+ */
+/* virtual */ const char *Window::GetMarkedText(size_t *length) const
+{
+	if (this->nested_focus != NULL && this->nested_focus->type == WWT_EDITBOX) {
+		return this->GetQueryString(this->nested_focus->index)->GetMarkedText(length);
+	}
+
+	return NULL;
+}
+
+/**
+ * Get the current caret position if an edit box has the focus.
+ * @return Top-left location of the caret, relative to the window.
+ */
+/* virtual */ Point Window::GetCaretPosition() const
+{
+	if (this->nested_focus != NULL && this->nested_focus->type == WWT_EDITBOX) {
+		return this->GetQueryString(this->nested_focus->index)->GetCaretPosition(this, this->nested_focus->index);
+	}
+
+	Point pt = {0, 0};
+	return pt;
+}
+
+/**
+ * Get the bounding rectangle for a text range if an edit box has the focus.
+ * @param from Start of the string range.
+ * @param to End of the string range.
+ * @return Rectangle encompassing the string range, relative to the window.
+ */
+/* virtual */ Rect Window::GetTextBoundingRect(const char *from, const char *to) const
+{
+	if (this->nested_focus != NULL && this->nested_focus->type == WWT_EDITBOX) {
+		return this->GetQueryString(this->nested_focus->index)->GetBoundingRect(this, this->nested_focus->index, from, to);
+	}
+
+	Rect r = {0, 0, 0, 0};
+	return r;
+}
+
+/**
+ * Get the character that is rendered at a position by the focused edit box.
+ * @param pt The position to test.
+ * @return Pointer to the character at the position or NULL if no character is at the position.
+ */
+/* virtual */ const char *Window::GetTextCharacterAtPosition(const Point &pt) const
+{
+	if (this->nested_focus != NULL && this->nested_focus->type == WWT_EDITBOX) {
+		return this->GetQueryString(this->nested_focus->index)->GetCharAtPosition(this, this->nested_focus->index, pt);
+	}
+
+	return NULL;
+}
 
 /**
  * Set the window that has the focus
@@ -277,7 +361,7 @@ void SetFocusedWindow(Window *w)
  * has a edit box as focused widget, or if a console is focused.
  * @return returns true if an edit box is in global focus or if the focused window is a console, else false
  */
-static bool EditBoxInGlobalFocus()
+bool EditBoxInGlobalFocus()
 {
 	if (_focused_window == NULL) return false;
 
@@ -293,6 +377,8 @@ static bool EditBoxInGlobalFocus()
 void Window::UnfocusFocusedWidget()
 {
 	if (this->nested_focus != NULL) {
+		if (this->nested_focus->type == WWT_EDITBOX) _video_driver->EditBoxLostFocus();
+
 		/* Repaint the widget that lost focus. A focused edit box may else leave the caret on the screen. */
 		this->nested_focus->SetDirty(this);
 		this->nested_focus = NULL;
@@ -315,9 +401,18 @@ bool Window::SetFocusedWidget(int widget_index)
 
 		/* Repaint the widget that lost focus. A focused edit box may else leave the caret on the screen. */
 		this->nested_focus->SetDirty(this);
+		if (this->nested_focus->type == WWT_EDITBOX) _video_driver->EditBoxLostFocus();
 	}
 	this->nested_focus = this->GetWidget<NWidgetCore>(widget_index);
 	return true;
+}
+
+/**
+ * Called when window looses focus
+ */
+void Window::OnFocusLost()
+{
+	if (this->nested_focus != NULL && this->nested_focus->type == WWT_EDITBOX) _video_driver->EditBoxLostFocus();
 }
 
 /**
@@ -823,7 +918,10 @@ Window::~Window()
 	if (_last_scroll_window == this) _last_scroll_window = NULL;
 
 	/* Make sure we don't try to access this window as the focused window when it doesn't exist anymore. */
-	if (_focused_window == this) _focused_window = NULL;
+	if (_focused_window == this) {
+		this->OnFocusLost();
+		_focused_window = NULL;
+	}
 
 	this->DeleteChildWindows();
 
@@ -2248,28 +2346,26 @@ static bool MaybeBringWindowToFront(Window *w)
  * @return #ES_HANDLED if the key press has been handled and no other
  *         window should receive the event.
  */
-EventState Window::HandleEditBoxKey(int wid, uint16 key, uint16 keycode)
+EventState Window::HandleEditBoxKey(int wid, WChar key, uint16 keycode)
 {
-	EventState state = ES_NOT_HANDLED;
-
 	QueryString *query = this->GetQueryString(wid);
-	if (query == NULL) return state;
+	if (query == NULL) return ES_NOT_HANDLED;
 
 	int action = QueryString::ACTION_NOTHING;
 
-	switch (query->HandleEditBoxKey(this, wid, key, keycode, state)) {
-		case HEBR_EDITING:
+	switch (query->text.HandleKeyPress(key, keycode)) {
+		case HKPR_EDITING:
 			this->SetWidgetDirty(wid);
 			this->OnEditboxChanged(wid);
 			break;
 
-		case HEBR_CURSOR:
+		case HKPR_CURSOR:
 			this->SetWidgetDirty(wid);
 			/* For the OSK also invalidate the parent window */
 			if (this->window_class == WC_OSK) this->InvalidateData();
 			break;
 
-		case HEBR_CONFIRM:
+		case HKPR_CONFIRM:
 			if (this->window_class == WC_OSK) {
 				this->OnClick(Point(), WID_OSK_OK, 1);
 			} else if (query->ok_button >= 0) {
@@ -2279,7 +2375,7 @@ EventState Window::HandleEditBoxKey(int wid, uint16 key, uint16 keycode)
 			}
 			break;
 
-		case HEBR_CANCEL:
+		case HKPR_CANCEL:
 			if (this->window_class == WC_OSK) {
 				this->OnClick(Point(), WID_OSK_CANCEL, 1);
 			} else if (query->cancel_button >= 0) {
@@ -2288,6 +2384,9 @@ EventState Window::HandleEditBoxKey(int wid, uint16 key, uint16 keycode)
 				action = query->cancel_button;
 			}
 			break;
+
+		case HKPR_NOT_HANDLED:
+			return ES_NOT_HANDLED;
 
 		default: break;
 	}
@@ -2298,31 +2397,33 @@ EventState Window::HandleEditBoxKey(int wid, uint16 key, uint16 keycode)
 			break;
 
 		case QueryString::ACTION_CLEAR:
-			query->text.DeleteAll();
-			this->SetWidgetDirty(wid);
-			this->OnEditboxChanged(wid);
+			if (query->text.bytes <= 1) {
+				/* If already empty, unfocus instead */
+				this->UnfocusFocusedWidget();
+			} else {
+				query->text.DeleteAll();
+				this->SetWidgetDirty(wid);
+				this->OnEditboxChanged(wid);
+			}
 			break;
 
 		default:
 			break;
 	}
 
-	return state;
+	return ES_HANDLED;
 }
 
 /**
  * Handle keyboard input.
- * @param raw_key Lower 8 bits contain the ASCII character, the higher 16 bits the keycode
+ * @param keycode Virtual keycode of the key.
+ * @param key Unicode character of the key.
  */
-void HandleKeypress(uint32 raw_key)
+void HandleKeypress(uint keycode, WChar key)
 {
 	/* World generation is multithreaded and messes with companies.
 	 * But there is no company related window open anyway, so _current_company is not used. */
 	assert(HasModalProgress() || IsLocalCompany());
-
-	/* Setup event */
-	uint16 key     = GB(raw_key,  0, 16);
-	uint16 keycode = GB(raw_key, 16, 16);
 
 	/*
 	 * The Unicode standard defines an area called the private use area. Code points in this
@@ -2372,6 +2473,35 @@ void HandleCtrlChanged()
 	FOR_ALL_WINDOWS_FROM_FRONT(w) {
 		if (w->OnCTRLStateChange() == ES_HANDLED) return;
 	}
+}
+
+/**
+ * Insert a text string at the cursor position into the edit box widget.
+ * @param wid Edit box widget.
+ * @param str Text string to insert.
+ */
+/* virtual */ void Window::InsertTextString(int wid, const char *str, bool marked, const char *caret, const char *insert_location, const char *replacement_end)
+{
+	QueryString *query = this->GetQueryString(wid);
+	if (query == NULL) return;
+
+	if (query->text.InsertString(str, marked, caret, insert_location, replacement_end) || marked) {
+		this->SetWidgetDirty(wid);
+		this->OnEditboxChanged(wid);
+	}
+}
+
+/**
+ * Handle text input.
+ * @param str Text string to input.
+ * @param marked Is the input a marked composition string from an IME?
+ * @param caret Move the caret to this point in the insertion string.
+ */
+void HandleTextInput(const char *str, bool marked, const char *caret, const char *insert_location, const char *replacement_end)
+{
+	if (!EditBoxInGlobalFocus()) return;
+
+	_focused_window->InsertTextString(_focused_window->window_class == WC_CONSOLE ? 0 : _focused_window->nested_focus->index, str, marked, caret, insert_location, replacement_end);
 }
 
 /**

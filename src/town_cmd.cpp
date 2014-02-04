@@ -1,4 +1,4 @@
-/* $Id: town_cmd.cpp 25169 2013-04-08 20:56:30Z rubidium $ */
+/* $Id: town_cmd.cpp 25989 2013-11-13 21:58:36Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -2524,7 +2524,20 @@ CommandCost CmdTownGrowthRate(TileIndex tile, DoCommandFlag flags, uint32 p1, ui
 	if (t == NULL) return CMD_ERROR;
 
 	if (flags & DC_EXEC) {
-		t->growth_rate = (p2 == 0) ? 0 : p2 | TOWN_GROW_RATE_CUSTOM;
+		if (p2 == 0) {
+			/* Clear TOWN_GROW_RATE_CUSTOM, UpdateTownGrowRate will determine a proper value */
+			t->growth_rate = 0;
+		} else {
+			uint old_rate = t->growth_rate & ~TOWN_GROW_RATE_CUSTOM;
+			if (t->grow_counter >= old_rate) {
+				/* This also catches old_rate == 0 */
+				t->grow_counter = p2;
+			} else {
+				/* Scale grow_counter, so half finished houses stay half finished */
+				t->grow_counter = t->grow_counter * p2 / old_rate;
+			}
+			t->growth_rate = p2 | TOWN_GROW_RATE_CUSTOM;
+		}
 		UpdateTownGrowRate(t);
 		InvalidateWindowData(WC_TOWN_VIEW, p1);
 	}

@@ -1,4 +1,4 @@
-/* $Id: station_gui.cpp 24703 2012-11-12 18:09:33Z frosch $ */
+/* $Id: station_gui.cpp 25984 2013-11-13 21:43:16Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -447,7 +447,7 @@ public:
 
 			case WID_STL_FACILALL: {
 				int cg_ofst = this->IsWidgetLowered(widget) ? 2 : 1;
-				DrawString(r.left + cg_ofst, r.right + cg_ofst, r.top + cg_ofst, STR_ABBREV_ALL, TC_BLACK);
+				DrawString(r.left + cg_ofst, r.right + cg_ofst, r.top + cg_ofst, STR_ABBREV_ALL, TC_BLACK, SA_HOR_CENTER);
 				break;
 			}
 

@@ -1,4 +1,4 @@
-/* $Id: cocoa_s.cpp 17248 2009-08-21 20:21:05Z rubidium $ */
+/* $Id: cocoa_s.cpp 26024 2013-11-17 13:35:48Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -67,7 +67,7 @@ const char *SoundDriver_Cocoa::Start(const char * const *parm)
 	requestedDesc.mBytesPerFrame = requestedDesc.mBitsPerChannel * requestedDesc.mChannelsPerFrame / 8;
 	requestedDesc.mBytesPerPacket = requestedDesc.mBytesPerFrame * requestedDesc.mFramesPerPacket;
 
-	MxInitialize(requestedDesc.mSampleRate);
+	MxInitialize((uint)requestedDesc.mSampleRate);
 
 	/* Locate the default output audio unit */
 	desc.componentType = kAudioUnitType_Output;

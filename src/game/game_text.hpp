@@ -1,4 +1,4 @@
-/* $Id: game_text.hpp 23737 2012-01-03 20:37:56Z truebrain $ */
+/* $Id: game_text.hpp 25986 2013-11-13 21:49:31Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -26,7 +26,7 @@ struct LanguageStrings {
 	const char *language; ///< Name of the language (base filename).
 	StringList lines;     ///< The lines of the file to pass into the parser/encoder.
 
-	LanguageStrings(const char *language);
+	LanguageStrings(const char *language, const char *end = NULL);
 	~LanguageStrings();
 };
 

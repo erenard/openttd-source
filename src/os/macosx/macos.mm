@@ -1,4 +1,4 @@
-/* $Id: macos.mm 23490 2011-12-11 11:47:08Z yexo $ */
+/* $Id: macos.mm 25981 2013-11-13 21:30:39Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -192,4 +192,16 @@ uint GetCPUCoreCount()
 	}
 
 	return count;
+}
+
+/**
+ * Check if a font is a monospace font.
+ * @param name Name of the font.
+ * @return True if the font is a monospace font.
+ */
+bool IsMonospaceFont(CFStringRef name)
+{
+	NSFont *font = [ NSFont fontWithName:(NSString *)name size:0.0f ];
+
+	return font != NULL ? [ font isFixedPitch ] : false;
 }

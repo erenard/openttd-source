@@ -1,4 +1,4 @@
-/* $Id: newgrf_object.h 24693 2012-11-10 20:46:39Z alberth $ */
+/* $Id: newgrf_object.h 25988 2013-11-13 21:56:48Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -52,7 +52,10 @@ enum ObjectClassID {
 /** Allow incrementing of ObjectClassID variables */
 DECLARE_POSTFIX_INCREMENT(ObjectClassID)
 
-/** An object that isn't use for transport, industries or houses. */
+/** An object that isn't use for transport, industries or houses.
+ * @note If you change this struct, adopt the initialization of
+ * default objects in table/object_land.h
+ */
 struct ObjectSpec {
 	/* 2 because of the "normal" and "buy" sprite stacks. */
 	GRFFilePropsBase<2> grf_prop; ///< Properties related the the grf file

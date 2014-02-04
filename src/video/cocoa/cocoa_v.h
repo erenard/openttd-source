@@ -1,4 +1,4 @@
-/* $Id: cocoa_v.h 24900 2013-01-08 22:46:42Z planetmaker $ */
+/* $Id: cocoa_v.h 26024 2013-11-17 13:35:48Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -49,6 +49,11 @@ public:
 	 * @return True if no error.
 	 */
 	/* virtual */ bool AfterBlitterChange();
+
+	/**
+	 * An edit box lost the input focus. Abort character compositing if necessary.
+	 */
+	/* virtual */ void EditBoxLostFocus();
 
 	/** Return driver name
 	 * @return driver name
@@ -227,7 +232,17 @@ uint QZ_ListModes(OTTD_Point *modes, uint max_modes, CGDirectDisplayID display_i
 @end
 
 /** Subclass of NSView to fix Quartz rendering and mouse awareness */
-@interface OTTD_CocoaView : NSView {
+@interface OTTD_CocoaView : NSView
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_5
+#	if MAC_OS_X_VERSION_MIN_REQUIRED <= MAC_OS_X_VERSION_10_4
+		<NSTextInputClient, NSTextInput>
+#	else
+		<NSTextInputClient>
+#	endif /* MAC_OS_X_VERSION_MIN_REQUIRED <= MAC_OS_X_VERSION_10_4 */
+#else
+	<NSTextInput>
+#endif /* MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_5 */
+{
 	CocoaSubdriver *driver;
 	NSTrackingRectTag trackingtag;
 }
@@ -253,6 +268,7 @@ uint QZ_ListModes(OTTD_Point *modes, uint max_modes, CGDirectDisplayID display_i
 - (void)setDriver:(CocoaSubdriver*)drv;
 
 - (BOOL)windowShouldClose:(id)sender;
+- (void)windowDidEnterFullScreen:(NSNotification *)aNotification;
 @end
 
 

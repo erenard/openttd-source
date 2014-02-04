@@ -1,4 +1,4 @@
-/* $Id: engine.cpp 25560 2013-07-04 21:20:05Z rubidium $ */
+/* $Id: engine.cpp 25978 2013-11-13 21:21:47Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -1112,12 +1112,16 @@ void CheckEngines()
 		if (!e->IsEnabled()) continue;
 
 		/* We have an available engine... yay! */
-		if (e->flags & ENGINE_AVAILABLE && e->company_avail != 0) return;
+		if ((e->flags & ENGINE_AVAILABLE) != 0 && e->company_avail != 0) return;
 
 		/* Okay, try to find the earliest date. */
 		min_date = min(min_date, e->info.base_intro);
 	}
 
-	SetDParam(0, min_date);
-	ShowErrorMessage(STR_ERROR_NO_VEHICLES_AVAILABLE, STR_ERROR_NO_VEHICLES_AVAILABLE_EXPLANATION, WL_WARNING);
+	if (min_date < INT32_MAX) {
+		SetDParam(0, min_date);
+		ShowErrorMessage(STR_ERROR_NO_VEHICLES_AVAILABLE_YET, STR_ERROR_NO_VEHICLES_AVAILABLE_YET_EXPLANATION, WL_WARNING);
+	} else {
+		ShowErrorMessage(STR_ERROR_NO_VEHICLES_AVAILABLE_AT_ALL, STR_ERROR_NO_VEHICLES_AVAILABLE_AT_ALL_EXPLANATION, WL_WARNING);
+	}
 }

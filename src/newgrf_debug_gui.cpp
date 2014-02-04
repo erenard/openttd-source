@@ -1,4 +1,4 @@
-/* $Id: newgrf_debug_gui.cpp 24900 2013-01-08 22:46:42Z planetmaker $ */
+/* $Id: newgrf_debug_gui.cpp 25989 2013-11-13 21:58:36Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -348,7 +348,7 @@ struct NewGRFInspectWindow : Window {
 		offset -= this->vscroll->GetPosition();
 		if (offset < 0 || offset >= this->vscroll->GetCapacity()) return;
 
-		::DrawString(r.left + LEFT_OFFSET, r.right + RIGHT_OFFSET, r.top + TOP_OFFSET + (offset * this->resize.step_height), buf, TC_BLACK);
+		::DrawString(r.left + LEFT_OFFSET, r.right - RIGHT_OFFSET, r.top + TOP_OFFSET + (offset * this->resize.step_height), buf, TC_BLACK);
 	}
 
 	virtual void DrawWidget(const Rect &r, int widget) const

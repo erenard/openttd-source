@@ -1,4 +1,4 @@
-/* $Id: settings_gui.cpp 24900 2013-01-08 22:46:42Z planetmaker $ */
+/* $Id: settings_gui.cpp 25988 2013-11-13 21:56:48Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -417,11 +417,10 @@ struct GameOptionsWindow : Window {
 				if (list != NULL) {
 					/* Find the biggest item for the default size. */
 					for (DropDownList::iterator it = list->begin(); it != list->end(); it++) {
-						static const Dimension extra = {WD_DROPDOWNTEXT_LEFT + WD_DROPDOWNTEXT_RIGHT, WD_DROPDOWNTEXT_TOP + WD_DROPDOWNTEXT_BOTTOM};
 						Dimension string_dim;
 						int width = (*it)->Width();
-						string_dim.width = width + extra.width;
-						string_dim.height = (*it)->Height(width) + extra.height;
+						string_dim.width = width + padding.width;
+						string_dim.height = (*it)->Height(width) + padding.height;
 						*size = maxdim(*size, string_dim);
 						delete *it;
 					}

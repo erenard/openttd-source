@@ -1,4 +1,4 @@
-/* $Id: airport_gui.cpp 25496 2013-06-28 19:09:47Z rubidium $ */
+/* $Id: airport_gui.cpp 26025 2013-11-17 13:53:33Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -99,7 +99,7 @@ struct BuildAirToolbarWindow : Window {
 	}
 
 
-	virtual EventState OnKeyPress(uint16 key, uint16 keycode)
+	virtual EventState OnKeyPress(WChar key, uint16 keycode)
 	{
 		int num = CheckHotkeyMatch(airtoolbar_hotkeys, keycode, this);
 		if (num == -1) return ES_NOT_HANDLED;
@@ -187,7 +187,7 @@ Window *ShowBuildAirToolbar()
 	return AllocateWindowDescFront<BuildAirToolbarWindow>(&_air_toolbar_desc, TRANSPORT_AIR);
 }
 
-EventState AirportToolbarGlobalHotkeys(uint16 key, uint16 keycode)
+EventState AirportToolbarGlobalHotkeys(WChar key, uint16 keycode)
 {
 	if (!CanBuildVehicleInfrastructure(VEH_AIRCRAFT)) return ES_NOT_HANDLED;
 	int num = CheckHotkeyMatch<BuildAirToolbarWindow>(_airtoolbar_hotkeys, keycode, NULL, true);
@@ -338,7 +338,7 @@ public:
 					if (!as->IsAvailable()) {
 						GfxFillRect(r.left + 1, y + 1, r.right - 1, y + this->line_height - 2, PC_BLACK, FILLRECT_CHECKER);
 					}
-					DrawString(r.left + WD_MATRIX_LEFT, r.right + WD_MATRIX_RIGHT, y + WD_MATRIX_TOP, as->name, ((int)i == _selected_airport_index) ? TC_WHITE : TC_BLACK);
+					DrawString(r.left + WD_MATRIX_LEFT, r.right - WD_MATRIX_RIGHT, y + WD_MATRIX_TOP, as->name, ((int)i == _selected_airport_index) ? TC_WHITE : TC_BLACK);
 					y += this->line_height;
 				}
 				break;

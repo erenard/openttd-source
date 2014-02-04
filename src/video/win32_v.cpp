@@ -1,4 +1,4 @@
-/* $Id: win32_v.cpp 25559 2013-07-04 21:16:35Z rubidium $ */
+/* $Id: win32_v.cpp 26024 2013-11-17 13:35:48Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -21,8 +21,16 @@
 #include "../texteff.hpp"
 #include "../thread/thread.h"
 #include "../progress.h"
+#include "../window_gui.h"
+#include "../window_func.h"
 #include "win32_v.h"
 #include <windows.h>
+#include <imm.h>
+
+/* Missing define in MinGW headers. */
+#ifndef MAPVK_VK_TO_CHAR
+#define MAPVK_VK_TO_CHAR    (2)
+#endif
 
 static struct {
 	HWND main_wnd;
@@ -44,8 +52,8 @@ bool _window_maximize;
 uint _display_hz;
 uint _fullscreen_bpp;
 static Dimension _bck_resolution;
-#if !defined(UNICODE)
-uint _codepage;
+#if !defined(WINCE) || _WIN32_WCE >= 0x400
+DWORD _imm_props;
 #endif
 
 /** Whether the drawing is/may be done in a separate thread. */
@@ -432,6 +440,215 @@ static void PaintWindowThread(void *)
 	_draw_thread->Exit();
 }
 
+/** Forward key presses to the window system. */
+static LRESULT HandleCharMsg(uint keycode, WChar charcode)
+{
+#if !defined(UNICODE)
+	static char prev_char = 0;
+
+	char input[2] = {(char)charcode, 0};
+	int input_len = 1;
+
+	if (prev_char != 0) {
+		/* We stored a lead byte previously, combine it with this byte. */
+		input[0] = prev_char;
+		input[1] = (char)charcode;
+		input_len = 2;
+	} else if (IsDBCSLeadByte(charcode)) {
+		/* We got a lead byte, store and exit. */
+		prev_char = charcode;
+		return 0;
+	}
+	prev_char = 0;
+
+	wchar_t w[2]; // Can get up to two code points as a result.
+	int len = MultiByteToWideChar(CP_ACP, 0, input, input_len, w, 2);
+	switch (len) {
+		case 1: // Normal unicode character.
+			charcode = w[0];
+			break;
+
+		case 2: // Got an UTF-16 surrogate pair back.
+			charcode = Utf16DecodeSurrogate(w[0], w[1]);
+			break;
+
+		default: // Some kind of error.
+			DEBUG(driver, 1, "Invalid DBCS character sequence encountered, dropping input");
+			charcode = 0;
+			break;
+	}
+#else
+	static WChar prev_char = 0;
+
+	/* Did we get a lead surrogate? If yes, store and exit. */
+	if (Utf16IsLeadSurrogate(charcode)) {
+		if (prev_char != 0) DEBUG(driver, 1, "Got two UTF-16 lead surrogates, dropping the first one");
+		prev_char = charcode;
+		return 0;
+	}
+
+	/* Stored lead surrogate and incoming trail surrogate? Combine and forward to input handling. */
+	if (prev_char != 0) {
+		if (Utf16IsTrailSurrogate(charcode)) {
+			charcode = Utf16DecodeSurrogate(prev_char, charcode);
+		} else {
+			DEBUG(driver, 1, "Got an UTF-16 lead surrogate without a trail surrogate, dropping the lead surrogate");
+		}
+	}
+	prev_char = 0;
+#endif /* UNICODE */
+
+	HandleKeypress(keycode, charcode);
+
+	return 0;
+}
+
+#if !defined(WINCE) || _WIN32_WCE >= 0x400
+/** Should we draw the composition string ourself, i.e is this a normal IME? */
+static bool DrawIMECompositionString()
+{
+	return (_imm_props & IME_PROP_AT_CARET) && !(_imm_props & IME_PROP_SPECIAL_UI);
+}
+
+/** Set position of the composition window to the caret position. */
+static void SetCompositionPos(HWND hwnd)
+{
+	HIMC hIMC = ImmGetContext(hwnd);
+	if (hIMC != NULL) {
+		COMPOSITIONFORM cf;
+		cf.dwStyle = CFS_POINT;
+
+		if (EditBoxInGlobalFocus()) {
+			/* Get caret position. */
+			Point pt = _focused_window->GetCaretPosition();
+			cf.ptCurrentPos.x = _focused_window->left + pt.x;
+			cf.ptCurrentPos.y = _focused_window->top  + pt.y;
+		} else {
+			cf.ptCurrentPos.x = 0;
+			cf.ptCurrentPos.y = 0;
+		}
+		ImmSetCompositionWindow(hIMC, &cf);
+	}
+	ImmReleaseContext(hwnd, hIMC);
+}
+
+/** Set the position of the candidate window. */
+static void SetCandidatePos(HWND hwnd)
+{
+	HIMC hIMC = ImmGetContext(hwnd);
+	if (hIMC != NULL) {
+		CANDIDATEFORM cf;
+		cf.dwIndex = 0;
+		cf.dwStyle = CFS_EXCLUDE;
+
+		if (EditBoxInGlobalFocus()) {
+			Point pt = _focused_window->GetCaretPosition();
+			cf.ptCurrentPos.x = _focused_window->left + pt.x;
+			cf.ptCurrentPos.y = _focused_window->top  + pt.y;
+			if (_focused_window->window_class == WC_CONSOLE) {
+				cf.rcArea.left   = _focused_window->left;
+				cf.rcArea.top    = _focused_window->top;
+				cf.rcArea.right  = _focused_window->left + _focused_window->width;
+				cf.rcArea.bottom = _focused_window->top  + _focused_window->height;
+			} else {
+				cf.rcArea.left   = _focused_window->left + _focused_window->nested_focus->pos_x;
+				cf.rcArea.top    = _focused_window->top  + _focused_window->nested_focus->pos_y;
+				cf.rcArea.right  = cf.rcArea.left + _focused_window->nested_focus->current_x;
+				cf.rcArea.bottom = cf.rcArea.top  + _focused_window->nested_focus->current_y;
+			}
+		} else {
+			cf.ptCurrentPos.x = 0;
+			cf.ptCurrentPos.y = 0;
+			SetRectEmpty(&cf.rcArea);
+		}
+		ImmSetCandidateWindow(hIMC, &cf);
+	}
+	ImmReleaseContext(hwnd, hIMC);
+}
+
+/** Handle WM_IME_COMPOSITION messages. */
+static LRESULT HandleIMEComposition(HWND hwnd, WPARAM wParam, LPARAM lParam)
+{
+	HIMC hIMC = ImmGetContext(hwnd);
+
+	if (hIMC != NULL) {
+		if (lParam & GCS_RESULTSTR) {
+			/* Read result string from the IME. */
+			LONG len = ImmGetCompositionString(hIMC, GCS_RESULTSTR, NULL, 0); // Length is always in bytes, even in UNICODE build.
+			TCHAR *str = (TCHAR *)_alloca(len + sizeof(TCHAR));
+			len = ImmGetCompositionString(hIMC, GCS_RESULTSTR, str, len);
+			str[len / sizeof(TCHAR)] = '\0';
+
+			/* Transmit text to windowing system. */
+			if (len > 0) {
+				HandleTextInput(NULL, true); // Clear marked string.
+				HandleTextInput(FS2OTTD(str));
+			}
+			SetCompositionPos(hwnd);
+
+			/* Don't pass the result string on to the default window proc. */
+			lParam &= ~(GCS_RESULTSTR | GCS_RESULTCLAUSE | GCS_RESULTREADCLAUSE | GCS_RESULTREADSTR);
+		}
+
+		if ((lParam & GCS_COMPSTR) && DrawIMECompositionString()) {
+			/* Read composition string from the IME. */
+			LONG len = ImmGetCompositionString(hIMC, GCS_COMPSTR, NULL, 0); // Length is always in bytes, even in UNICODE build.
+			TCHAR *str = (TCHAR *)_alloca(len + sizeof(TCHAR));
+			len = ImmGetCompositionString(hIMC, GCS_COMPSTR, str, len);
+			str[len / sizeof(TCHAR)] = '\0';
+
+			if (len > 0) {
+				static char utf8_buf[1024];
+				convert_from_fs(str, utf8_buf, lengthof(utf8_buf));
+
+				/* Convert caret position from bytes in the input string to a position in the UTF-8 encoded string. */
+				LONG caret_bytes = ImmGetCompositionString(hIMC, GCS_CURSORPOS, NULL, 0);
+				const char *caret = utf8_buf;
+				for (const TCHAR *c = str; *c != '\0' && *caret != '\0' && caret_bytes > 0; c++, caret_bytes--) {
+					/* Skip DBCS lead bytes or leading surrogates. */
+#ifdef UNICODE
+					if (Utf16IsLeadSurrogate(*c)) {
+#else
+					if (IsDBCSLeadByte(*c)) {
+#endif
+						c++;
+						caret_bytes--;
+					}
+					Utf8Consume(&caret);
+				}
+
+				HandleTextInput(utf8_buf, true, caret);
+			} else {
+				HandleTextInput(NULL, true);
+			}
+
+			lParam &= ~(GCS_COMPSTR | GCS_COMPATTR | GCS_COMPCLAUSE | GCS_CURSORPOS | GCS_DELTASTART);
+		}
+	}
+	ImmReleaseContext(hwnd, hIMC);
+
+	return lParam != 0 ? DefWindowProc(hwnd, WM_IME_COMPOSITION, wParam, lParam) : 0;
+}
+
+/** Clear the current composition string. */
+static void CancelIMEComposition(HWND hwnd)
+{
+	HIMC hIMC = ImmGetContext(hwnd);
+	if (hIMC != NULL) ImmNotifyIME(hIMC, NI_COMPOSITIONSTR, CPS_CANCEL, 0);
+	ImmReleaseContext(hwnd, hIMC);
+	/* Clear any marked string from the current edit box. */
+	HandleTextInput(NULL, true);
+}
+
+#else
+
+static bool DrawIMECompositionString() { return false; }
+static void SetCompositionPos(HWND hwnd) {}
+static void SetCandidatePos(HWND hwnd) {}
+static void CancelIMEComposition(HWND hwnd) {}
+
+#endif /* !defined(WINCE) || _WIN32_WCE >= 0x400 */
+
 static LRESULT CALLBACK WndProcGdi(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	static uint32 keycode = 0;
@@ -441,6 +658,10 @@ static LRESULT CALLBACK WndProcGdi(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 	switch (msg) {
 		case WM_CREATE:
 			SetTimer(hwnd, TID_POLLMOUSE, MOUSE_POLL_DELAY, (TIMERPROC)TrackMouseTimerProc);
+			SetCompositionPos(hwnd);
+#if !defined(WINCE) || _WIN32_WCE >= 0x400
+			_imm_props = ImmGetProperty(GetKeyboardLayout(0), IGP_PROPERTY);
+#endif
 			break;
 
 		case WM_ENTERSIZEMOVE:
@@ -566,16 +787,44 @@ static LRESULT CALLBACK WndProcGdi(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 			return 0;
 		}
 
-#if !defined(UNICODE)
-		case WM_INPUTLANGCHANGE: {
-			TCHAR locale[6];
-			LCID lcid = GB(lParam, 0, 16);
+#if !defined(WINCE) || _WIN32_WCE >= 0x400
+		case WM_INPUTLANGCHANGE:
+			_imm_props = ImmGetProperty(GetKeyboardLayout(0), IGP_PROPERTY);
+			break;
 
-			int len = GetLocaleInfo(lcid, LOCALE_IDEFAULTANSICODEPAGE, locale, lengthof(locale));
-			if (len != 0) _codepage = _ttoi(locale);
-			return 1;
-		}
-#endif /* UNICODE */
+		case WM_IME_SETCONTEXT:
+			/* Don't show the composition window if we draw the string ourself. */
+			if (DrawIMECompositionString()) lParam &= ~ISC_SHOWUICOMPOSITIONWINDOW;
+			break;
+
+		case WM_IME_STARTCOMPOSITION:
+			SetCompositionPos(hwnd);
+			if (DrawIMECompositionString()) return 0;
+			break;
+
+		case WM_IME_COMPOSITION:
+			return HandleIMEComposition(hwnd, wParam, lParam);
+
+		case WM_IME_ENDCOMPOSITION:
+			/* Clear any pending composition string. */
+			HandleTextInput(NULL, true);
+			if (DrawIMECompositionString()) return 0;
+			break;
+
+		case WM_IME_NOTIFY:
+			if (wParam == IMN_OPENCANDIDATE) SetCandidatePos(hwnd);
+			break;
+
+#if !defined(UNICODE)
+		case WM_IME_CHAR:
+			if (GB(wParam, 8, 8) != 0) {
+				/* DBCS character, send lead byte first. */
+				HandleCharMsg(0, GB(wParam, 8, 8));
+			}
+			HandleCharMsg(0, GB(wParam, 0, 8));
+			return 0;
+#endif
+#endif
 
 		case WM_DEADCHAR:
 			console = GB(lParam, 16, 8) == 41;
@@ -592,31 +841,50 @@ static LRESULT CALLBACK WndProcGdi(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 				return 0;
 			}
 
-#if !defined(UNICODE)
-			wchar_t w;
-			int len = MultiByteToWideChar(_codepage, 0, (char*)&charcode, 1, &w, 1);
-			charcode = len == 1 ? w : 0;
-#endif /* UNICODE */
+			/* IMEs and other input methods sometimes send a WM_CHAR without a WM_KEYDOWN,
+			 * clear the keycode so a previous WM_KEYDOWN doesn't become 'stuck'. */
+			uint cur_keycode = keycode;
+			keycode = 0;
 
-			/* No matter the keyboard layout, we will map the '~' to the console */
-			scancode = scancode == 41 ? (int)WKC_BACKQUOTE : keycode;
-			HandleKeypress(GB(charcode, 0, 16) | (scancode << 16));
-			return 0;
+			return HandleCharMsg(cur_keycode, charcode);
 		}
 
 		case WM_KEYDOWN: {
-			keycode = MapWindowsKey(wParam);
+			/* No matter the keyboard layout, we will map the '~' to the console. */
+			uint scancode = GB(lParam, 16, 8);
+			keycode = scancode == 41 ? (uint)WKC_BACKQUOTE : MapWindowsKey(wParam);
 
 			/* Silently drop all messages handled by WM_CHAR. */
 			MSG msg;
 			if (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) {
-				if (msg.message == WM_CHAR && GB(lParam, 16, 8) == GB(msg.lParam, 16, 8)) {
+				if ((msg.message == WM_CHAR || msg.message == WM_DEADCHAR) && GB(lParam, 16, 8) == GB(msg.lParam, 16, 8)) {
 					return 0;
 				}
 			}
 
-			HandleKeypress(0 | (keycode << 16));
-			return 0;
+			uint charcode = MapVirtualKey(wParam, MAPVK_VK_TO_CHAR);
+
+			/* No character translation? */
+			if (charcode == 0) {
+				HandleKeypress(keycode, 0);
+				return 0;
+			}
+
+			/* Is the console key a dead key? If yes, ignore the first key down event. */
+			if (HasBit(charcode, 31) && !console) {
+				if (scancode == 41) {
+					console = true;
+					return 0;
+				}
+			}
+			console = false;
+
+			/* IMEs and other input methods sometimes send a WM_CHAR without a WM_KEYDOWN,
+			 * clear the keycode so a previous WM_KEYDOWN doesn't become 'stuck'. */
+			uint cur_keycode = keycode;
+			keycode = 0;
+
+			return HandleCharMsg(cur_keycode, LOWORD(charcode));
 		}
 
 		case WM_SYSKEYDOWN: // user presses F10 or Alt, both activating the title-menu
@@ -630,11 +898,11 @@ static LRESULT CALLBACK WndProcGdi(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 					return 0; // do nothing
 
 				case VK_F10: // F10, ignore activation of menu
-					HandleKeypress(MapWindowsKey(wParam) << 16);
+					HandleKeypress(MapWindowsKey(wParam), 0);
 					return 0;
 
 				default: // ALT in combination with something else
-					HandleKeypress(MapWindowsKey(wParam) << 16);
+					HandleKeypress(MapWindowsKey(wParam), 0);
 					break;
 			}
 			break;
@@ -731,6 +999,7 @@ static LRESULT CALLBACK WndProcGdi(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 
 		case WM_SETFOCUS:
 			_wnd.has_focus = true;
+			SetCompositionPos(hwnd);
 			break;
 
 		case WM_KILLFOCUS:
@@ -979,7 +1248,8 @@ void VideoDriver_Win32::MainLoop()
 
 		while (PeekMessage(&mesg, NULL, 0, 0, PM_REMOVE)) {
 			InteractiveRandom(); // randomness
-			TranslateMessage(&mesg);
+			/* Convert key messages to char messages if we want text input. */
+			if (EditBoxInGlobalFocus()) TranslateMessage(&mesg);
 			DispatchMessage(&mesg);
 		}
 		if (_exit_game) return;
@@ -1084,4 +1354,11 @@ bool VideoDriver_Win32::ToggleFullscreen(bool full_screen)
 bool VideoDriver_Win32::AfterBlitterChange()
 {
 	return AllocateDibSection(_screen.width, _screen.height, true) && this->MakeWindow(_fullscreen);
+}
+
+void VideoDriver_Win32::EditBoxLostFocus()
+{
+	CancelIMEComposition(_wnd.main_wnd);
+	SetCompositionPos(_wnd.main_wnd);
+	SetCandidatePos(_wnd.main_wnd);
 }

@@ -1,4 +1,4 @@
-/* $Id: vehicle_gui.cpp 24997 2013-02-14 17:11:42Z rubidium $ */
+/* $Id: vehicle_gui.cpp 25992 2013-11-13 22:03:26Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -1618,7 +1618,7 @@ static WindowDesc _vehicle_list_desc(
 	_nested_vehicle_list, lengthof(_nested_vehicle_list)
 );
 
-static void ShowVehicleListWindowLocal(CompanyID company, VehicleListType vlt, VehicleType vehicle_type, uint16 unique_number)
+static void ShowVehicleListWindowLocal(CompanyID company, VehicleListType vlt, VehicleType vehicle_type, uint32 unique_number)
 {
 	if (!Company::IsValidID(company) && company != OWNER_NONE) return;
 
@@ -2394,6 +2394,10 @@ public:
 	{
 		const Vehicle *v = Vehicle::Get(this->window_number);
 		switch (widget) {
+			case WID_VV_START_STOP:
+				size->height = max(size->height, max(GetSpriteSize(SPR_FLAG_VEH_STOPPED).height, GetSpriteSize(SPR_FLAG_VEH_RUNNING).height) + WD_IMGBTN_TOP + WD_IMGBTN_BOTTOM);
+				break;
+
 			case WID_VV_FORCE_PROCEED:
 				if (v->type != VEH_TRAIN) {
 					size->height = 0;
@@ -2523,9 +2527,16 @@ public:
 			}
 		}
 
-		/* draw the flag plus orders */
-		DrawSprite(v->vehstatus & VS_STOPPED ? SPR_FLAG_VEH_STOPPED : SPR_FLAG_VEH_RUNNING, PAL_NONE, WD_FRAMERECT_LEFT, r.top + WD_FRAMERECT_TOP);
-		DrawString(r.left + WD_FRAMERECT_LEFT + 6, r.right - WD_FRAMERECT_RIGHT, r.top + WD_FRAMERECT_TOP, str, TC_FROMSTRING, SA_HOR_CENTER);
+		/* Draw the flag plus orders. */
+		bool rtl = (_current_text_dir == TD_RTL);
+		uint text_offset = max(GetSpriteSize(SPR_FLAG_VEH_STOPPED).width, GetSpriteSize(SPR_FLAG_VEH_RUNNING).width) + WD_IMGBTN_LEFT + WD_IMGBTN_RIGHT;
+		int text_left = r.left + (rtl ? (uint)WD_FRAMERECT_LEFT : text_offset);
+		int text_right = r.right - (rtl ? text_offset : (uint)WD_FRAMERECT_RIGHT);
+		int image_left = (rtl ? text_right + 1 : r.left) + WD_IMGBTN_LEFT;
+		int image = ((v->vehstatus & VS_STOPPED) != 0) ? SPR_FLAG_VEH_STOPPED : SPR_FLAG_VEH_RUNNING;
+		int lowered = this->IsWidgetLowered(WID_VV_START_STOP) ? 1 : 0;
+		DrawSprite(image, PAL_NONE, image_left + lowered, r.top + WD_IMGBTN_TOP + lowered);
+		DrawString(text_left + lowered, text_right + lowered, r.top + WD_FRAMERECT_TOP + lowered, str, TC_FROMSTRING, SA_HOR_CENTER);
 	}
 
 	virtual void OnClick(Point pt, int widget, int click_count)

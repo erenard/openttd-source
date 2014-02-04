@@ -1,4 +1,4 @@
-/* $Id: highscore_gui.cpp 25528 2013-06-30 08:58:35Z rubidium $ */
+/* $Id: highscore_gui.cpp 25982 2013-11-13 21:35:44Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -63,7 +63,7 @@ struct EndGameHighScoreBaseWindow : Window {
 		delete this;
 	}
 
-	virtual EventState OnKeyPress(uint16 key, uint16 keycode)
+	virtual EventState OnKeyPress(WChar key, uint16 keycode)
 	{
 		/* All keys are 'handled' by this window but we want to make
 		 * sure that 'quit' still works correctly. Not handling the

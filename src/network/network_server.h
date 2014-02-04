@@ -1,4 +1,4 @@
-/* $Id: network_server.h 24900 2013-01-08 22:46:42Z planetmaker $ */
+/* $Id: network_server.h 26020 2013-11-17 11:24:39Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -75,16 +75,13 @@ public:
 	CommandQueue outgoing_queue; ///< The command-queue awaiting delivery
 	int receive_limit;           ///< Amount of bytes that we can receive at this moment
 
-	Packet *savegame_packets;      ///< Packet queue of the savegame; send these "slowly" to the client.
 	struct PacketWriter *savegame; ///< Writer used to write the savegame.
-	ThreadMutex *savegame_mutex;   ///< Mutex for making threaded saving safe.
 	NetworkAddress client_address; ///< IP-address of the client (so he can be banned)
 
 	ServerNetworkGameSocketHandler(SOCKET s);
 	~ServerNetworkGameSocketHandler();
 
 	virtual Packet *ReceivePacket();
-	virtual void SendPacket(Packet *packet);
 	NetworkRecvStatus CloseConnection(NetworkRecvStatus status);
 	void GetClientName(char *client_name, size_t size) const;
 

@@ -1,4 +1,4 @@
-/* $Id: newgrf_storage.h 23735 2012-01-03 20:26:05Z rubidium $ */
+/* $Id: newgrf_storage.h 25991 2013-11-13 22:00:46Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -84,7 +84,7 @@ struct PersistentStorageArray : BaseStorageArray {
 		if (this->storage[pos] == value) return;
 
 		/* We do not have made a backup; lets do so */
-		if (this->prev_storage != NULL) {
+		if (this->prev_storage == NULL) {
 			this->prev_storage = MallocT<TYPE>(SIZE);
 			memcpy(this->prev_storage, this->storage, sizeof(this->storage));
 
@@ -121,6 +121,7 @@ struct PersistentStorageArray : BaseStorageArray {
 			memcpy(this->storage, this->prev_storage, sizeof(this->storage));
 		}
 		free(this->prev_storage);
+		this->prev_storage = NULL;
 	}
 };
 

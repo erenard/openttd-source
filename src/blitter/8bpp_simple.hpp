@@ -1,4 +1,4 @@
-/* $Id: 8bpp_simple.hpp 23588 2011-12-18 17:17:18Z smatz $ */
+/* $Id: 8bpp_simple.hpp 25987 2013-11-13 21:53:40Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -19,7 +19,7 @@
 class Blitter_8bppSimple FINAL : public Blitter_8bppBase {
 public:
 	/* virtual */ void Draw(Blitter::BlitterParams *bp, BlitterMode mode, ZoomLevel zoom);
-	/* virtual */ Sprite *Encode(SpriteLoader::Sprite *sprite, AllocatorProc *allocator);
+	/* virtual */ Sprite *Encode(const SpriteLoader::Sprite *sprite, AllocatorProc *allocator);
 
 	/* virtual */ const char *GetName() { return "8bpp-simple"; }
 };

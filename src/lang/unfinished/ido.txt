@@ -10,7 +10,7 @@
 ##grflangid 0x06
 
 
-# $Id: ido.txt 25528 2013-06-30 08:58:35Z rubidium $
+# $Id: ido.txt 26031 2013-11-17 17:30:42Z rubidium $
 
 # This file is part of OpenTTD.
 # OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -825,6 +825,8 @@ STR_NEWGRF_LIST_NONE                                            :Nulo
 
 # 'User removed essential NewGRFs'-placeholders for stuff without specs
 STR_NEWGRF_INVALID_CARGO_ABBREV                                 :??
+
+# Placeholders for other invalid stuff, e.g. vehicles that have gone (Game Script).
 
 # NewGRF scanning window
 

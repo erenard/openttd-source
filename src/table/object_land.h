@@ -1,4 +1,4 @@
-/* $Id: object_land.h 25560 2013-07-04 21:20:05Z rubidium $ */
+/* $Id: object_land.h 25988 2013-11-13 21:56:48Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -123,7 +123,7 @@ static const DrawTileSprites _object_hq[] = {
 
 #undef TILE_SPRITE_LINE
 
-#define M(name, size, build_cost_multiplier, clear_cost_multiplier, height, flags) { GRFFilePropsBase<2>(), INVALID_OBJECT_CLASS, name, 0xF, size, 0, 0, build_cost_multiplier, clear_cost_multiplier, flags, {0, 0, 0, 0}, 0, height, 1, true }
+#define M(name, size, build_cost_multiplier, clear_cost_multiplier, height, flags) { GRFFilePropsBase<2>(), INVALID_OBJECT_CLASS, name, 0xF, size, build_cost_multiplier, clear_cost_multiplier, 0, 0, flags, {0, 0, 0, 0}, 0, height, 1, true }
 
 /** Specification of the original object structures. */
 extern const ObjectSpec _original_objects[] = {

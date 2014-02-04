@@ -1,4 +1,4 @@
-/* $Id: window_gui.h 24900 2013-01-08 22:46:42Z planetmaker $ */
+/* $Id: window_gui.h 26024 2013-11-17 13:35:48Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -19,6 +19,7 @@
 #include "widget_type.h"
 #include "core/smallvec_type.hpp"
 #include "core/smallmap_type.hpp"
+#include "string_type.h"
 
 /** State of handling an event. */
 enum EventState {
@@ -130,7 +131,7 @@ enum WidgetDrawDistances {
 	/* Dropdown widget. */
 	WD_DROPDOWN_HEIGHT     = 12, ///< Height of a drop down widget.
 	WD_DROPDOWNTEXT_LEFT   = 2,  ///< Left offset of the dropdown widget string.
-	WD_DROPDOWNTEXT_RIGHT  = 14, ///< Right offset of the dropdown widget string.
+	WD_DROPDOWNTEXT_RIGHT  = 2,  ///< Right offset of the dropdown widget string.
 	WD_DROPDOWNTEXT_TOP    = 1,  ///< Top offset of the dropdown widget string.
 	WD_DROPDOWNTEXT_BOTTOM = 1,  ///< Bottom offset of the dropdown widget string.
 
@@ -322,6 +323,13 @@ public:
 	const QueryString *GetQueryString(uint widnum) const;
 	QueryString *GetQueryString(uint widnum);
 
+	virtual const char *GetFocusedText() const;
+	virtual const char *GetCaret() const;
+	virtual const char *GetMarkedText(size_t *length) const;
+	virtual Point GetCaretPosition() const;
+	virtual Rect GetTextBoundingRect(const char *from, const char *to) const;
+	virtual const char *GetTextCharacterAtPosition(const Point &pt) const;
+
 	void InitNested(const WindowDesc *desc, WindowNumber number = 0);
 	void CreateNestedTree(const WindowDesc *desc, bool fill_nested = true);
 	void FinishInitNested(const WindowDesc *desc, WindowNumber window_number = 0);
@@ -465,7 +473,8 @@ public:
 	void UnfocusFocusedWidget();
 	bool SetFocusedWidget(int widget_index);
 
-	EventState HandleEditBoxKey(int wid, uint16 key, uint16 keycode);
+	EventState HandleEditBoxKey(int wid, WChar key, uint16 keycode);
+	virtual void InsertTextString(int wid, const char *str, bool marked, const char *caret, const char *insert_location, const char *replacement_end);
 
 	void HandleButtonClick(byte widget);
 	int GetRowFromWidget(int clickpos, int widget, int padding, int line_height = -1) const;
@@ -558,10 +567,7 @@ public:
 	 */
 	virtual void OnFocus() {}
 
-	/**
-	 * Called when window looses focus
-	 */
-	virtual void OnFocusLost() {}
+	virtual void OnFocusLost();
 
 	/**
 	 * A key has been pressed.
@@ -570,7 +576,7 @@ public:
 	 * @return #ES_HANDLED if the key press has been handled and no other
 	 *         window should receive the event.
 	 */
-	virtual EventState OnKeyPress(uint16 key, uint16 keycode) { return ES_NOT_HANDLED; }
+	virtual EventState OnKeyPress(WChar key, uint16 keycode) { return ES_NOT_HANDLED; }
 
 	/**
 	 * The state of the control key has changed

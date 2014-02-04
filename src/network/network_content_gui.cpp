@@ -1,4 +1,4 @@
-/* $Id: network_content_gui.cpp 25102 2013-03-17 20:58:40Z rubidium $ */
+/* $Id: network_content_gui.cpp 25982 2013-11-13 21:35:44Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -799,7 +799,7 @@ public:
 		}
 	}
 
-	virtual EventState OnKeyPress(uint16 key, uint16 keycode)
+	virtual EventState OnKeyPress(WChar key, uint16 keycode)
 	{
 		switch (keycode) {
 			case WKC_UP:

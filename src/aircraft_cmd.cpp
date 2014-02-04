@@ -1,4 +1,4 @@
-/* $Id: aircraft_cmd.cpp 25240 2013-05-13 19:18:10Z rubidium $ */
+/* $Id: aircraft_cmd.cpp 26135 2013-11-29 12:10:22Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -1021,7 +1021,7 @@ static bool HandleCrashedAircraft(Aircraft *v)
 
 	/* make aircraft crash down to the ground */
 	if (v->crashed_counter < 500 && st == NULL && ((v->crashed_counter % 3) == 0) ) {
-		int z = GetSlopePixelZ(v->x_pos, v->y_pos);
+		int z = GetSlopePixelZ(Clamp(v->x_pos, 0, MapMaxX() * TILE_SIZE), Clamp(v->y_pos, 0, MapMaxY() * TILE_SIZE));
 		v->z_pos -= 1;
 		if (v->z_pos == z) {
 			v->crashed_counter = 500;

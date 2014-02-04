@@ -1,4 +1,4 @@
-/* $Id: script_event_types.cpp 23777 2012-01-08 21:48:05Z rubidium $ */
+/* $Id: script_event_types.cpp 25985 2013-11-13 21:46:47Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -243,6 +243,14 @@ char *ScriptEventAdminPort::ReadValue(HSQUIRRELVM vm, char *p)
 		case '[': {
 			/* Array */
 			sq_newarray(vm, 0);
+
+			/* Empty array? */
+			char *p2 = p+1;
+			SKIP_EMPTY(p2);
+			if (*p2 == ']') {
+				p = p2+1;
+				break;
+			}
 
 			while (*p++ != ']') {
 				p = this->ReadValue(vm, p);

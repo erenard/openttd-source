@@ -1,4 +1,4 @@
-/* $Id: network_chat_gui.cpp 25502 2013-06-28 19:44:28Z rubidium $ */
+/* $Id: network_chat_gui.cpp 25982 2013-11-13 21:35:44Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -491,7 +491,7 @@ struct NetworkChatWindow : public Window {
 		}
 	}
 
-	virtual EventState OnKeyPress(uint16 key, uint16 keycode)
+	virtual EventState OnKeyPress(WChar key, uint16 keycode)
 	{
 		EventState state = ES_NOT_HANDLED;
 		if (keycode == WKC_TAB) {

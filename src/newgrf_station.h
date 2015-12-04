@@ -1,4 +1,4 @@
-/* $Id: newgrf_station.h 24905 2013-01-11 07:39:25Z peter1138 $ */
+/* $Id: newgrf_station.h 26085 2013-11-24 14:41:19Z frosch $ */
 
 /*
  * This file is part of OpenTTD.
@@ -30,7 +30,7 @@ struct StationScopeResolver : public ScopeResolver {
 	CargoID cargo_type;                 ///< Type of cargo of the station.
 	Axis axis;                          ///< Station axis, used only for the slope check callback.
 
-	StationScopeResolver(ResolverObject *ro, const StationSpec *statspec, BaseStation *st, TileIndex tile);
+	StationScopeResolver(ResolverObject &ro, const StationSpec *statspec, BaseStation *st, TileIndex tile);
 
 	/* virtual */ uint32 GetRandomBits() const;
 	/* virtual */ uint32 GetTriggers() const;

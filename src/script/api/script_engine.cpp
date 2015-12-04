@@ -1,4 +1,4 @@
-/* $Id: script_engine.cpp 24492 2012-08-21 19:53:08Z frosch $ */
+/* $Id: script_engine.cpp 26482 2014-04-23 20:13:33Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -19,6 +19,8 @@
 #include "../../engine_func.h"
 #include "../../articulated_vehicles.h"
 #include "table/strings.h"
+
+#include "../../safeguards.h"
 
 /* static */ bool ScriptEngine::IsValidEngine(EngineID engine_id)
 {
@@ -171,11 +173,11 @@
 	return ::Engine::Get(engine_id)->GetDisplayMaxTractiveEffort();
 }
 
-/* static */ int32 ScriptEngine::GetDesignDate(EngineID engine_id)
+/* static */ ScriptDate::Date ScriptEngine::GetDesignDate(EngineID engine_id)
 {
-	if (!IsValidEngine(engine_id)) return -1;
+	if (!IsValidEngine(engine_id)) return ScriptDate::DATE_INVALID;
 
-	return ::Engine::Get(engine_id)->intro_date;
+	return (ScriptDate::Date)::Engine::Get(engine_id)->intro_date;
 }
 
 /* static */ ScriptVehicle::VehicleType ScriptEngine::GetVehicleType(EngineID engine_id)

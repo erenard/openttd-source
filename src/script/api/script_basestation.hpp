@@ -1,4 +1,4 @@
-/* $Id: script_basestation.hpp 23735 2012-01-03 20:26:05Z rubidium $ */
+/* $Id: script_basestation.hpp 26307 2014-02-06 19:50:34Z zuu $ */
 
 /*
  * This file is part of OpenTTD.
@@ -13,6 +13,7 @@
 #define SCRIPT_BASESTATION_HPP
 
 #include "script_text.hpp"
+#include "script_date.hpp"
 
 /**
  * Base class for stations and waypoints.
@@ -73,7 +74,7 @@ public:
 	 * @param station_id The station to look at.
 	 * @return The last date some part of this station was build.
 	 */
-	static int32 GetConstructionDate(StationID station_id);
+	static ScriptDate::Date GetConstructionDate(StationID station_id);
 };
 
 #endif /* SCRIPT_BASESTATION_HPP */

@@ -1,4 +1,4 @@
-/* $Id: thread_none.cpp 17776 2009-10-15 17:41:06Z rubidium $ */
+/* $Id: thread_none.cpp 26482 2014-04-23 20:13:33Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -12,6 +12,8 @@
 #include "../stdafx.h"
 #include "thread.h"
 
+#include "../safeguards.h"
+
 /* static */ bool ThreadObject::New(OTTDThreadFunc proc, void *param, ThreadObject **thread)
 {
 	if (thread != NULL) *thread = NULL;
@@ -21,8 +23,8 @@
 /** Mutex that doesn't do locking because it ain't needed when there're no threads */
 class ThreadMutex_None : public ThreadMutex {
 public:
-	virtual void BeginCritical() {}
-	virtual void EndCritical() {}
+	virtual void BeginCritical(bool allow_recursive = false) {}
+	virtual void EndCritical(bool allow_recursive = false) {}
 	virtual void WaitForSignal() {}
 	virtual void SendSignal() {}
 };

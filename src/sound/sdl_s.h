@@ -1,4 +1,4 @@
-/* $Id: sdl_s.h 22410 2011-05-02 16:14:23Z rubidium $ */
+/* $Id: sdl_s.h 26108 2013-11-25 14:30:22Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -15,7 +15,7 @@
 #include "sound_driver.hpp"
 
 /** Implementation of the SDL sound driver. */
-class SoundDriver_SDL: public SoundDriver {
+class SoundDriver_SDL : public SoundDriver {
 public:
 	/* virtual */ const char *Start(const char * const *param);
 
@@ -24,12 +24,10 @@ public:
 };
 
 /** Factory for the SDL sound driver. */
-class FSoundDriver_SDL: public SoundDriverFactory<FSoundDriver_SDL> {
+class FSoundDriver_SDL : public DriverFactoryBase {
 public:
-	static const int priority = 5;
-	/* virtual */ const char *GetName() { return "sdl"; }
-	/* virtual */ const char *GetDescription() { return "SDL Sound Driver"; }
-	/* virtual */ Driver *CreateInstance() { return new SoundDriver_SDL(); }
+	FSoundDriver_SDL() : DriverFactoryBase(Driver::DT_SOUND, 5, "sdl", "SDL Sound Driver") {}
+	/* virtual */ Driver *CreateInstance() const { return new SoundDriver_SDL(); }
 };
 
 #endif /* SOUND_SDL_H */

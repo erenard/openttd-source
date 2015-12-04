@@ -1,4 +1,4 @@
-/* $Id: openttd.h 23618 2011-12-19 20:58:59Z truebrain $ */
+/* $Id: openttd.h 25506 2013-06-28 21:11:35Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -75,7 +75,7 @@ extern PauseModeByte _pause_mode;
 void AskExitGame();
 void AskExitToGameMenu();
 
-int ttd_main(int argc, char *argv[]);
+int openttd_main(int argc, char *argv[]);
 void HandleExitGameRequest();
 
 void SwitchToMode(SwitchMode new_mode);

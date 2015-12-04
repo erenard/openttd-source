@@ -1,4 +1,4 @@
-/* $Id: storage_sl.cpp 23853 2012-01-25 22:10:14Z rubidium $ */
+/* $Id: storage_sl.cpp 26482 2014-04-23 20:13:33Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -12,6 +12,8 @@
 #include "../stdafx.h"
 #include "../newgrf_storage.h"
 #include "saveload.h"
+
+#include "../safeguards.h"
 
 /** Description of the data to save and load in #PersistentStorage. */
 static const SaveLoad _storage_desc[] = {
@@ -27,7 +29,7 @@ static void Load_PSAC()
 
 	while ((index = SlIterateArray()) != -1) {
 		assert(PersistentStorage::CanAllocateItem());
-		PersistentStorage *ps = new (index) PersistentStorage(0);
+		PersistentStorage *ps = new (index) PersistentStorage(0, 0, 0);
 		SlObject(ps, _storage_desc);
 	}
 }
@@ -39,6 +41,7 @@ static void Save_PSAC()
 
 	/* Write the industries */
 	FOR_ALL_STORAGES(ps) {
+		ps->ClearChanges();
 		SlSetArrayIndex(ps->index);
 		SlObject(ps, _storage_desc);
 	}

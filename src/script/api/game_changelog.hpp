@@ -1,4 +1,4 @@
-/* $Id: game_changelog.hpp 26032 2013-11-17 17:31:51Z rubidium $ */
+/* $Id: game_changelog.hpp 27355 2015-08-01 10:28:15Z frosch $ */
 
 /*
  * This file is part of OpenTTD.
@@ -14,6 +14,85 @@
  * bug fixes can be found in the normal changelog. Note that removed API
  * functions may still be available if you return an older API version
  * in GetAPIVersion() in info.nut.
+ *
+ * \b 1.5.2
+ *
+ * No changes
+ *
+ * \b 1.5.1
+ *
+ * No changes
+ *
+ * \b 1.5.0
+ *
+ * API additions:
+ * \li GSList::SwapList
+ * \li GSStation::GetCargoPlanned
+ * \li GSStation::GetCargoPlannedFrom
+ * \li GSStation::GetCargoPlannedFromVia
+ * \li GSStation::GetCargoPlannedVia
+ * \li GSStation::GetCargoWaitingFromVia
+ * \li GSStationList_CargoPlannedByFrom
+ * \li GSStationList_CargoPlannedByVia
+ * \li GSStationList_CargoPlannedFromByVia
+ * \li GSStationList_CargoPlannedViaByFrom
+ * \li GSStationList_CargoWaitingByFrom
+ * \li GSStationList_CargoWaitingByVia
+ * \li GSStationList_CargoWaitingFromByVia
+ * \li GSStationList_CargoWaitingViaByFrom
+ *
+ * Other changes:
+ * \li GSNews::Create takes two extra parameters to refer to a location, station,
+ *     industry, or town. The user can click at the news message to jump to the
+ *     referred location.
+ *
+ * \b 1.4.4
+ *
+ * No changes
+ *
+ * \b 1.4.3
+ *
+ * No changes
+ *
+ * \b 1.4.2
+ *
+ * Other changes:
+ * \li GSCargoMonitor delivery and pickup monitor functions have improved boundary checking for
+ *     their parameters, and return \c -1 if they are found out of bounds.
+ *
+ * \b 1.4.1
+ *
+ * No changes
+ *
+ * \b 1.4.0
+ *
+ * API additions:
+ * \li AICargo::GetDistributionType
+ * \li GSCompany::ChangeBankBalance
+ * \li GSDate::DATE_INVALID
+ * \li GSDate::IsValidDate
+ * \li GSGoal::GT_STORY_PAGE
+ * \li GSGoal::IsCompleted
+ * \li GSGoal::SetCompleted
+ * \li GSGoal::SetProgress
+ * \li GSGoal::SetText
+ * \li GSStation::HasCargoRating
+ * \li GSStation::GetCargoWaitingFrom
+ * \li GSStation::GetCargoWaitingVia
+ * \li GSStoryPage
+ * \li GSStoryPageList
+ * \li GSStoryPageElementList
+ * \li GSTile::GetTerrainType
+ * \li GSTown::FoundTown
+ * \li GSTown::GetFundBuildingsDuration
+ * \li GSTown::SetName
+ * \li GSTown::TOWN_GROWTH_NONE
+ * \li GSTown::TOWN_GROWTH_NORMAL
+ *
+ * Other changes:
+ * \li GSGoal::New can now create up to 64000 concurrent goals. The old limit was 256 goals.
+ * \li GSStation::GetCargoRating does return -1 for cargo-station combinations that
+ *     do not have a rating yet instead of returning 69.
  *
  * \b 1.3.3
  *

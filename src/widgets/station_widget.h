@@ -1,4 +1,4 @@
-/* $Id: station_widget.h 24127 2012-04-17 19:43:18Z michi_cc $ */
+/* $Id: station_widget.h 25365 2013-06-09 13:08:52Z fonsinchen $ */
 
 /*
  * This file is part of OpenTTD.
@@ -15,6 +15,10 @@
 /** Widgets of the #StationViewWindow class. */
 enum StationViewWidgets {
 	WID_SV_CAPTION,            ///< Caption of the window.
+	WID_SV_SORT_ORDER,         ///< 'Sort order' button
+	WID_SV_SORT_BY,            ///< 'Sort by' button
+	WID_SV_GROUP,              ///< label for "group by"
+	WID_SV_GROUP_BY,           ///< 'Group by' button
 	WID_SV_WAITING,            ///< List of waiting cargo.
 	WID_SV_SCROLLBAR,          ///< Scrollbar.
 	WID_SV_ACCEPT_RATING_LIST, ///< List of accepted cargoes / rating of cargoes.

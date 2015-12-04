@@ -1,4 +1,4 @@
-/* $Id: toolbar_gui.h 24065 2012-03-25 19:06:59Z rubidium $ */
+/* $Id: toolbar_gui.h 27146 2015-02-13 21:13:45Z frosch $ */
 
 /*
  * This file is part of OpenTTD.
@@ -16,6 +16,6 @@ void AllocateToolbar();
 void ToggleBoundingBoxes();
 void ToggleDirtyBlocks();
 
-extern int16 *_preferred_toolbar_size;
+extern uint _toolbar_width;
 
 #endif /* TOOLBAR_GUI_H */

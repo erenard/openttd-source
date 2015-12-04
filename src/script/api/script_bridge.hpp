@@ -1,4 +1,4 @@
-/* $Id: script_bridge.hpp 23633 2011-12-19 21:05:36Z truebrain $ */
+/* $Id: script_bridge.hpp 26149 2013-12-08 15:44:09Z frosch $ */
 
 /*
  * This file is part of OpenTTD.
@@ -133,7 +133,8 @@ public:
 	 * @pre 'start' and 'end' are in a straight line, i.e.
 	 *  ScriptMap::GetTileX(start) == ScriptMap::GetTileX(end) or
 	 *  ScriptMap::GetTileY(start) == ScriptMap::GetTileY(end).
-	 * @pre vehicle_type == ScriptVehicle::VT_ROAD || vehicle_type == ScriptVehicle::VT_WATER ||
+	 * @pre vehicle_type == ScriptVehicle::VT_WATER ||
+	 *   (vehicle_type == ScriptVehicle::VT_ROAD && ScriptRoad::IsRoadTypeAvailable(ScriptRoad::GetCurrentRoadType())) ||
 	 *   (vehicle_type == ScriptVehicle::VT_RAIL && ScriptRail::IsRailTypeAvailable(ScriptRail::GetCurrentRailType())).
 	 * @game @pre Outside CompanyMode: vehicle_type == ScriptVehicle::VT_ROAD.
 	 * @exception ScriptError::ERR_ALREADY_BUILT

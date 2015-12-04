@@ -1,4 +1,4 @@
-/* $Id: train.h 24900 2013-01-08 22:46:42Z planetmaker $ */
+/* $Id: train.h 26317 2014-02-07 23:48:56Z frosch $ */
 
 /*
  * This file is part of OpenTTD.
@@ -11,6 +11,8 @@
 
 #ifndef TRAIN_H
 #define TRAIN_H
+
+#include "core/enum_type.hpp"
 
 #include "newgrf_engine.h"
 #include "cargotype.h"
@@ -40,6 +42,20 @@ enum TrainForceProceeding {
 	TFP_SIGNAL = 2,    ///< Ignore next signal, after the signal ignore being stuck.
 };
 typedef SimpleTinyEnumT<TrainForceProceeding, byte> TrainForceProceedingByte;
+
+/** Flags for Train::ConsistChanged */
+enum ConsistChangeFlags {
+	CCF_LENGTH     = 0x01,     ///< Allow vehicles to change length.
+	CCF_CAPACITY   = 0x02,     ///< Allow vehicles to change capacity.
+
+	CCF_TRACK      = 0,                          ///< Valid changes while vehicle is driving, and possibly changing tracks.
+	CCF_LOADUNLOAD = 0,                          ///< Valid changes while vehicle is loading/unloading.
+	CCF_AUTOREFIT  = CCF_CAPACITY,               ///< Valid changes for autorefitting in stations.
+	CCF_REFIT      = CCF_LENGTH | CCF_CAPACITY,  ///< Valid changes for refitting in a depot.
+	CCF_ARRANGE    = CCF_LENGTH | CCF_CAPACITY,  ///< Valid changes for arranging the consist in a depot.
+	CCF_SAVELOAD   = CCF_LENGTH,                 ///< Valid changes when loading a savegame. (Everything that is not stored in the save.)
+};
+DECLARE_ENUM_AS_BIT_SET(ConsistChangeFlags)
 
 byte FreightWagonMult(CargoID cargo);
 
@@ -115,7 +131,7 @@ struct Train FINAL : public GroundVehicle<Train, VEH_TRAIN> {
 
 	int GetCurveSpeedLimit() const;
 
-	void ConsistChanged(bool same_length);
+	void ConsistChanged(ConsistChangeFlags allowed_changes);
 
 	int UpdateSpeed();
 
@@ -199,7 +215,7 @@ protected: // These functions should not be called outside acceleration code.
 	 */
 	inline uint16 GetWeight() const
 	{
-		uint16 weight = (CargoSpec::Get(this->cargo_type)->weight * this->cargo.Count() * FreightWagonMult(this->cargo_type)) / 16;
+		uint16 weight = (CargoSpec::Get(this->cargo_type)->weight * this->cargo.StoredCount() * FreightWagonMult(this->cargo_type)) / 16;
 
 		/* Vehicle weight is not added for articulated parts. */
 		if (!this->IsArticulatedPart()) {

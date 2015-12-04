@@ -1,4 +1,4 @@
-/* $Id: script_engine.hpp 24900 2013-01-08 22:46:42Z planetmaker $ */
+/* $Id: script_engine.hpp 27123 2015-01-20 19:11:31Z frosch $ */
 
 /*
  * This file is part of OpenTTD.
@@ -15,6 +15,7 @@
 #include "script_vehicle.hpp"
 #include "script_rail.hpp"
 #include "script_airport.hpp"
+#include "script_date.hpp"
 
 /**
  * Class that handles all engine related functions.
@@ -107,7 +108,6 @@ public:
 	 * Get the maximum speed of an engine.
 	 * @param engine_id The engine to get the maximum speed of.
 	 * @pre IsValidEngine(engine_id).
-	 * @pre GetVehicleType(engine_id) != ScriptVehicle::VT_TRAIN || !IsWagon(engine_id).
 	 * @return The maximum speed the engine has.
 	 * @note The speed is in OpenTTD's internal speed unit.
 	 *       This is mph / 1.6, which is roughly km/h.
@@ -174,7 +174,7 @@ public:
 	 * @pre IsValidEngine(engine_id).
 	 * @return The date this engine was designed.
 	 */
-	static int32 GetDesignDate(EngineID engine_id);
+	static ScriptDate::Date GetDesignDate(EngineID engine_id);
 
 	/**
 	 * Get the type of an engine.

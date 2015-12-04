@@ -1,4 +1,4 @@
-/* $Id: script_subsidy.hpp 24900 2013-01-08 22:46:42Z planetmaker $ */
+/* $Id: script_subsidy.hpp 26307 2014-02-06 19:50:34Z zuu $ */
 
 /*
  * This file is part of OpenTTD.
@@ -13,6 +13,7 @@
 #define SCRIPT_SUBSIDY_HPP
 
 #include "script_company.hpp"
+#include "script_date.hpp"
 
 /**
  * Class that handles all subsidy related functions.
@@ -83,7 +84,7 @@ public:
 	 * @note The return value of this function will change if the subsidy is
 	 *  awarded.
 	 */
-	static int32 GetExpireDate(SubsidyID subsidy_id);
+	static ScriptDate::Date GetExpireDate(SubsidyID subsidy_id);
 
 	/**
 	 * Get the cargo type that has to be transported in order to be awarded this

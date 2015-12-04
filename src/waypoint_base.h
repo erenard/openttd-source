@@ -1,4 +1,4 @@
-/* $Id: waypoint_base.h 23640 2011-12-20 17:57:56Z truebrain $ */
+/* $Id: waypoint_base.h 26085 2013-11-24 14:41:19Z frosch $ */
 
 /*
  * This file is part of OpenTTD.
@@ -32,7 +32,7 @@ struct Waypoint FINAL : SpecializedStation<Waypoint, true> {
 		return IsRailWaypointTile(tile) && GetStationIndex(tile) == this->index;
 	}
 
-	/* virtual */ uint32 GetNewGRFVariable(const struct ResolverObject *object, byte variable, byte parameter, bool *available) const;
+	/* virtual */ uint32 GetNewGRFVariable(const struct ResolverObject &object, byte variable, byte parameter, bool *available) const;
 
 	/* virtual */ void GetTileArea(TileArea *ta, StationType type) const;
 

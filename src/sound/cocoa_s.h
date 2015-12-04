@@ -1,4 +1,4 @@
-/* $Id: cocoa_s.h 17428 2009-09-05 21:26:51Z rubidium $ */
+/* $Id: cocoa_s.h 26108 2013-11-25 14:30:22Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -14,7 +14,7 @@
 
 #include "sound_driver.hpp"
 
-class SoundDriver_Cocoa: public SoundDriver {
+class SoundDriver_Cocoa : public SoundDriver {
 public:
 	/* virtual */ const char *Start(const char * const *param);
 
@@ -22,12 +22,10 @@ public:
 	/* virtual */ const char *GetName() const { return "cocoa"; }
 };
 
-class FSoundDriver_Cocoa: public SoundDriverFactory<FSoundDriver_Cocoa> {
+class FSoundDriver_Cocoa : public DriverFactoryBase {
 public:
-	static const int priority = 10;
-	/* virtual */ const char *GetName() { return "cocoa"; }
-	/* virtual */ const char *GetDescription() { return "Cocoa Sound Driver"; }
-	/* virtual */ Driver *CreateInstance() { return new SoundDriver_Cocoa(); }
+	FSoundDriver_Cocoa() : DriverFactoryBase(Driver::DT_SOUND, 10, "cocoa", "Cocoa Sound Driver") {}
+	/* virtual */ Driver *CreateInstance() const { return new SoundDriver_Cocoa(); }
 };
 
 #endif /* SOUND_COCOA_H */

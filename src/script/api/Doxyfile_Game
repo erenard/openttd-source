@@ -1,4 +1,4 @@
-# $Id: Doxyfile_Game 23610 2011-12-19 20:56:42Z truebrain $
+# $Id: Doxyfile_Game 25595 2013-07-13 06:44:22Z rubidium $
 
 # This file is part of OpenTTD.
 # OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -213,7 +213,7 @@ SKIP_FUNCTION_MACROS   = YES
 # Configuration::additions related to external references
 #---------------------------------------------------------------------------
 TAGFILES               =
-GENERATE_TAGFILE       = openttd_nogo.tag
+GENERATE_TAGFILE       = ../../../objs/openttd_nogo.tag
 ALLEXTERNALS           = NO
 EXTERNAL_GROUPS        = YES
 PERL_PATH              = /usr/bin/perl

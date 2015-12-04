@@ -1,4 +1,4 @@
-/* $Id: depot_cmd.cpp 23704 2012-01-01 17:22:32Z alberth $ */
+/* $Id: depot_cmd.cpp 26509 2014-04-25 15:40:32Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -20,6 +20,8 @@
 #include "window_func.h"
 
 #include "table/strings.h"
+
+#include "safeguards.h"
 
 /**
  * Check whether the given name is globally unique amongst depots.
@@ -68,7 +70,7 @@ CommandCost CmdRenameDepot(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
 			d->name = NULL;
 			MakeDefaultName(d);
 		} else {
-			d->name = strdup(text);
+			d->name = stredup(text);
 		}
 
 		/* Update the orders and depot */
@@ -76,13 +78,7 @@ CommandCost CmdRenameDepot(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
 		SetWindowDirty(WC_VEHICLE_DEPOT, d->xy);
 
 		/* Update the depot list */
-		VehicleType vt;
-		switch (GetTileType(d->xy)) {
-			default: NOT_REACHED();
-			case MP_RAILWAY: vt = VEH_TRAIN; break;
-			case MP_ROAD:    vt = VEH_ROAD;  break;
-			case MP_WATER:   vt = VEH_SHIP;  break;
-		}
+		VehicleType vt = GetDepotVehicleType(d->xy);
 		SetWindowDirty(GetWindowClassForVehicleType(vt), VehicleListIdentifier(VL_DEPOT_LIST, vt, GetTileOwner(d->xy), d->index).Pack());
 	}
 	return CommandCost();

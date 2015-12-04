@@ -1,4 +1,4 @@
-/* $Id: textbuf_type.h 26024 2013-11-17 13:35:48Z rubidium $ */
+/* $Id: textbuf_type.h 25692 2013-08-05 20:37:57Z michi_cc $ */
 
 /*
  * This file is part of OpenTTD.

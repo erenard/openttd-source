@@ -10,7 +10,7 @@
 ##grflangid 0x09
 
 
-# $Id: maltese.txt 26031 2013-11-17 17:30:42Z rubidium $
+# $Id: maltese.txt 27353 2015-07-31 17:46:09Z rubidium $
 
 # This file is part of OpenTTD.
 # OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -191,6 +191,9 @@ STR_TOOLTIP_VSCROLL_BAR_SCROLLS_LIST                            :{BLACK}Faxxa bi
 STR_TOOLTIP_HSCROLL_BAR_SCROLLS_LIST                            :{BLACK}Faxxa biex tiskrolja - iskrolja l-lista lejn ix-xellug jew lemin
 STR_TOOLTIP_DEMOLISH_BUILDINGS_ETC                              :{BLACK}Waqqa bini, etc.., Ctrl tagħzel zona dijagonali. Shift taqleb bejn bini/turija ta' stima ta' l-ispiza
 
+# Show engines button
+
+
 # Query window
 STR_BUTTON_DEFAULT                                              :{BLACK}Default
 STR_BUTTON_CANCEL                                               :{BLACK}Ikkanċella
@@ -207,7 +210,6 @@ STR_MEASURE_LENGTH_HEIGHTDIFF                                   :{BLACK}Tul: {NU
 
 
 # These are used in buttons
-STR_SORT_BY_CAPTION_POPULATION                                  :{BLACK}Popolazzjoni
 STR_SORT_BY_CAPTION_NAME                                        :{BLACK}Isem
 STR_SORT_BY_CAPTION_DATE                                        :{BLACK}Data
 # These are used in dropdowns
@@ -228,7 +230,6 @@ STR_SORT_BY_LENGTH                                              :Tul
 STR_SORT_BY_LIFE_TIME                                           :Isservi sa
 STR_SORT_BY_TIMETABLE_DELAY                                     :Dewmien fl-iskeda
 STR_SORT_BY_FACILITY                                            :Tip ta' stazzjon
-STR_SORT_BY_WAITING                                             :Valur tal-Kargo
 STR_SORT_BY_RATING_MAX                                          :L-Ogħla livell tal-Kargo
 STR_SORT_BY_RATING_MIN                                          :L-Inqas livell tal-Kargo
 STR_SORT_BY_ENGINE_ID                                           :ID tal-magna (issortjar klassiku)
@@ -240,6 +241,7 @@ STR_SORT_BY_RUNNING_COST                                        :Kemm Taħli
 STR_SORT_BY_POWER_VS_RUNNING_COST                               :Saħħa/Kemm Taħli
 STR_SORT_BY_CARGO_CAPACITY                                      :Kapaċita ta' merkanzija
 STR_SORT_BY_RANGE                                               :Kemm Twassal
+STR_SORT_BY_POPULATION                                          :Popolazzjoni
 
 # Tooltips for the main toolbar
 STR_TOOLBAR_TOOLTIP_PAUSE_GAME                                  :{BLACK}Waqfa temporanja mil-logħba
@@ -307,7 +309,10 @@ STR_FILE_MENU_SEPARATOR                                         :
 ############ range for about menu starts
 ############ range ends here
 
-############ range for days starts (also used for the place in the highscore window)
+############ range for ordinal numbers used for the place in the highscore window
+############ range for ordinal numbers ends
+
+############ range for days starts
 ############ range for days ends
 
 ############ range for months starts
@@ -375,9 +380,7 @@ STR_STATUSBAR_COMPANY_NAME                                      :{SILVER}- -  {C
 
 
 
-# Start of order review system
-# DON'T ADD OR REMOVE LINES HERE
-# end of order system
+# Order review system / warnings
 
 STR_NEWS_VEHICLE_IS_LOST                                        :{WHITE}{VEHICLE} mitluf
 
@@ -394,20 +397,17 @@ STR_NEWS_VEHICLE_IS_LOST                                        :{WHITE}{VEHICLE
 ############ end of currency region
 
 
-############ start of measuring units region
-############ end of measuring units region
-
-
 
 ############ start of townname region
 ############ end of townname region
 
 
+############ start of autosave dropdown
+############ end of autosave dropdown
 
 
 
 STR_GAME_OPTIONS_RESOLUTION_OTHER                               :oħrajn
-
 
 
 
@@ -431,7 +431,7 @@ STR_GAME_OPTIONS_RESOLUTION_OTHER                               :oħrajn
 
 
 
-# Advanced settings window
+# Settings tree window
 
 
 
@@ -471,6 +471,13 @@ STR_CONFIG_SETTING_COMMAND_PAUSE_LEVEL_NO_ACTIONS               :L-ebda azzjoni
 STR_CONFIG_SETTING_COMMAND_PAUSE_LEVEL_ALL_ACTIONS              :L-azzjonijiet kollha
 STR_CONFIG_SETTING_ADVANCED_VEHICLE_LISTS                       :Uza l-lista avvanzata tal-vetturi: {STRING}
 STR_CONFIG_SETTING_ADVANCED_VEHICLE_LISTS_HELPTEXT              :Ippermetti l-uzu tal-listi avvanzati tal-vetturi biex tghaqqad il-vetturi fi gruppi
+
+
+
+
+
+
+
 
 
 
@@ -702,6 +709,8 @@ STR_NEWGRF_SETTINGS_RESCAN_FILES_TOOLTIP                        :{BLACK}Aġġorn
 
 STR_NEWGRF_SETTINGS_INCOMPATIBLE                                :{RED}Ma jaqblux ma din il-verzjoni ta' OpenTTD
 
+# NewGRF save preset window
+
 # NewGRF parameters window
 
 # NewGRF inspect window
@@ -754,7 +763,8 @@ STR_GOALS_TEXT                                                  :{ORANGE}{STRING
 
 # Goal question window
 
-### Start of Goal Question button list
+############ Start of Goal Question button list
+############ End of Goal Question button list
 
 # Subsidies window
 
@@ -770,7 +780,8 @@ STR_STATION_VIEW_WAITING_CARGO                                  :{WHITE}{CARGO_L
 
 
 
-STR_STATION_VIEW_CARGO_RATING                                   :{WHITE}{STRING}: {YELLOW}{STRING} ({COMMA}%)
+
+
 
 ############ range for rating starts
 ############ range for rating ends
@@ -824,7 +835,11 @@ STR_FINANCES_POSITIVE_INCOME                                    :{BLACK}+{CURREN
 
 
 
+
 # Build vehicle window
+
+
+
 
 
 
@@ -862,6 +877,7 @@ STR_DEPOT_VEHICLE_TOOLTIP_CARGO                                 :{}{CARGO_LONG} 
 
 
 # Autoreplace window
+
 
 
 
@@ -1032,6 +1048,7 @@ STR_WARNING_SCREENSHOT_SIZE_MESSAGE                             :{YELLOW}L-istam
 
 # Industry related errors
 
+
 # Station construction related errors
 
 
@@ -1091,6 +1108,7 @@ STR_ERROR_SHIP_NOT_AVAILABLE                                    :{WHITE}Dan il-v
 STR_ERROR_AIRCRAFT_NOT_AVAILABLE                                :{WHITE}Dan l-ajruplan mhux disponibbli
 
 STR_ERROR_TOO_MANY_VEHICLES_IN_GAME                             :{WHITE}Hemm wisq vetturi fil-logħba
+
 
 
 # Specific vehicle errors
@@ -1375,8 +1393,6 @@ STR_WHITE_COMMA                                                 :{WHITE}{COMMA}
 STR_TINY_BLACK_DECIMAL                                          :{TINY_FONT}{BLACK}{DECIMAL}
 STR_COMPANY_MONEY                                               :{WHITE}{CURRENCY_LONG}
 STR_BLACK_DATE_LONG                                             :{BLACK}{DATE_LONG}
-STR_BLACK_CROSS                                                 :{BLACK}{CROSS}
-STR_SILVER_CROSS                                                :{SILVER}{CROSS}
 STR_WHITE_DATE_LONG                                             :{WHITE}{DATE_LONG}
 STR_SHORT_DATE                                                  :{WHITE}{DATE_TINY}
 STR_DATE_LONG_SMALL                                             :{TINY_FONT}{BLACK}{DATE_LONG}
@@ -1387,9 +1403,7 @@ STR_WHITE_SIGN                                                  :{WHITE}{SIGN}
 STR_TINY_BLACK_STATION                                          :{TINY_FONT}{BLACK}{STATION}
 STR_BLACK_STRING                                                :{BLACK}{STRING}
 STR_BLACK_RAW_STRING                                            :{BLACK}{STRING}
-STR_GREEN_STRING                                                :{GREEN}{STRING}
 STR_ORANGE_STRING                                               :{ORANGE}{STRING}
-STR_RED_STRING                                                  :{RED}{STRING}
 STR_LTBLUE_STRING                                               :{LTBLUE}{STRING}
 STR_WHITE_STRING                                                :{WHITE}{STRING}
 STR_ORANGE_STRING1_WHITE                                        :{ORANGE}{STRING}{WHITE}

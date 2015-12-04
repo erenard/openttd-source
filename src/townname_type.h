@@ -1,4 +1,4 @@
-/* $Id: townname_type.h 22405 2011-05-01 19:14:12Z rubidium $ */
+/* $Id: townname_type.h 26313 2014-02-06 21:06:59Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -17,6 +17,10 @@
 
 #include "newgrf_townname.h"
 #include "town_type.h"
+#include <set>
+#include <string>
+
+typedef std::set<std::string> TownNames;
 
 /**
  * Struct holding a parameters used to generate town name.

@@ -1,4 +1,4 @@
-/* $Id: null.cpp 25987 2013-11-13 21:53:40Z rubidium $ */
+/* $Id: null.cpp 26482 2014-04-23 20:13:33Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -11,6 +11,8 @@
 
 #include "../stdafx.h"
 #include "null.hpp"
+
+#include "../safeguards.h"
 
 /** Instantiation of the null blitter factory. */
 static FBlitter_Null iFBlitter_Null;

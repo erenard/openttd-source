@@ -1,4 +1,4 @@
-/* $Id: script_tunnel.hpp 23633 2011-12-19 21:05:36Z truebrain $ */
+/* $Id: script_tunnel.hpp 26149 2013-12-08 15:44:09Z frosch $ */
 
 /*
  * This file is part of OpenTTD.
@@ -85,8 +85,8 @@ public:
 	 * @param start Where to start the tunnel.
 	 * @param vehicle_type The vehicle-type of tunnel to build.
 	 * @pre ScriptMap::IsValidTile(start).
-	 * @pre vehicle_type == ScriptVehicle::VT_ROAD || (vehicle_type == ScriptVehicle::VT_RAIL &&
-	 *   ScriptRail::IsRailTypeAvailable(ScriptRail::GetCurrentRailType())).
+	 * @pre (vehicle_type == ScriptVehicle::VT_ROAD && ScriptRoad::IsRoadTypeAvailable(ScriptRoad::GetCurrentRoadType())) ||
+	 *      (vehicle_type == ScriptVehicle::VT_RAIL && ScriptRail::IsRailTypeAvailable(ScriptRail::GetCurrentRailType())).
 	 * @game @pre Outside CompanyMode: vehicle_type == ScriptVehicle::VT_ROAD.
 	 * @exception ScriptError::ERR_AREA_NOT_CLEAR
 	 * @exception ScriptTunnel::ERR_TUNNEL_CANNOT_BUILD_ON_WATER

@@ -1,4 +1,4 @@
-/* $Id: script_tile.cpp 25986 2013-11-13 21:49:31Z rubidium $ */
+/* $Id: script_tile.cpp 26482 2014-04-23 20:13:33Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -19,6 +19,8 @@
 #include "../../tree_map.h"
 #include "../../town.h"
 #include "../../landscape.h"
+
+#include "../../safeguards.h"
 
 /* static */ bool ScriptTile::IsBuildable(TileIndex tile)
 {

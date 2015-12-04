@@ -1,4 +1,4 @@
-/* $Id: gfx_layout.cpp 26094 2013-11-24 19:57:23Z rubidium $ */
+/* $Id: gfx_layout.cpp 26482 2014-04-23 20:13:33Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -20,6 +20,8 @@
 #ifdef WITH_ICU
 #include <unicode/ustring.h>
 #endif /* WITH_ICU */
+
+#include "safeguards.h"
 
 
 /** Cache of ParagraphLayout lines. */
@@ -322,7 +324,7 @@ const Font *FallbackParagraphLayout::FallbackVisualRun::GetFont() const
 }
 
 /**
- * Get the number of glyhps in this run.
+ * Get the number of glyphs in this run.
  * @return The number of glyphs.
  */
 int FallbackParagraphLayout::FallbackVisualRun::GetGlyphCount() const
@@ -331,7 +333,7 @@ int FallbackParagraphLayout::FallbackVisualRun::GetGlyphCount() const
 }
 
 /**
- * Get the glyhps of this run.
+ * Get the glyphs of this run.
  * @return The glyphs.
  */
 const GlyphID *FallbackParagraphLayout::FallbackVisualRun::GetGlyphs() const
@@ -751,7 +753,7 @@ Point Layouter::GetCharPosition(const char *ch) const
  */
 const char *Layouter::GetCharAtPosition(int x) const
 {
-	const ParagraphLayouter::Line *line = *this->Begin();;
+	const ParagraphLayouter::Line *line = *this->Begin();
 
 	for (int run_index = 0; run_index < line->CountRuns(); run_index++) {
 		const ParagraphLayouter::VisualRun *run = line->GetVisualRun(run_index);

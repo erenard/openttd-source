@@ -1,4 +1,4 @@
-/* $Id: goal_type.h 23827 2012-01-21 12:03:55Z rubidium $ */
+/* $Id: goal_type.h 26012 2013-11-16 17:41:57Z zuu $ */
 
 /*
  * This file is part of OpenTTD.
@@ -24,6 +24,7 @@ enum GoalType {
 	GT_INDUSTRY,     ///< Destination is an industry
 	GT_TOWN,         ///< Destination is a town
 	GT_COMPANY,      ///< Destination is a company
+	GT_STORY_PAGE,   ///< Destination is a story page
 };
 typedef SimpleTinyEnumT<GoalType, byte> GoalTypeByte; ///< The GoalType packed into a byte for savegame purposes.
 

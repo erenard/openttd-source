@@ -1,4 +1,4 @@
-/* $Id: newgrf_debug.h 22570 2011-06-12 20:51:38Z terkhen $ */
+/* $Id: newgrf_debug.h 25946 2013-11-07 18:17:21Z frosch $ */
 
 /*
  * This file is part of OpenTTD.
@@ -36,6 +36,7 @@ extern NewGrfDebugSpritePicker _newgrf_debug_sprite_picker;
 
 bool IsNewGRFInspectable(GrfSpecFeature feature, uint index);
 void ShowNewGRFInspectWindow(GrfSpecFeature feature, uint index, const uint32 grfid = 0);
+void InvalidateNewGRFInspectWindow(GrfSpecFeature feature, uint index);
 void DeleteNewGRFInspectWindow(GrfSpecFeature feature, uint index);
 
 GrfSpecFeature GetGrfSpecFeature(TileIndex tile);

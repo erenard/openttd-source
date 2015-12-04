@@ -1,4 +1,4 @@
-/* $Id: base_station_base.h 24905 2013-01-11 07:39:25Z peter1138 $ */
+/* $Id: base_station_base.h 26085 2013-11-24 14:41:19Z frosch $ */
 
 /*
  * This file is part of OpenTTD.
@@ -103,7 +103,7 @@ struct BaseStation : StationPool::PoolItem<&_station_pool> {
 	 * @param available will return false if ever the variable asked for does not exist
 	 * @return the value stored in the corresponding variable
 	 */
-	virtual uint32 GetNewGRFVariable(const struct ResolverObject *object, byte variable, byte parameter, bool *available) const = 0;
+	virtual uint32 GetNewGRFVariable(const struct ResolverObject &object, byte variable, byte parameter, bool *available) const = 0;
 
 	/**
 	 * Update the coordinated of the sign (as shown in the viewport).

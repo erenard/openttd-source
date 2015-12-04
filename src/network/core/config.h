@@ -1,4 +1,4 @@
-/* $Id: config.h 25599 2013-07-13 10:13:55Z rubidium $ */
+/* $Id: config.h 25590 2013-07-12 17:15:13Z planetmaker $ */
 
 /*
  * This file is part of OpenTTD.

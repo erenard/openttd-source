@@ -1,4 +1,4 @@
-/* $Id: elrail.cpp 24900 2013-01-08 22:46:42Z planetmaker $ */
+/* $Id: elrail.cpp 26879 2014-09-21 11:24:51Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -49,8 +49,8 @@
  * that are impossible (because the pylon would be situated on the track) and
  * some that are preferred (because the pylon would be rectangular to the track).
  *
- * <img src="../../elrail_tile.png">
- * <img src="../../elrail_track.png">
+ * @image html elrail_tile.png
+ * @image html elrail_track.png
  *
  */
 
@@ -66,6 +66,8 @@
 #include "newgrf_railtype.h"
 
 #include "table/elrail_data.h"
+
+#include "safeguards.h"
 
 /**
  * Get the tile location group of a tile.
@@ -405,7 +407,7 @@ static void DrawCatenaryRailway(const TileInfo *ti)
 		 * Remove those (simply by ANDing with allowed, since these markers are never allowed) */
 		if ((PPPallowed[i] & PPPpreferred[i]) != 0) PPPallowed[i] &= PPPpreferred[i];
 
-		if (MayHaveBridgeAbove(ti->tile) && IsBridgeAbove(ti->tile)) {
+		if (IsBridgeAbove(ti->tile)) {
 			Track bridgetrack = GetBridgeAxis(ti->tile) == AXIS_X ? TRACK_X : TRACK_Y;
 			int height = GetBridgeHeight(GetNorthernBridgeEnd(ti->tile));
 
@@ -444,7 +446,7 @@ static void DrawCatenaryRailway(const TileInfo *ti)
 	if (IsTunnelTile(ti->tile)) return;
 
 	/* Don't draw a wire under a low bridge */
-	if (MayHaveBridgeAbove(ti->tile) && IsBridgeAbove(ti->tile) && !IsTransparencySet(TO_BRIDGES)) {
+	if (IsBridgeAbove(ti->tile) && !IsTransparencySet(TO_BRIDGES)) {
 		int height = GetBridgeHeight(GetNorthernBridgeEnd(ti->tile));
 
 		if (height <= GetTileMaxZ(ti->tile) + 1) return;
@@ -627,7 +629,7 @@ bool SettingsDisableElrail(int32 p1)
 	FOR_ALL_TRAINS(t) {
 		/* power and acceleration is cached only for front engines */
 		if (t->IsFrontEngine()) {
-			t->ConsistChanged(true);
+			t->ConsistChanged(CCF_TRACK);
 		}
 	}
 

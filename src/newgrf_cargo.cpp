@@ -1,4 +1,4 @@
-/* $Id: newgrf_cargo.cpp 24693 2012-11-10 20:46:39Z alberth $ */
+/* $Id: newgrf_cargo.cpp 26482 2014-04-23 20:13:33Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -12,6 +12,8 @@
 #include "stdafx.h"
 #include "debug.h"
 #include "newgrf_spritegroup.h"
+
+#include "safeguards.h"
 
 /** Resolver of cargo. */
 struct CargoResolverObject : public ResolverObject {
@@ -40,6 +42,7 @@ struct CargoResolverObject : public ResolverObject {
 CargoResolverObject::CargoResolverObject(const CargoSpec *cs, CallbackID callback, uint32 callback_param1, uint32 callback_param2)
 		: ResolverObject(cs->grffile, callback, callback_param1, callback_param2)
 {
+	this->root_spritegroup = cs->group;
 }
 
 /**
@@ -50,7 +53,7 @@ CargoResolverObject::CargoResolverObject(const CargoSpec *cs, CallbackID callbac
 SpriteID GetCustomCargoSprite(const CargoSpec *cs)
 {
 	CargoResolverObject object(cs);
-	const SpriteGroup *group = SpriteGroup::Resolve(cs->group, &object);
+	const SpriteGroup *group = object.Resolve();
 	if (group == NULL) return 0;
 
 	return group->GetResult();
@@ -60,10 +63,7 @@ SpriteID GetCustomCargoSprite(const CargoSpec *cs)
 uint16 GetCargoCallback(CallbackID callback, uint32 param1, uint32 param2, const CargoSpec *cs)
 {
 	CargoResolverObject object(cs, callback, param1, param2);
-	const SpriteGroup *group = SpriteGroup::Resolve(cs->group, &object);
-	if (group == NULL) return CALLBACK_FAILED;
-
-	return group->GetCallbackResult();
+	return object.ResolveCallback();
 }
 
 /**

@@ -1,4 +1,4 @@
-/* $Id: script_vehicle.cpp 25499 2013-06-28 19:24:39Z rubidium $ */
+/* $Id: script_vehicle.cpp 26482 2014-04-23 20:13:33Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -23,6 +23,8 @@
 #include "../../vehicle_func.h"
 #include "../../aircraft.h"
 #include "table/strings.h"
+
+#include "../../safeguards.h"
 
 /* static */ bool ScriptVehicle::IsValidVehicle(VehicleID vehicle_id)
 {
@@ -399,7 +401,7 @@
 
 	uint32 amount = 0;
 	for (const Vehicle *v = ::Vehicle::Get(vehicle_id); v != NULL; v = v->Next()) {
-		if (v->cargo_type == cargo) amount += v->cargo.Count();
+		if (v->cargo_type == cargo) amount += v->cargo.StoredCount();
 	}
 
 	return amount;

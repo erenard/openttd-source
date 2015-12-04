@@ -1,4 +1,4 @@
-/* $Id: fios_gui.cpp 25982 2013-11-13 21:35:44Z rubidium $ */
+/* $Id: fios_gui.cpp 26960 2014-10-05 11:20:02Z peter1138 $ */
 
 /*
  * This file is part of OpenTTD.
@@ -33,6 +33,8 @@
 
 #include "table/sprites.h"
 #include "table/strings.h"
+
+#include "safeguards.h"
 
 SaveLoadDialogMode _saveload_mode;
 LoadCheckData _load_check_data;    ///< Data loaded from save during SL_LOAD_CHECK.
@@ -73,6 +75,7 @@ static const NWidgetPart _nested_load_dialog_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(WWT_CAPTION, COLOUR_GREY, WID_SL_CAPTION),
+		NWidget(WWT_DEFSIZEBOX, COLOUR_GREY),
 	EndContainer(),
 	NWidget(WWT_PANEL, COLOUR_GREY, WID_SL_BACKGROUND), SetFill(1, 0), SetResize(1, 0), EndContainer(),
 	NWidget(NWID_HORIZONTAL, NC_EQUALSIZE),
@@ -115,6 +118,7 @@ static const NWidgetPart _nested_load_heightmap_dialog_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(WWT_CAPTION, COLOUR_GREY, WID_SL_CAPTION),
+		NWidget(WWT_DEFSIZEBOX, COLOUR_GREY),
 	EndContainer(),
 	NWidget(WWT_PANEL, COLOUR_GREY, WID_SL_BACKGROUND), SetFill(1, 0), SetResize(1, 0), EndContainer(),
 	NWidget(NWID_VERTICAL),
@@ -131,9 +135,11 @@ static const NWidgetPart _nested_load_heightmap_dialog_widgets[] = {
 						SetDataTip(0x0, STR_SAVELOAD_LIST_TOOLTIP), SetResize(1, 10), SetScrollbar(WID_SL_SCROLLBAR), EndContainer(),
 				NWidget(NWID_VSCROLLBAR, COLOUR_GREY, WID_SL_SCROLLBAR),
 			EndContainer(),
-			NWidget(NWID_HORIZONTAL),
-				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SL_CONTENT_DOWNLOAD), SetResize(1, 0),
+			NWidget(NWID_HORIZONTAL, NC_EQUALSIZE),
+				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SL_CONTENT_DOWNLOAD), SetResize(1, 0), SetFill(1, 0),
 						SetDataTip(STR_INTRO_ONLINE_CONTENT, STR_INTRO_TOOLTIP_ONLINE_CONTENT),
+				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_SL_LOAD_BUTTON), SetResize(1, 0), SetFill(1, 0),
+						SetDataTip(STR_SAVELOAD_LOAD_BUTTON, STR_SAVELOAD_LOAD_HEIGHTMAP_TOOLTIP),
 				NWidget(WWT_RESIZEBOX, COLOUR_GREY),
 			EndContainer(),
 		EndContainer(),
@@ -145,6 +151,7 @@ static const NWidgetPart _nested_save_dialog_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_GREY),
 		NWidget(WWT_CAPTION, COLOUR_GREY, WID_SL_CAPTION),
+		NWidget(WWT_DEFSIZEBOX, COLOUR_GREY),
 	EndContainer(),
 	NWidget(WWT_PANEL, COLOUR_GREY, WID_SL_BACKGROUND), SetFill(1, 0), SetResize(1, 0), EndContainer(),
 	NWidget(NWID_HORIZONTAL, NC_EQUALSIZE),
@@ -243,7 +250,7 @@ public:
 		this->filename_editbox.text.UpdateSize();
 	}
 
-	SaveLoadWindow(const WindowDesc *desc, SaveLoadDialogMode mode) : filename_editbox(64)
+	SaveLoadWindow(WindowDesc *desc, SaveLoadDialogMode mode) : Window(desc), filename_editbox(64)
 	{
 		static const StringID saveload_captions[] = {
 			STR_SAVELOAD_LOAD_CAPTION,
@@ -267,12 +274,12 @@ public:
 		this->querystrings[WID_SL_SAVE_OSK_TITLE] = &this->filename_editbox;
 		this->filename_editbox.ok_button = WID_SL_SAVE_GAME;
 
-		this->CreateNestedTree(desc, true);
+		this->CreateNestedTree(true);
 		if (mode == SLD_LOAD_GAME) this->GetWidget<NWidgetStacked>(WID_SL_CONTENT_DOWNLOAD_SEL)->SetDisplayedPlane(SZSP_HORIZONTAL);
 		this->GetWidget<NWidgetCore>(WID_SL_CAPTION)->widget_data = saveload_captions[mode];
 		this->vscroll = this->GetScrollbar(WID_SL_SCROLLBAR);
 
-		this->FinishInitNested(desc, 0);
+		this->FinishInitNested(0);
 
 		this->LowerWidget(WID_SL_DRIVES_DIRECTORIES_LIST);
 
@@ -291,17 +298,17 @@ public:
 		switch (_saveload_mode) {
 			case SLD_SAVE_GAME:
 			case SLD_LOAD_GAME:
-				FioGetDirectory(o_dir.name, lengthof(o_dir.name), SAVE_DIR);
+				FioGetDirectory(o_dir.name, lastof(o_dir.name), SAVE_DIR);
 				break;
 
 			case SLD_SAVE_SCENARIO:
 			case SLD_LOAD_SCENARIO:
-				FioGetDirectory(o_dir.name, lengthof(o_dir.name), SCENARIO_DIR);
+				FioGetDirectory(o_dir.name, lastof(o_dir.name), SCENARIO_DIR);
 				break;
 
 			case SLD_SAVE_HEIGHTMAP:
 			case SLD_LOAD_HEIGHTMAP:
-				FioGetDirectory(o_dir.name, lengthof(o_dir.name), HEIGHTMAP_DIR);
+				FioGetDirectory(o_dir.name, lastof(o_dir.name), HEIGHTMAP_DIR);
 				break;
 
 			default:
@@ -476,7 +483,7 @@ public:
 			case WID_SL_SORT_BYNAME:
 			case WID_SL_SORT_BYDATE: {
 				Dimension d = GetStringBoundingBox(this->GetWidget<NWidgetCore>(widget)->widget_data);
-				d.width += padding.width + WD_SORTBUTTON_ARROW_WIDTH * 2; // Doubled since the string is centred and it also looks better.
+				d.width += padding.width + Window::SortButtonWidth() * 2; // Doubled since the string is centred and it also looks better.
 				d.height += padding.height;
 				*size = maxdim(*size, d);
 				break;
@@ -518,16 +525,21 @@ public:
 				break;
 
 			case WID_SL_LOAD_BUTTON:
-				if (this->selected != NULL && !_load_check_data.HasErrors() && (_load_check_data.grf_compatibility != GLC_NOT_FOUND || _settings_client.gui.UserIsAllowedToChangeNewGRFs())) {
-					_switch_mode = (_game_mode == GM_EDITOR) ? SM_LOAD_SCENARIO : SM_LOAD_GAME;
-
+				if (this->selected != NULL && !_load_check_data.HasErrors()) {
 					const char *name = FiosBrowseTo(this->selected);
 					SetFiosType(this->selected->type);
 
 					strecpy(_file_to_saveload.name, name, lastof(_file_to_saveload.name));
 					strecpy(_file_to_saveload.title, this->selected->title, lastof(_file_to_saveload.title));
-					ClearErrorMessages();
-					delete this;
+
+					if (_saveload_mode == SLD_LOAD_HEIGHTMAP) {
+						delete this;
+						ShowHeightmapLoad();
+					} else if (!_load_check_data.HasNewGrfs() || _load_check_data.grf_compatibility != GLC_NOT_FOUND || _settings_client.gui.UserIsAllowedToChangeNewGRFs()) {
+						_switch_mode = (_game_mode == GM_EDITOR) ? SM_LOAD_SCENARIO : SM_LOAD_GAME;
+						ClearErrorMessages();
+						delete this;
+					}
 				}
 				break;
 
@@ -540,7 +552,7 @@ public:
 			case WID_SL_MISSING_NEWGRFS:
 				if (!_network_available) {
 					ShowErrorMessage(STR_NETWORK_ERROR_NOTAVAILABLE, INVALID_STRING_ID, WL_ERROR);
-				} else {
+				} else if (_load_check_data.HasNewGrfs()) {
 #if defined(ENABLE_NETWORK)
 					ShowMissingContentWindow(_load_check_data.grfconfig);
 #endif
@@ -642,10 +654,10 @@ public:
 		} else if (this->IsWidgetLowered(WID_SL_SAVE_GAME)) { // Save button clicked
 			if (_saveload_mode  == SLD_SAVE_GAME || _saveload_mode == SLD_SAVE_SCENARIO) {
 				_switch_mode = SM_SAVE_GAME;
-				FiosMakeSavegameName(_file_to_saveload.name, this->filename_editbox.text.buf, sizeof(_file_to_saveload.name));
+				FiosMakeSavegameName(_file_to_saveload.name, this->filename_editbox.text.buf, lastof(_file_to_saveload.name));
 			} else {
 				_switch_mode = SM_SAVE_HEIGHTMAP;
-				FiosMakeHeightmapName(_file_to_saveload.name, this->filename_editbox.text.buf, sizeof(_file_to_saveload.name));
+				FiosMakeHeightmapName(_file_to_saveload.name, this->filename_editbox.text.buf, lastof(_file_to_saveload.name));
 			}
 
 			/* In the editor set up the vehicle engines correctly (date might have changed) */
@@ -676,9 +688,12 @@ public:
 			case 1:
 				/* Selection changes */
 				if (!gui_scope) break;
+				if (_saveload_mode == SLD_LOAD_HEIGHTMAP) {
+					this->SetWidgetDisabledState(WID_SL_LOAD_BUTTON, this->selected == NULL || _load_check_data.HasErrors());
+				}
 				if (_saveload_mode == SLD_LOAD_GAME || _saveload_mode == SLD_LOAD_SCENARIO) {
 					this->SetWidgetDisabledState(WID_SL_LOAD_BUTTON,
-							this->selected == NULL || _load_check_data.HasErrors() || !(_load_check_data.grf_compatibility != GLC_NOT_FOUND || _settings_client.gui.UserIsAllowedToChangeNewGRFs()));
+							this->selected == NULL || _load_check_data.HasErrors() || !(!_load_check_data.HasNewGrfs() || _load_check_data.grf_compatibility != GLC_NOT_FOUND || _settings_client.gui.UserIsAllowedToChangeNewGRFs()));
 					this->SetWidgetDisabledState(WID_SL_NEWGRF_INFO,
 							!_load_check_data.HasNewGrfs());
 					this->SetWidgetDisabledState(WID_SL_MISSING_NEWGRFS,
@@ -696,24 +711,24 @@ public:
 };
 
 /** Load game/scenario */
-static const WindowDesc _load_dialog_desc(
-	WDP_CENTER, 500, 294,
+static WindowDesc _load_dialog_desc(
+	WDP_CENTER, "load_game", 500, 294,
 	WC_SAVELOAD, WC_NONE,
 	0,
 	_nested_load_dialog_widgets, lengthof(_nested_load_dialog_widgets)
 );
 
 /** Load heightmap */
-static const WindowDesc _load_heightmap_dialog_desc(
-	WDP_CENTER, 257, 320,
+static WindowDesc _load_heightmap_dialog_desc(
+	WDP_CENTER, "load_heightmap", 257, 320,
 	WC_SAVELOAD, WC_NONE,
 	0,
 	_nested_load_heightmap_dialog_widgets, lengthof(_nested_load_heightmap_dialog_widgets)
 );
 
 /** Save game/scenario */
-static const WindowDesc _save_dialog_desc(
-	WDP_CENTER, 500, 294,
+static WindowDesc _save_dialog_desc(
+	WDP_CENTER, "save_game", 500, 294,
 	WC_SAVELOAD, WC_NONE,
 	0,
 	_nested_save_dialog_widgets, lengthof(_nested_save_dialog_widgets)
@@ -740,7 +755,7 @@ void ShowSaveLoadDialog(SaveLoadDialogMode mode)
 {
 	DeleteWindowById(WC_SAVELOAD, 0);
 
-	const WindowDesc *sld;
+	WindowDesc *sld;
 	switch (mode) {
 		case SLD_SAVE_GAME:
 		case SLD_SAVE_SCENARIO:

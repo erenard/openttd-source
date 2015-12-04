@@ -1,4 +1,4 @@
-/* $Id: depot.cpp 22411 2011-05-02 17:42:12Z rubidium $ */
+/* $Id: depot.cpp 26482 2014-04-23 20:13:33Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -17,6 +17,8 @@
 #include "core/pool_func.hpp"
 #include "vehicle_gui.h"
 #include "vehiclelist.h"
+
+#include "safeguards.h"
 
 /** All our depots tucked away in a pool. */
 DepotPool _depot_pool("Depot");
@@ -44,12 +46,6 @@ Depot::~Depot()
 	DeleteWindowById(WC_VEHICLE_DEPOT, this->xy);
 
 	/* Delete the depot list */
-	VehicleType vt;
-	switch (GetTileType(this->xy)) {
-		default: NOT_REACHED();
-		case MP_RAILWAY: vt = VEH_TRAIN; break;
-		case MP_ROAD:    vt = VEH_ROAD;  break;
-		case MP_WATER:   vt = VEH_SHIP;  break;
-	}
+	VehicleType vt = GetDepotVehicleType(this->xy);
 	DeleteWindowById(GetWindowClassForVehicleType(vt), VehicleListIdentifier(VL_DEPOT_LIST, vt, GetTileOwner(this->xy), this->index).Pack());
 }

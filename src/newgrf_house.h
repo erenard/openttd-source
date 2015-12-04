@@ -1,4 +1,4 @@
-/* $Id: newgrf_house.h 24693 2012-11-10 20:46:39Z alberth $ */
+/* $Id: newgrf_house.h 26085 2013-11-24 14:41:19Z frosch $ */
 
 /*
  * This file is part of OpenTTD.
@@ -27,7 +27,7 @@ struct HouseScopeResolver : public ScopeResolver {
 	uint16 initial_random_bits;    ///< Random bits during construction checks.
 	uint32 watched_cargo_triggers; ///< Cargo types that triggered the watched cargo callback.
 
-	HouseScopeResolver(ResolverObject *ro, HouseID house_id, TileIndex tile, Town *town,
+	HouseScopeResolver(ResolverObject &ro, HouseID house_id, TileIndex tile, Town *town,
 			bool not_yet_constructed, uint8 initial_random_bits, uint32 watched_cargo_triggers);
 
 	/* virtual */ uint32 GetRandomBits() const;

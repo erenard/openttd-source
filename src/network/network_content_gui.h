@@ -1,4 +1,4 @@
-/* $Id: network_content_gui.h 23528 2011-12-15 22:22:55Z truebrain $ */
+/* $Id: network_content_gui.h 25287 2013-05-26 19:23:42Z frosch $ */
 
 /*
  * This file is part of OpenTTD.
@@ -32,7 +32,7 @@ public:
 	 * Create the window with the given description.
 	 * @param desc  The description of the window.
 	 */
-	BaseNetworkContentDownloadStatusWindow(const WindowDesc *desc);
+	BaseNetworkContentDownloadStatusWindow(WindowDesc *desc);
 
 	/**
 	 * Free everything associated with this window.

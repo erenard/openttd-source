@@ -1,4 +1,4 @@
-/* $Id: wnd_quickdraw.mm 24900 2013-01-08 22:46:42Z planetmaker $ */
+/* $Id: wnd_quickdraw.mm 26108 2013-11-25 14:30:22Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -45,7 +45,7 @@
 class WindowQuickdrawSubdriver;
 
 
-class WindowQuickdrawSubdriver: public CocoaSubdriver {
+class WindowQuickdrawSubdriver : public CocoaSubdriver {
 private:
 	/**
 	 * This function copies 32bpp pixels from the screen buffer in 16bpp windowed mode.

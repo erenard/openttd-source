@@ -1,4 +1,4 @@
-/* $Id: toolbar_widget.h 23853 2012-01-25 22:10:14Z rubidium $ */
+/* $Id: toolbar_widget.h 25376 2013-06-09 13:37:04Z zuu $ */
 
 /*
  * This file is part of OpenTTD.
@@ -24,6 +24,8 @@ enum ToolbarNormalWidgets {
 	WID_TN_STATIONS,      ///< Station menu.
 	WID_TN_FINANCES,      ///< Finance menu.
 	WID_TN_COMPANIES,     ///< Company menu.
+	WID_TN_STORY,         ///< Story menu.
+	WID_TN_GOAL,          ///< Goal menu.
 	WID_TN_GRAPHS,        ///< Graph menu.
 	WID_TN_LEAGUE,        ///< Company league menu.
 	WID_TN_INDUSTRIES,    ///< Industry menu.

@@ -1,4 +1,4 @@
-/* $Id: tcp_game.h 24900 2013-01-08 22:46:42Z planetmaker $ */
+/* $Id: tcp_game.h 26056 2013-11-22 21:50:43Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -137,7 +137,7 @@ class CommandQueue {
 
 public:
 	/** Initialise the command queue. */
-	CommandQueue() : first(NULL), last(NULL) {}
+	CommandQueue() : first(NULL), last(NULL), count(0) {}
 	/** Clear the command queue. */
 	~CommandQueue() { this->Free(); }
 	void Append(CommandPacket *p);

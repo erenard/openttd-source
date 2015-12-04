@@ -1,4 +1,4 @@
-/* $Id: macos.h 25981 2013-11-13 21:30:39Z rubidium $ */
+/* $Id: macos.h 25663 2013-08-05 20:36:06Z michi_cc $ */
 
 /*
  * This file is part of OpenTTD.

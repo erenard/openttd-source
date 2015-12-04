@@ -1,4 +1,4 @@
-/* $Id: network_chat_gui.cpp 25982 2013-11-13 21:35:44Z rubidium $ */
+/* $Id: network_chat_gui.cpp 27146 2015-02-13 21:13:45Z frosch $ */
 
 /*
  * This file is part of OpenTTD.
@@ -21,6 +21,7 @@
 #include "../querystring_gui.h"
 #include "../town.h"
 #include "../window_func.h"
+#include "../toolbar_gui.h"
 #include "../core/geometry_func.hpp"
 #include "network.h"
 #include "network_client.h"
@@ -29,6 +30,8 @@
 #include "../widgets/network_chat_widget.h"
 
 #include "table/strings.h"
+
+#include "../safeguards.h"
 
 /** The draw buffer must be able to contain the chat message, client name and the "[All]" message,
  * some spaces and possible translations of [All] to other languages. */
@@ -84,7 +87,7 @@ void CDECL NetworkAddChatMessage(TextColour colour, uint duration, const char *m
 	va_list va;
 
 	va_start(va, message);
-	vsnprintf(buf, lengthof(buf), message, va);
+	vseprintf(buf, lastof(buf), message, va);
 	va_end(va);
 
 	Utf8TrimString(buf, DRAW_STRING_BUFFER);
@@ -108,7 +111,7 @@ void NetworkReInitChatBoxSize()
 {
 	_chatmsg_box.y       = 3 * FONT_HEIGHT_NORMAL;
 	_chatmsg_box.height  = MAX_CHAT_MESSAGES * (FONT_HEIGHT_NORMAL + NETWORK_CHAT_LINE_SPACING) + 2;
-	_chatmessage_backup  = ReallocT(_chatmessage_backup, _chatmsg_box.width * _chatmsg_box.height * BlitterFactoryBase::GetCurrentBlitter()->GetBytesPerPixel());
+	_chatmessage_backup  = ReallocT(_chatmessage_backup, _chatmsg_box.width * _chatmsg_box.height * BlitterFactory::GetCurrentBlitter()->GetBytesPerPixel());
 }
 
 /** Initialize all buffers of the chat visualisation. */
@@ -118,7 +121,7 @@ void NetworkInitChatMessage()
 
 	_chatmsg_list        = ReallocT(_chatmsg_list, _settings_client.gui.network_chat_box_height);
 	_chatmsg_box.x       = 10;
-	_chatmsg_box.width   = _settings_client.gui.network_chat_box_width;
+	_chatmsg_box.width   = _settings_client.gui.network_chat_box_width_pct * _screen.width / 100;
 	NetworkReInitChatBoxSize();
 	_chatmessage_visible = false;
 
@@ -149,7 +152,7 @@ void NetworkUndrawChatMessage()
 	}
 
 	if (_chatmessage_visible) {
-		Blitter *blitter = BlitterFactoryBase::GetCurrentBlitter();
+		Blitter *blitter = BlitterFactory::GetCurrentBlitter();
 		int x      = _chatmsg_box.x;
 		int y      = _screen.height - _chatmsg_box.y - _chatmsg_box.height;
 		int width  = _chatmsg_box.width;
@@ -167,7 +170,7 @@ void NetworkUndrawChatMessage()
 		/* Put our 'shot' back to the screen */
 		blitter->CopyFromBuffer(blitter->MoveTo(_screen.dst_ptr, x, y), _chatmessage_backup, width, height);
 		/* And make sure it is updated next time */
-		_video_driver->MakeDirty(x, y, width, height);
+		VideoDriver::GetInstance()->MakeDirty(x, y, width, height);
 
 		_chatmessage_dirty = true;
 	}
@@ -198,7 +201,7 @@ void NetworkChatMessageLoop()
 /** Draw the chat message-box */
 void NetworkDrawChatMessage()
 {
-	Blitter *blitter = BlitterFactoryBase::GetCurrentBlitter();
+	Blitter *blitter = BlitterFactory::GetCurrentBlitter();
 	if (!_chatmessage_dirty) return;
 
 	/* First undraw if needed */
@@ -254,7 +257,7 @@ void NetworkDrawChatMessage()
 	}
 
 	/* Make sure the data is updated next flush */
-	_video_driver->MakeDirty(x, y, width, height);
+	VideoDriver::GetInstance()->MakeDirty(x, y, width, height);
 
 	_chatmessage_visible = true;
 	_chatmessage_dirty = false;
@@ -289,7 +292,7 @@ struct NetworkChatWindow : public Window {
 	 * @param type The type of destination.
 	 * @param dest The actual destination index.
 	 */
-	NetworkChatWindow(const WindowDesc *desc, DestType type, int dest) : message_editbox(NETWORK_CHAT_LENGTH)
+	NetworkChatWindow(WindowDesc *desc, DestType type, int dest) : Window(desc), message_editbox(NETWORK_CHAT_LENGTH)
 	{
 		this->dtype   = type;
 		this->dest    = dest;
@@ -305,7 +308,7 @@ struct NetworkChatWindow : public Window {
 		assert((uint)this->dtype < lengthof(chat_captions));
 		this->dest_string = chat_captions[this->dtype];
 
-		this->InitNested(desc, type);
+		this->InitNested(type);
 
 		this->SetFocusedWidget(WID_NC_TEXTBOX);
 		InvalidateWindowData(WC_NEWS_WINDOW, 0, this->height);
@@ -317,6 +320,11 @@ struct NetworkChatWindow : public Window {
 	~NetworkChatWindow()
 	{
 		InvalidateWindowData(WC_NEWS_WINDOW, 0, 0);
+	}
+
+	virtual void FindWindowPlacementAndResize(int def_width, int def_height)
+	{
+		Window::FindWindowPlacementAndResize(_toolbar_width, def_height);
 	}
 
 	/**
@@ -389,7 +397,7 @@ struct NetworkChatWindow : public Window {
 		item = 0;
 
 		/* Copy the buffer so we can modify it without damaging the real data */
-		pre_buf = (_chat_tab_completion_active) ? strdup(_chat_tab_completion_buf) : strdup(tb->buf);
+		pre_buf = (_chat_tab_completion_active) ? stredup(_chat_tab_completion_buf) : stredup(tb->buf);
 
 		tb_buf  = ChatTabCompletionFindText(pre_buf);
 		tb_len  = strlen(tb_buf);
@@ -426,7 +434,7 @@ struct NetworkChatWindow : public Window {
 			len = strlen(cur_name);
 			if (tb_len < len && strncasecmp(cur_name, tb_buf, tb_len) == 0) {
 				/* Save the data it was before completion */
-				if (!second_scan) snprintf(_chat_tab_completion_buf, lengthof(_chat_tab_completion_buf), "%s", tb->buf);
+				if (!second_scan) seprintf(_chat_tab_completion_buf, lastof(_chat_tab_completion_buf), "%s", tb->buf);
 				_chat_tab_completion_active = true;
 
 				/* Change to the found name. Add ': ' if we are at the start of the line (pretty) */
@@ -452,7 +460,7 @@ struct NetworkChatWindow : public Window {
 		free(pre_buf);
 	}
 
-	virtual Point OnInitialPosition(const WindowDesc *desc, int16 sm_width, int16 sm_height, int window_number)
+	virtual Point OnInitialPosition(int16 sm_width, int16 sm_height, int window_number)
 	{
 		Point pt = { 0, _screen.height - sm_height - FindWindowById(WC_STATUS_BAR, 0)->height };
 		return pt;
@@ -533,8 +541,8 @@ static const NWidgetPart _nested_chat_window_widgets[] = {
 };
 
 /** The description of the chat window. */
-static const WindowDesc _chat_window_desc(
-	WDP_MANUAL, 640, 14, // x, y, width, height
+static WindowDesc _chat_window_desc(
+	WDP_MANUAL, NULL, 0, 0,
 	WC_SEND_NETWORK_MSG, WC_NONE,
 	0,
 	_nested_chat_window_widgets, lengthof(_nested_chat_window_widgets)

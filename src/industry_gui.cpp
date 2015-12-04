@@ -1,4 +1,4 @@
-/* $Id: industry_gui.cpp 26024 2013-11-17 13:35:48Z rubidium $ */
+/* $Id: industry_gui.cpp 26960 2014-10-05 11:20:02Z peter1138 $ */
 
 /*
  * This file is part of OpenTTD.
@@ -24,6 +24,7 @@
 #include "newgrf_industries.h"
 #include "newgrf_text.h"
 #include "newgrf_debug.h"
+#include "network/network.h"
 #include "strings_func.h"
 #include "company_func.h"
 #include "tilehighlight_func.h"
@@ -40,6 +41,8 @@
 #include "widgets/industry_widget.h"
 
 #include "table/strings.h"
+
+#include "safeguards.h"
 
 bool _ignore_restrictions;
 uint64 _displayed_industries; ///< Communication from the industry chain window to the smallmap window about what industries to display.
@@ -79,7 +82,7 @@ static void GetCargoSuffix(uint cargo, CargoSuffixType cst, const Industry *ind,
 		if (callback > 0x400) {
 			ErrorUnknownCallbackResult(indspec->grf_prop.grffile->grfid, CBID_INDUSTRY_CARGO_SUFFIX, callback);
 		} else if (indspec->grf_prop.grffile->grf_version >= 8 || GB(callback, 0, 8) != 0xFF) {
-			StartTextRefStackUsage(6);
+			StartTextRefStackUsage(indspec->grf_prop.grffile, 6);
 			GetString(suffix, GetGRFStringID(indspec->grf_prop.grffile->grfid, 0xD000 + callback), suffix_last);
 			StopTextRefStackUsage();
 		}
@@ -117,12 +120,10 @@ static int CDECL IndustryTypeNameSorter(const IndustryType *a, const IndustryTyp
 	static char industry_name[2][64];
 
 	const IndustrySpec *indsp1 = GetIndustrySpec(*a);
-	SetDParam(0, indsp1->name);
-	GetString(industry_name[0], STR_JUST_STRING, lastof(industry_name[0]));
+	GetString(industry_name[0], indsp1->name, lastof(industry_name[0]));
 
 	const IndustrySpec *indsp2 = GetIndustrySpec(*b);
-	SetDParam(0, indsp2->name);
-	GetString(industry_name[1], STR_JUST_STRING, lastof(industry_name[1]));
+	GetString(industry_name[1], indsp2->name, lastof(industry_name[1]));
 
 	int r = strnatcmp(industry_name[0], industry_name[1]); // Sort by name (natural sorting).
 
@@ -170,10 +171,11 @@ static const NWidgetPart _nested_build_industry_widgets[] = {
 		NWidget(WWT_CLOSEBOX, COLOUR_DARK_GREEN),
 		NWidget(WWT_CAPTION, COLOUR_DARK_GREEN), SetDataTip(STR_FUND_INDUSTRY_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
 		NWidget(WWT_SHADEBOX, COLOUR_DARK_GREEN),
+		NWidget(WWT_DEFSIZEBOX, COLOUR_DARK_GREEN),
 		NWidget(WWT_STICKYBOX, COLOUR_DARK_GREEN),
 	EndContainer(),
 	NWidget(NWID_HORIZONTAL),
-		NWidget(WWT_MATRIX, COLOUR_DARK_GREEN, WID_DPI_MATRIX_WIDGET), SetDataTip(0x801, STR_FUND_INDUSTRY_SELECTION_TOOLTIP), SetFill(1, 0), SetResize(1, 1), SetScrollbar(WID_DPI_SCROLLBAR),
+		NWidget(WWT_MATRIX, COLOUR_DARK_GREEN, WID_DPI_MATRIX_WIDGET), SetMatrixDataTip(1, 0, STR_FUND_INDUSTRY_SELECTION_TOOLTIP), SetFill(1, 0), SetResize(1, 1), SetScrollbar(WID_DPI_SCROLLBAR),
 		NWidget(NWID_VSCROLLBAR, COLOUR_DARK_GREEN, WID_DPI_SCROLLBAR),
 	EndContainer(),
 	NWidget(WWT_PANEL, COLOUR_DARK_GREEN, WID_DPI_INFOPANEL), SetResize(1, 0),
@@ -187,8 +189,8 @@ static const NWidgetPart _nested_build_industry_widgets[] = {
 };
 
 /** Window definition of the dynamic place industries gui */
-static const WindowDesc _build_industry_desc(
-	WDP_AUTO, 170, 212,
+static WindowDesc _build_industry_desc(
+	WDP_AUTO, "build_industry", 170, 212,
 	WC_BUILD_INDUSTRY, WC_NONE,
 	WDF_CONSTRUCTION,
 	_nested_build_industry_widgets, lengthof(_nested_build_industry_widgets)
@@ -265,7 +267,7 @@ class BuildIndustryWindow : public Window {
 	}
 
 public:
-	BuildIndustryWindow() : Window()
+	BuildIndustryWindow() : Window(&_build_industry_desc)
 	{
 		this->timer_enabled = _loaded_newgrf_features.has_newindustries;
 
@@ -274,9 +276,9 @@ public:
 
 		this->callback_timer = DAY_TICKS;
 
-		this->CreateNestedTree(&_build_industry_desc);
+		this->CreateNestedTree();
 		this->vscroll = this->GetScrollbar(WID_DPI_SCROLLBAR);
-		this->FinishInitNested(&_build_industry_desc, 0);
+		this->FinishInitNested(0);
 
 		this->SetButtons();
 	}
@@ -470,7 +472,7 @@ public:
 						} else {
 							str = GetGRFStringID(indsp->grf_prop.grffile->grfid, 0xD000 + callback_res);  // No. here's the new string
 							if (str != STR_UNDEFINED) {
-								StartTextRefStackUsage(6);
+								StartTextRefStackUsage(indsp->grf_prop.grffile, 6);
 								DrawStringMultiLine(left, right, y, bottom, str, TC_YELLOW);
 								StopTextRefStackUsage();
 							}
@@ -540,7 +542,6 @@ public:
 	{
 		/* Adjust the number of items in the matrix depending of the resize */
 		this->vscroll->SetCapacityFromWidget(this, WID_DPI_MATRIX_WIDGET);
-		this->GetWidget<NWidgetCore>(WID_DPI_MATRIX_WIDGET)->widget_data = (this->vscroll->GetCapacity() << MAT_ROW_START) + (1 << MAT_COL_START);
 	}
 
 	virtual void OnPlaceObject(Point pt, TileIndex tile)
@@ -639,7 +640,8 @@ static inline bool IsProductionAlterable(const Industry *i)
 {
 	const IndustrySpec *is = GetIndustrySpec(i->type);
 	return ((_game_mode == GM_EDITOR || _cheats.setup_prod.value) &&
-			(is->production_rate[0] != 0 || is->production_rate[1] != 0 || is->IsRawIndustry()));
+			(is->production_rate[0] != 0 || is->production_rate[1] != 0 || is->IsRawIndustry()) &&
+			!_networking);
 }
 
 class IndustryViewWindow : public Window
@@ -667,7 +669,7 @@ class IndustryViewWindow : public Window
 	int info_height;          ///< Height needed for the #WID_IV_INFO panel
 
 public:
-	IndustryViewWindow(const WindowDesc *desc, WindowNumber window_number) : Window()
+	IndustryViewWindow(WindowDesc *desc, WindowNumber window_number) : Window(desc)
 	{
 		this->flags |= WF_DISABLE_VP_SCROLL;
 		this->editbox_line = IL_NONE;
@@ -675,7 +677,7 @@ public:
 		this->clicked_button = 0;
 		this->info_height = WD_FRAMERECT_TOP + 2 * FONT_HEIGHT_NORMAL + WD_FRAMERECT_BOTTOM + 1; // Info panel has at least two lines text.
 
-		this->InitNested(desc, window_number);
+		this->InitNested(window_number);
 		NWidgetViewport *nvp = this->GetWidget<NWidgetViewport>(WID_IV_VIEWPORT);
 		nvp->InitializeViewport(this, Industry::Get(window_number)->location.GetCenterTile(), ZOOM_LVL_INDUSTRY);
 
@@ -712,6 +714,11 @@ public:
 		bool first = true;
 		bool has_accept = false;
 		char cargo_suffix[3][512];
+
+		if (i->prod_level == PRODLEVEL_CLOSURE) {
+			DrawString(left + WD_FRAMERECT_LEFT, right - WD_FRAMERECT_RIGHT, y, STR_INDUSTRY_VIEW_INDUSTRY_ANNOUNCED_CLOSURE);
+			y += 2 * FONT_HEIGHT_NORMAL;
+		}
 
 		if (HasBit(ind->callback_mask, CBM_IND_PRODUCTION_CARGO_ARRIVAL) || HasBit(ind->callback_mask, CBM_IND_PRODUCTION_256_TICKS)) {
 			GetAllCargoSuffixes(0, CST_VIEW, i, i->type, ind, i->accepts_cargo, cargo_suffix);
@@ -795,7 +802,7 @@ public:
 					if (message != STR_NULL && message != STR_UNDEFINED) {
 						y += WD_PAR_VSEP_WIDE;
 
-						StartTextRefStackUsage(6);
+						StartTextRefStackUsage(ind->grf_prop.grffile, 6);
 						/* Use all the available space left from where we stand up to the
 						 * end of the window. We ALSO enlarge the window if needed, so we
 						 * can 'go' wild with the bottom of the window. */
@@ -1008,6 +1015,7 @@ static const NWidgetPart _nested_industry_view_widgets[] = {
 		NWidget(WWT_CAPTION, COLOUR_CREAM, WID_IV_CAPTION), SetDataTip(STR_INDUSTRY_VIEW_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
 		NWidget(WWT_DEBUGBOX, COLOUR_CREAM),
 		NWidget(WWT_SHADEBOX, COLOUR_CREAM),
+		NWidget(WWT_DEFSIZEBOX, COLOUR_CREAM),
 		NWidget(WWT_STICKYBOX, COLOUR_CREAM),
 	EndContainer(),
 	NWidget(WWT_PANEL, COLOUR_CREAM),
@@ -1025,8 +1033,8 @@ static const NWidgetPart _nested_industry_view_widgets[] = {
 };
 
 /** Window definition of the view industry gui */
-static const WindowDesc _industry_view_desc(
-	WDP_AUTO, 260, 120,
+static WindowDesc _industry_view_desc(
+	WDP_AUTO, "view_industry", 260, 120,
 	WC_INDUSTRY_VIEW, WC_NONE,
 	0,
 	_nested_industry_view_widgets, lengthof(_nested_industry_view_widgets)
@@ -1043,6 +1051,7 @@ static const NWidgetPart _nested_industry_directory_widgets[] = {
 		NWidget(WWT_CLOSEBOX, COLOUR_BROWN),
 		NWidget(WWT_CAPTION, COLOUR_BROWN), SetDataTip(STR_INDUSTRY_DIRECTORY_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
 		NWidget(WWT_SHADEBOX, COLOUR_BROWN),
+		NWidget(WWT_DEFSIZEBOX, COLOUR_BROWN),
 		NWidget(WWT_STICKYBOX, COLOUR_BROWN),
 	EndContainer(),
 	NWidget(NWID_HORIZONTAL),
@@ -1221,9 +1230,9 @@ protected:
 	}
 
 public:
-	IndustryDirectoryWindow(const WindowDesc *desc, WindowNumber number) : Window()
+	IndustryDirectoryWindow(WindowDesc *desc, WindowNumber number) : Window(desc)
 	{
-		this->CreateNestedTree(desc);
+		this->CreateNestedTree();
 		this->vscroll = this->GetScrollbar(WID_ID_SCROLLBAR);
 
 		this->industries.SetListing(this->last_sorting);
@@ -1231,7 +1240,7 @@ public:
 		this->industries.ForceRebuild();
 		this->BuildSortIndustriesList();
 
-		this->FinishInitNested(desc, 0);
+		this->FinishInitNested(0);
 	}
 
 	~IndustryDirectoryWindow()
@@ -1274,7 +1283,7 @@ public:
 		switch (widget) {
 			case WID_ID_DROPDOWN_ORDER: {
 				Dimension d = GetStringBoundingBox(this->GetWidget<NWidgetCore>(widget)->widget_data);
-				d.width += padding.width + WD_SORTBUTTON_ARROW_WIDTH * 2; // Doubled since the string is centred and it also looks better.
+				d.width += padding.width + Window::SortButtonWidth() * 2; // Doubled since the string is centred and it also looks better.
 				d.height += padding.height;
 				*size = maxdim(*size, d);
 				break;
@@ -1396,8 +1405,8 @@ const StringID IndustryDirectoryWindow::sorter_names[] = {
 
 
 /** Window definition of the industry directory gui */
-static const WindowDesc _industry_directory_desc(
-	WDP_AUTO, 428, 190,
+static WindowDesc _industry_directory_desc(
+	WDP_AUTO, "list_industries", 428, 190,
 	WC_INDUSTRY_DIRECTORY, WC_NONE,
 	0,
 	_nested_industry_directory_widgets, lengthof(_nested_industry_directory_widgets)
@@ -1414,6 +1423,7 @@ static const NWidgetPart _nested_industry_cargoes_widgets[] = {
 		NWidget(WWT_CLOSEBOX, COLOUR_BROWN),
 		NWidget(WWT_CAPTION, COLOUR_BROWN, WID_IC_CAPTION), SetDataTip(STR_INDUSTRY_CARGOES_INDUSTRY_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
 		NWidget(WWT_SHADEBOX, COLOUR_BROWN),
+		NWidget(WWT_DEFSIZEBOX, COLOUR_BROWN),
 		NWidget(WWT_STICKYBOX, COLOUR_BROWN),
 	EndContainer(),
 	NWidget(NWID_HORIZONTAL),
@@ -1437,8 +1447,8 @@ static const NWidgetPart _nested_industry_cargoes_widgets[] = {
 };
 
 /** Window description for the industry cargoes window. */
-static const WindowDesc _industry_cargoes_desc(
-	WDP_AUTO, 300, 210,
+static WindowDesc _industry_cargoes_desc(
+	WDP_AUTO, "industry_cargoes", 300, 210,
 	WC_INDUSTRY_CARGOES, WC_NONE,
 	0,
 	_nested_industry_cargoes_widgets, lengthof(_nested_industry_cargoes_widgets)
@@ -1661,8 +1671,7 @@ struct CargoesField {
 				ypos += (normal_height - FONT_HEIGHT_NORMAL) / 2;
 				if (this->u.industry.ind_type < NUM_INDUSTRYTYPES) {
 					const IndustrySpec *indsp = GetIndustrySpec(this->u.industry.ind_type);
-					SetDParam(0, indsp->name);
-					DrawString(xpos, xpos2, ypos, STR_JUST_STRING, TC_WHITE, SA_HOR_CENTER);
+					DrawString(xpos, xpos2, ypos, indsp->name, TC_WHITE, SA_HOR_CENTER);
 
 					/* Draw the industry legend. */
 					int blob_left, blob_right;
@@ -1953,7 +1962,7 @@ struct CargoesRow {
 		assert(cargo_fld->type == CFT_CARGO && label_fld->type == CFT_EMPTY);
 		for (uint i = 0; i < cargo_fld->u.cargo.num_cargoes; i++) {
 			int col = cargo_fld->ConnectCargo(cargo_fld->u.cargo.vertical_cargoes[i], !accepting);
-			cargoes[col] = cargo_fld->u.cargo.vertical_cargoes[i];
+			if (col >= 0) cargoes[col] = cargo_fld->u.cargo.vertical_cargoes[i];
 		}
 		label_fld->MakeCargoLabel(cargoes, lengthof(cargoes), accepting);
 	}
@@ -1988,12 +1997,12 @@ struct CargoesRow {
 		} else {
 			/* Houses only display what is demanded. */
 			for (uint i = 0; i < cargo_fld->u.cargo.num_cargoes; i++) {
-				for (uint h = 0; h < HOUSE_MAX; h++) {
+				for (uint h = 0; h < NUM_HOUSES; h++) {
 					HouseSpec *hs = HouseSpec::Get(h);
 					if (!hs->enabled) continue;
 
 					for (uint j = 0; j < lengthof(hs->accepts_cargo); j++) {
-						if (cargo_fld->u.cargo.vertical_cargoes[i] == hs->accepts_cargo[j]) {
+						if (hs->cargo_acceptance[j] > 0 && cargo_fld->u.cargo.vertical_cargoes[i] == hs->accepts_cargo[j]) {
 							cargo_fld->ConnectCargo(cargo_fld->u.cargo.vertical_cargoes[i], false);
 							goto next_cargo;
 						}
@@ -2044,12 +2053,12 @@ struct IndustryCargoesWindow : public Window {
 	Dimension ind_textsize;   ///< Size to hold any industry type text, as well as STR_INDUSTRY_CARGOES_SELECT_INDUSTRY.
 	Scrollbar *vscroll;
 
-	IndustryCargoesWindow(int id) : Window()
+	IndustryCargoesWindow(int id) : Window(&_industry_cargoes_desc)
 	{
 		this->OnInit();
-		this->CreateNestedTree(&_industry_cargoes_desc);
+		this->CreateNestedTree();
 		this->vscroll = this->GetScrollbar(WID_IC_SCROLLBAR);
-		this->FinishInitNested(&_industry_cargoes_desc, 0);
+		this->FinishInitNested(0);
 		this->OnInvalidateData(id);
 	}
 
@@ -2180,12 +2189,12 @@ struct IndustryCargoesWindow : public Window {
 		for (uint i = 0; i < length; i++) {
 			if (cargoes[i] == INVALID_CARGO) continue;
 
-			for (uint h = 0; h < HOUSE_MAX; h++) {
+			for (uint h = 0; h < NUM_HOUSES; h++) {
 				HouseSpec *hs = HouseSpec::Get(h);
 				if (!hs->enabled || !(hs->building_availability & climate_mask)) continue;
 
 				for (uint j = 0; j < lengthof(hs->accepts_cargo); j++) {
-					if (cargoes[i] == hs->accepts_cargo[j]) return true;
+					if (hs->cargo_acceptance[j] > 0 && cargoes[i] == hs->accepts_cargo[j]) return true;
 				}
 			}
 		}
@@ -2582,9 +2591,9 @@ struct IndustryCargoesWindow : public Window {
 				DropDownList *lst = new DropDownList;
 				const CargoSpec *cs;
 				FOR_ALL_SORTED_STANDARD_CARGOSPECS(cs) {
-					lst->push_back(new DropDownListStringItem(cs->name, cs->Index(), false));
+					*lst->Append() = new DropDownListStringItem(cs->name, cs->Index(), false);
 				}
-				if (lst->size() == 0) {
+				if (lst->Length() == 0) {
 					delete lst;
 					break;
 				}
@@ -2599,9 +2608,9 @@ struct IndustryCargoesWindow : public Window {
 					IndustryType ind = _sorted_industry_types[i];
 					const IndustrySpec *indsp = GetIndustrySpec(ind);
 					if (!indsp->enabled) continue;
-					lst->push_back(new DropDownListStringItem(indsp->name, ind, false));
+					*lst->Append() = new DropDownListStringItem(indsp->name, ind, false);
 				}
-				if (lst->size() == 0) {
+				if (lst->Length() == 0) {
 					delete lst;
 					break;
 				}

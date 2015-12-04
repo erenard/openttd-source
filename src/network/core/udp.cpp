@@ -1,4 +1,4 @@
-/* $Id: udp.cpp 24532 2012-09-19 15:15:49Z rubidium $ */
+/* $Id: udp.cpp 26482 2014-04-23 20:13:33Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -17,6 +17,8 @@
 #include "../../date_func.h"
 #include "../../debug.h"
 #include "udp.h"
+
+#include "../../safeguards.h"
 
 /**
  * Create an UDP socket but don't listen yet.
@@ -96,7 +98,9 @@ void NetworkUDPSocketHandler::SendPacket(Packet *p, NetworkAddress *recv, bool a
 		if (broadcast) {
 			/* Enable broadcast */
 			unsigned long val = 1;
-			setsockopt(s->second, SOL_SOCKET, SO_BROADCAST, (char *) &val, sizeof(val));
+			if (setsockopt(s->second, SOL_SOCKET, SO_BROADCAST, (char *) &val, sizeof(val)) < 0) {
+				DEBUG(net, 1, "[udp] setting broadcast failed with: %i", GET_LAST_ERROR());
+			}
 		}
 #endif
 
@@ -281,12 +285,6 @@ void NetworkUDPSocketHandler::ReceiveNetworkGameInfo(Packet *p, NetworkGameInfo 
 			if (info->map_set     >= NETWORK_NUM_LANDSCAPES) info->map_set     = 0;
 	}
 }
-
-/**
- * Defines a simple (switch) case for each network packet
- * @param type the packet type to create the case for
- */
-#define UDP_COMMAND(type) case type: this->NetworkPacketReceive_ ## type ## _command(p, client_addr); break;
 
 /**
  * Handle an incoming packets by sending it to the correct function.

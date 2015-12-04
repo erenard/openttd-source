@@ -1,4 +1,4 @@
-/* $Id: town_widget.h 23600 2011-12-19 20:46:17Z truebrain $ */
+/* $Id: town_widget.h 25094 2013-03-17 15:41:40Z alberth $ */
 
 /*
  * This file is part of OpenTTD.
@@ -14,8 +14,8 @@
 
 /** Widgets of the #TownDirectoryWindow class. */
 enum TownDirectoryWidgets {
-	WID_TD_SORT_NAME,        ///< Sort by town name.
-	WID_TD_SORT_POPULATION,  ///< Sort by town population.
+	WID_TD_SORT_ORDER,       ///< Direction of sort dropdown.
+	WID_TD_SORT_CRITERIA,    ///< Criteria of sort dropdown.
 	WID_TD_LIST,             ///< List of towns.
 	WID_TD_SCROLLBAR,        ///< Scrollbar for the town list.
 	WID_TD_WORLD_POPULATION, ///< The world's population.

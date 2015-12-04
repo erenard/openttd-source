@@ -1,4 +1,4 @@
-/* $Id: game_text.hpp 25986 2013-11-13 21:49:31Z rubidium $ */
+/* $Id: game_text.hpp 25818 2013-10-06 12:13:20Z frosch $ */
 
 /*
  * This file is part of OpenTTD.

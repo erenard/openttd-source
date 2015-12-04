@@ -1,4 +1,4 @@
-/* $Id: null_s.h 22410 2011-05-02 16:14:23Z rubidium $ */
+/* $Id: null_s.h 26108 2013-11-25 14:30:22Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -15,7 +15,7 @@
 #include "sound_driver.hpp"
 
 /** Implementation of the null sound driver. */
-class SoundDriver_Null: public SoundDriver {
+class SoundDriver_Null : public SoundDriver {
 public:
 	/* virtual */ const char *Start(const char * const *param) { return NULL; }
 
@@ -24,12 +24,10 @@ public:
 };
 
 /** Factory for the null sound driver. */
-class FSoundDriver_Null: public SoundDriverFactory<FSoundDriver_Null> {
+class FSoundDriver_Null : public DriverFactoryBase {
 public:
-	static const int priority = 1;
-	/* virtual */ const char *GetName() { return "null"; }
-	/* virtual */ const char *GetDescription() { return "Null Sound Driver"; }
-	/* virtual */ Driver *CreateInstance() { return new SoundDriver_Null(); }
+	FSoundDriver_Null() : DriverFactoryBase(Driver::DT_SOUND, 1, "null", "Null Sound Driver") {}
+	/* virtual */ Driver *CreateInstance() const { return new SoundDriver_Null(); }
 };
 
 #endif /* SOUND_NULL_H */

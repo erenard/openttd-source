@@ -1,4 +1,4 @@
-/* $Id: querystring_gui.h 26024 2013-11-17 13:35:48Z rubidium $ */
+/* $Id: querystring_gui.h 25691 2013-08-05 20:37:53Z michi_cc $ */
 
 /*
  * This file is part of OpenTTD.

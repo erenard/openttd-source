@@ -1,4 +1,4 @@
-/* $Id: newgrf.h 24900 2013-01-08 22:46:42Z planetmaker $ */
+/* $Id: newgrf.h 27214 2015-03-31 18:45:30Z frosch $ */
 
 /*
  * This file is part of OpenTTD.
@@ -61,6 +61,7 @@ enum GrfMiscBit {
 	GMB_TRAIN_WIDTH_32_PIXELS  = 3, ///< Use 32 pixels per train vehicle in depot gui and vehicle details. Never set in the global variable; @see GRFFile::traininfo_vehicle_width
 	GMB_AMBIENT_SOUND_CALLBACK = 4,
 	GMB_CATENARY_ON_3RD_TRACK  = 5, // Unsupported.
+	GMB_SECOND_ROCKY_TILE_SET  = 6,
 };
 
 enum GrfSpecFeature {
@@ -126,7 +127,7 @@ struct GRFFile : ZeroedMemoryAllocator {
 	uint8 cargo_map[NUM_CARGO];                     ///< Inverse cargo translation table (CargoID -> local ID)
 
 	SmallVector<RailTypeLabel, 4> railtype_list;    ///< Railtype translation table
-	RailType railtype_map[RAILTYPE_END];
+	RailTypeByte railtype_map[RAILTYPE_END];
 
 	CanalProperties canal_local_properties[CF_END]; ///< Canal properties as set by this NewGRF
 

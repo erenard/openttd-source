@@ -1,4 +1,4 @@
-/* $Id: vehicle_func.h 24996 2013-02-14 17:08:56Z rubidium $ */
+/* $Id: vehicle_func.h 26863 2014-09-20 15:31:26Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -29,6 +29,15 @@
 static const int VEHICLE_PROFIT_MIN_AGE = DAYS_IN_YEAR * 2; ///< Only vehicles older than this have a meaningful profit.
 static const Money VEHICLE_PROFIT_THRESHOLD = 10000;        ///< Threshold for a vehicle to be considered making good profit.
 
+/**
+ * Helper to check whether an image index is valid for a particular vehicle.
+ * @param <T> The type of vehicle.
+ * @param image_index The image index to check.
+ * @return True iff the image index is valid.
+ */
+template <VehicleType T>
+bool IsValidImageIndex(uint8 image_index);
+
 typedef Vehicle *VehicleFromPosProc(Vehicle *v, void *data);
 
 void VehicleServiceInDepot(Vehicle *v);
@@ -57,11 +66,6 @@ void DecreaseVehicleValue(Vehicle *v);
 void CheckVehicleBreakdown(Vehicle *v);
 void AgeVehicle(Vehicle *v);
 void VehicleEnteredDepotThisTick(Vehicle *v);
-
-void VehicleUpdatePosition(Vehicle *v);
-void VehicleUpdateViewport(Vehicle *v, bool dirty);
-void VehicleUpdatePositionAndViewport(Vehicle *v);
-void MarkSingleVehicleDirty(const Vehicle *v);
 
 UnitID GetFreeUnitNumber(VehicleType type);
 

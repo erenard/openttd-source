@@ -1,4 +1,4 @@
-/* $Id: misc.cpp 24132 2012-04-17 19:43:43Z michi_cc $ */
+/* $Id: misc.cpp 26482 2014-04-23 20:13:33Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -27,6 +27,9 @@
 #include "window_func.h"
 #include "core/pool_type.hpp"
 #include "game/game.hpp"
+#include "linkgraph/linkgraphschedule.h"
+
+#include "safeguards.h"
 
 
 extern TileIndex _cur_tileloop_tile;
@@ -68,6 +71,7 @@ void InitializeGame(uint size_x, uint size_y, bool reset_date, bool reset_settin
 		InitializeOldNames();
 	}
 
+	LinkGraphSchedule::Clear();
 	PoolBase::Clean(PT_NORMAL);
 
 	ResetPersistentNewGRFData();

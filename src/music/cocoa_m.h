@@ -1,4 +1,4 @@
-/* $Id: cocoa_m.h 17710 2009-10-04 21:24:09Z michi_cc $ */
+/* $Id: cocoa_m.h 26108 2013-11-25 14:30:22Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -14,7 +14,7 @@
 
 #include "music_driver.hpp"
 
-class MusicDriver_Cocoa: public MusicDriver {
+class MusicDriver_Cocoa : public MusicDriver {
 public:
 	/* virtual */ const char *Start(const char * const *param);
 
@@ -30,12 +30,10 @@ public:
 	/* virtual */ const char *GetName() const { return "cocoa"; }
 };
 
-class FMusicDriver_Cocoa: public MusicDriverFactory<FMusicDriver_Cocoa> {
+class FMusicDriver_Cocoa : public DriverFactoryBase {
 public:
-	static const int priority = 10;
-	/* virtual */ const char *GetName() { return "cocoa"; }
-	/* virtual */ const char *GetDescription() { return "Cocoa MIDI Driver"; }
-	/* virtual */ Driver *CreateInstance() { return new MusicDriver_Cocoa(); }
+	FMusicDriver_Cocoa() : DriverFactoryBase(Driver::DT_MUSIC, 10, "cocoa", "Cocoa MIDI Driver") {}
+	/* virtual */ Driver *CreateInstance() const { return new MusicDriver_Cocoa(); }
 };
 
 #endif /* MUSIC_MACOSX_COCOA_H */

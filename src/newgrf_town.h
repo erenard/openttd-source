@@ -1,4 +1,4 @@
-/* $Id: newgrf_town.h 24693 2012-11-10 20:46:39Z alberth $ */
+/* $Id: newgrf_town.h 26085 2013-11-24 14:41:19Z frosch $ */
 
 /*
  * This file is part of OpenTTD.
@@ -25,7 +25,7 @@ struct TownScopeResolver : public ScopeResolver {
 	Town *t;       ///< %Town of the scope.
 	bool readonly; ///< When set, persistent storage of the town is read-only,
 
-	TownScopeResolver(ResolverObject *ro, Town *t, bool readonly);
+	TownScopeResolver(ResolverObject &ro, Town *t, bool readonly);
 
 	virtual uint32 GetVariable(byte variable, uint32 parameter, bool *available) const;
 	virtual void StorePSA(uint reg, int32 value);

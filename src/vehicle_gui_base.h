@@ -1,4 +1,4 @@
-/* $Id: vehicle_gui_base.h 20777 2010-09-09 14:40:39Z rubidium $ */
+/* $Id: vehicle_gui_base.h 25287 2013-05-26 19:23:42Z frosch $ */
 
 /*
  * This file is part of OpenTTD.
@@ -38,7 +38,7 @@ struct BaseVehicleListWindow : public Window {
 	static const StringID vehicle_sorter_names[];
 	static GUIVehicleList::SortFunction * const vehicle_sorter_funcs[];
 
-	BaseVehicleListWindow(WindowNumber wno) : Window(), vli(wno)
+	BaseVehicleListWindow(WindowDesc *desc, WindowNumber wno) : Window(desc), vli(wno)
 	{
 		this->vehicles.SetSortFuncs(this->vehicle_sorter_funcs);
 	}

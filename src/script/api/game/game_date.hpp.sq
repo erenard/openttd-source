@@ -1,4 +1,4 @@
-/* $Id: game_date.hpp.sq 23737 2012-01-03 20:37:56Z truebrain $ */
+/* $Id: game_date.hpp.sq 26307 2014-02-06 19:50:34Z zuu $ */
 
 /*
  * This file is part of OpenTTD.
@@ -21,6 +21,9 @@ void SQGSDate_Register(Squirrel *engine)
 	SQGSDate.PreRegister(engine);
 	SQGSDate.AddConstructor<void (ScriptDate::*)(), 1>(engine, "x");
 
+	SQGSDate.DefSQConst(engine, ScriptDate::DATE_INVALID, "DATE_INVALID");
+
+	SQGSDate.DefSQStaticMethod(engine, &ScriptDate::IsValidDate,    "IsValidDate",    2, ".i");
 	SQGSDate.DefSQStaticMethod(engine, &ScriptDate::GetCurrentDate, "GetCurrentDate", 1, ".");
 	SQGSDate.DefSQStaticMethod(engine, &ScriptDate::GetYear,        "GetYear",        2, ".i");
 	SQGSDate.DefSQStaticMethod(engine, &ScriptDate::GetMonth,       "GetMonth",       2, ".i");

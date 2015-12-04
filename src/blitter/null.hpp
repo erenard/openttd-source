@@ -1,4 +1,4 @@
-/* $Id: null.hpp 25987 2013-11-13 21:53:40Z rubidium $ */
+/* $Id: null.hpp 26209 2014-01-02 22:41:58Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -24,7 +24,7 @@ public:
 	/* virtual */ void *MoveTo(void *video, int x, int y) { return NULL; };
 	/* virtual */ void SetPixel(void *video, int x, int y, uint8 colour) {};
 	/* virtual */ void DrawRect(void *video, int width, int height, uint8 colour) {};
-	/* virtual */ void DrawLine(void *video, int x, int y, int x2, int y2, int screen_width, int screen_height, uint8 colour, int width) {};
+	/* virtual */ void DrawLine(void *video, int x, int y, int x2, int y2, int screen_width, int screen_height, uint8 colour, int width, int dash) {};
 	/* virtual */ void CopyFromBuffer(void *video, const void *src, int width, int height) {};
 	/* virtual */ void CopyToBuffer(const void *video, void *dst, int width, int height) {};
 	/* virtual */ void CopyImageToBuffer(const void *video, void *dst, int width, int height, int dst_pitch) {};
@@ -38,10 +38,9 @@ public:
 };
 
 /** Factory for the blitter that does nothing. */
-class FBlitter_Null: public BlitterFactory<FBlitter_Null> {
+class FBlitter_Null : public BlitterFactory {
 public:
-	/* virtual */ const char *GetName() { return "null"; }
-	/* virtual */ const char *GetDescription() { return "Null Blitter (does nothing)"; }
+	FBlitter_Null() : BlitterFactory("null", "Null Blitter (does nothing)") {}
 	/* virtual */ Blitter *CreateInstance() { return new Blitter_Null(); }
 };
 

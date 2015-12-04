@@ -1,4 +1,4 @@
-/* $Id: fios.h 24900 2013-01-08 22:46:42Z planetmaker $ */
+/* $Id: fios.h 26489 2014-04-23 21:23:21Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -41,7 +41,8 @@ struct LoadCheckData {
 	struct LoggedAction *gamelog_action;          ///< Gamelog actions
 	uint gamelog_actions;                         ///< Number of gamelog actions
 
-	LoadCheckData() : error_data(NULL), grfconfig(NULL), gamelog_action(NULL)
+	LoadCheckData() : error_data(NULL), grfconfig(NULL),
+			grf_compatibility(GLC_NOT_FOUND), gamelog_action(NULL), gamelog_actions(0)
 	{
 		this->Clear();
 	}
@@ -169,8 +170,8 @@ const char *FiosBrowseTo(const FiosItem *item);
 
 StringID FiosGetDescText(const char **path, uint64 *total_free);
 bool FiosDelete(const char *name);
-void FiosMakeHeightmapName(char *buf,const char *name, size_t size);
-void FiosMakeSavegameName(char *buf, const char *name, size_t size);
+void FiosMakeHeightmapName(char *buf, const char *name, const char *last);
+void FiosMakeSavegameName(char *buf, const char *name, const char *last);
 
 FiosType FiosGetSavegameListCallback(SaveLoadDialogMode mode, const char *file, const char *ext, char *title, const char *last);
 

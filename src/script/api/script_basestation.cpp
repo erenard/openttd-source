@@ -1,4 +1,4 @@
-/* $Id: script_basestation.cpp 25499 2013-06-28 19:24:39Z rubidium $ */
+/* $Id: script_basestation.cpp 26482 2014-04-23 20:13:33Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -16,6 +16,8 @@
 #include "../../string_func.h"
 #include "../../strings_func.h"
 #include "table/strings.h"
+
+#include "../../safeguards.h"
 
 /* static */ bool ScriptBaseStation::IsValidBaseStation(StationID station_id)
 {
@@ -52,9 +54,9 @@
 	return ::BaseStation::Get(station_id)->xy;
 }
 
-/* static */ int32 ScriptBaseStation::GetConstructionDate(StationID station_id)
+/* static */ ScriptDate::Date ScriptBaseStation::GetConstructionDate(StationID station_id)
 {
-	if (!IsValidBaseStation(station_id)) return -1;
+	if (!IsValidBaseStation(station_id)) return ScriptDate::DATE_INVALID;
 
-	return ::BaseStation::Get(station_id)->build_date;
+	return (ScriptDate::Date)::BaseStation::Get(station_id)->build_date;
 }

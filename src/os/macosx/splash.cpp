@@ -1,4 +1,4 @@
-/* $Id: splash.cpp 23446 2011-12-08 18:13:29Z rubidium $ */
+/* $Id: splash.cpp 26482 2014-04-23 20:13:33Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -22,6 +22,8 @@
 #ifdef WITH_PNG
 
 #include <png.h>
+
+#include "../../safeguards.h"
 
 /**
  * Handle pnglib error.
@@ -122,7 +124,7 @@ void DisplaySplashImage()
 	uint xoff = (_screen.width - width) / 2;
 	uint yoff = (_screen.height - height) / 2;
 
-	switch (BlitterFactoryBase::GetCurrentBlitter()->GetScreenDepth()) {
+	switch (BlitterFactory::GetCurrentBlitter()->GetScreenDepth()) {
 		case 8: {
 				uint8 *dst_ptr = (uint8 *)_screen.dst_ptr;
 				/* Initialize buffer */

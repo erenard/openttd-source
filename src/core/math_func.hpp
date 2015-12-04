@@ -1,4 +1,4 @@
-/* $Id: math_func.hpp 23640 2011-12-20 17:57:56Z truebrain $ */
+/* $Id: math_func.hpp 26651 2014-06-17 19:01:45Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -11,18 +11,6 @@
 
 #ifndef MATH_FUNC_HPP
 #define MATH_FUNC_HPP
-
-#ifdef min
-#undef min
-#endif
-
-#ifdef max
-#undef max
-#endif
-
-#ifdef abs
-#undef abs
-#endif
 
 /**
  * Returns the maximum of two values.
@@ -317,6 +305,7 @@ static inline uint ToPercent16(uint i)
 
 int LeastCommonMultiple(int a, int b);
 int GreatestCommonDivisor(int a, int b);
+int DivideApprox(int a, int b);
 
 /**
  * Computes ceil(a / b) for non-negative a and b.

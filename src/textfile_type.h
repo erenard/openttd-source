@@ -1,4 +1,4 @@
-/* $Id: textfile_type.h 25339 2013-06-09 09:33:06Z rubidium $ */
+/* $Id: textfile_type.h 25338 2013-06-09 09:25:22Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.

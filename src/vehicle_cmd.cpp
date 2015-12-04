@@ -1,4 +1,4 @@
-/* $Id: vehicle_cmd.cpp 25983 2013-11-13 21:39:14Z rubidium $ */
+/* $Id: vehicle_cmd.cpp 26509 2014-04-25 15:40:32Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -33,6 +33,8 @@
 #include "company_base.h"
 
 #include "table/strings.h"
+
+#include "safeguards.h"
 
 /* Tables used in vehicle.h to find the right command for a certain vehicle type */
 const uint32 _veh_build_proc_table[] = {
@@ -85,14 +87,7 @@ CommandCost CmdBuildVehicle(TileIndex tile, DoCommandFlag flags, uint32 p1, uint
 	/* Elementary check for valid location. */
 	if (!IsDepotTile(tile) || !IsTileOwner(tile, _current_company)) return CMD_ERROR;
 
-	VehicleType type;
-	switch (GetTileType(tile)) {
-		case MP_RAILWAY: type = VEH_TRAIN;    break;
-		case MP_ROAD:    type = VEH_ROAD;     break;
-		case MP_WATER:   type = VEH_SHIP;     break;
-		case MP_STATION: type = VEH_AIRCRAFT; break;
-		default: NOT_REACHED(); // Safe due to IsDepotTile()
-	}
+	VehicleType type = GetDepotVehicleType(tile);
 
 	/* Validate the engine type. */
 	EngineID eid = GB(p1, 0, 16);
@@ -288,6 +283,7 @@ struct RefitResult {
 	Vehicle *v;         ///< Vehicle to refit
 	uint capacity;      ///< New capacity of vehicle
 	uint mail_capacity; ///< New mail capacity of aircraft
+	byte subtype;       ///< cargo subtype to refit to
 };
 
 /**
@@ -297,7 +293,7 @@ struct RefitResult {
  * @param only_this    Whether to only refit this vehicle, or to check the rest of them.
  * @param num_vehicles Number of vehicles to refit (not counting articulated parts). Zero means the whole chain.
  * @param new_cid      Cargotype to refit to
- * @param new_subtype  Cargo subtype to refit to
+ * @param new_subtype  Cargo subtype to refit to. 0xFF means to try keeping the same subtype according to GetBestFittingSubType().
  * @param flags        Command flags
  * @param auto_refit   Refitting is done as automatic refitting outside a depot.
  * @return Refit cost.
@@ -320,7 +316,11 @@ static CommandCost RefitVehicle(Vehicle *v, bool only_this, uint8 num_vehicles, 
 	refit_result.Clear();
 
 	v->InvalidateNewGRFCacheOfChain();
+	byte actual_subtype = new_subtype;
 	for (; v != NULL; v = (only_this ? NULL : v->Next())) {
+		/* Reset actual_subtype for every new vehicle */
+		if (!v->IsArticulatedPart()) actual_subtype = new_subtype;
+
 		if (v->type == VEH_TRAIN && !vehicles_to_refit.Contains(v->index) && !only_this) continue;
 
 		const Engine *e = v->GetEngine();
@@ -331,12 +331,17 @@ static CommandCost RefitVehicle(Vehicle *v, bool only_this, uint8 num_vehicles, 
 		bool refittable = HasBit(e->info.refit_mask, new_cid) && (!auto_refit || HasBit(e->info.misc_flags, EF_AUTO_REFIT));
 		if (!refittable && v->cargo_type != new_cid) continue;
 
+		/* Determine best fitting subtype if requested */
+		if (actual_subtype == 0xFF) {
+			actual_subtype = GetBestFittingSubType(v, v, new_cid);
+		}
+
 		/* Back up the vehicle's cargo type */
 		CargoID temp_cid = v->cargo_type;
 		byte temp_subtype = v->cargo_subtype;
 		if (refittable) {
 			v->cargo_type = new_cid;
-			v->cargo_subtype = new_subtype;
+			v->cargo_subtype = actual_subtype;
 		}
 
 		uint16 mail_capacity = 0;
@@ -352,7 +357,7 @@ static CommandCost RefitVehicle(Vehicle *v, bool only_this, uint8 num_vehicles, 
 		v->cargo_subtype = temp_subtype;
 
 		bool auto_refit_allowed;
-		CommandCost refit_cost = GetRefitCost(v, v->engine_type, new_cid, new_subtype, &auto_refit_allowed);
+		CommandCost refit_cost = GetRefitCost(v, v->engine_type, new_cid, actual_subtype, &auto_refit_allowed);
 		if (auto_refit && !auto_refit_allowed) {
 			/* Sorry, auto-refitting not allowed, subtract the cargo amount again from the total. */
 			total_capacity -= amount;
@@ -380,20 +385,23 @@ static CommandCost RefitVehicle(Vehicle *v, bool only_this, uint8 num_vehicles, 
 		result->v = v;
 		result->capacity = amount;
 		result->mail_capacity = mail_capacity;
+		result->subtype = actual_subtype;
 	}
 
 	if (flags & DC_EXEC) {
 		/* Store the result */
 		for (RefitResult *result = refit_result.Begin(); result != refit_result.End(); result++) {
 			Vehicle *u = result->v;
-			u->cargo.Truncate((u->cargo_type == new_cid) ? result->capacity : 0);
+			u->refit_cap = (u->cargo_type == new_cid) ? min(result->capacity, u->refit_cap) : 0;
+			if (u->cargo.TotalCount() > u->refit_cap) u->cargo.Truncate(u->cargo.TotalCount() - u->refit_cap);
 			u->cargo_type = new_cid;
 			u->cargo_cap = result->capacity;
-			u->cargo_subtype = new_subtype;
+			u->cargo_subtype = result->subtype;
 			if (u->type == VEH_AIRCRAFT) {
 				Vehicle *w = u->Next();
+				w->refit_cap = min(w->refit_cap, result->mail_capacity);
 				w->cargo_cap = result->mail_capacity;
-				w->cargo.Truncate(result->mail_capacity);
+				if (w->cargo.TotalCount() > w->refit_cap) w->cargo.Truncate(w->cargo.TotalCount() - w->refit_cap);
 			}
 		}
 	}
@@ -413,7 +421,7 @@ static CommandCost RefitVehicle(Vehicle *v, bool only_this, uint8 num_vehicles, 
  * - p2 = (bit 0-4)   - New cargo type to refit to.
  * - p2 = (bit 6)     - Automatic refitting.
  * - p2 = (bit 7)     - Refit only this vehicle. Used only for cloning vehicles.
- * - p2 = (bit 8-15)  - New cargo subtype to refit to.
+ * - p2 = (bit 8-15)  - New cargo subtype to refit to. 0xFF means to try keeping the same subtype according to GetBestFittingSubType().
  * - p2 = (bit 16-23) - Number of vehicles to refit (not counting articulated parts). Zero means all vehicles.
  *                      Only used if "refit only this vehicle" is false.
  * @param text unused
@@ -457,7 +465,7 @@ CommandCost CmdRefitVehicle(TileIndex tile, DoCommandFlag flags, uint32 p1, uint
 		/* Update the cached variables */
 		switch (v->type) {
 			case VEH_TRAIN:
-				Train::From(front)->ConsistChanged(auto_refit);
+				Train::From(front)->ConsistChanged(auto_refit ? CCF_AUTOREFIT : CCF_REFIT);
 				break;
 			case VEH_ROAD:
 				RoadVehUpdateCache(RoadVehicle::From(front), auto_refit);
@@ -466,18 +474,17 @@ CommandCost CmdRefitVehicle(TileIndex tile, DoCommandFlag flags, uint32 p1, uint
 
 			case VEH_SHIP:
 				v->InvalidateNewGRFCacheOfChain();
-				v->colourmap = PAL_NONE; // invalidate vehicle colour map
 				Ship::From(v)->UpdateCache();
 				break;
 
 			case VEH_AIRCRAFT:
 				v->InvalidateNewGRFCacheOfChain();
-				v->colourmap = PAL_NONE; // invalidate vehicle colour map
 				UpdateAircraftCache(Aircraft::From(v), true);
 				break;
 
 			default: NOT_REACHED();
 		}
+		front->MarkDirty();
 
 		if (!free_wagon) {
 			InvalidateWindowData(WC_VEHICLE_DETAILS, front->index);
@@ -744,7 +751,7 @@ static void CloneVehicleName(const Vehicle *src, Vehicle *dst)
 
 		/* Check the name is unique. */
 		if (IsUniqueVehicleName(buf)) {
-			dst->name = strdup(buf);
+			dst->name = stredup(buf);
 			break;
 		}
 	}
@@ -1022,7 +1029,7 @@ CommandCost CmdRenameVehicle(TileIndex tile, DoCommandFlag flags, uint32 p1, uin
 
 	if (flags & DC_EXEC) {
 		free(v->name);
-		v->name = reset ? NULL : strdup(text);
+		v->name = reset ? NULL : stredup(text);
 		InvalidateWindowClassesData(GetWindowClassForVehicleType(v->type), 1);
 		MarkWholeScreenDirty();
 	}

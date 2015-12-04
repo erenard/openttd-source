@@ -1,4 +1,4 @@
-/* $Id: script_tile.hpp 25240 2013-05-13 19:18:10Z rubidium $ */
+/* $Id: script_tile.hpp 25213 2013-04-30 17:16:32Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.

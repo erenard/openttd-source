@@ -1,4 +1,4 @@
-/* $Id: bmp.cpp 22872 2011-09-02 20:16:29Z michi_cc $ */
+/* $Id: bmp.cpp 26482 2014-04-23 20:13:33Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -15,6 +15,8 @@
 #include "core/alloc_func.hpp"
 #include "core/mem_func.hpp"
 
+#include "safeguards.h"
+
 void BmpInitializeBuffer(BmpBuffer *buffer, FILE *file)
 {
 	buffer->pos      = -1;
@@ -25,18 +27,24 @@ void BmpInitializeBuffer(BmpBuffer *buffer, FILE *file)
 
 static inline void AdvanceBuffer(BmpBuffer *buffer)
 {
+	if (buffer->read < 0) return;
+
 	buffer->read = (int)fread(buffer->data, 1, BMP_BUFFER_SIZE, buffer->file);
 	buffer->pos  = 0;
 }
 
 static inline bool EndOfBuffer(BmpBuffer *buffer)
 {
+	if (buffer->read < 0) return false;
+
 	if (buffer->pos == buffer->read || buffer->pos < 0) AdvanceBuffer(buffer);
 	return buffer->pos == buffer->read;
 }
 
 static inline byte ReadByte(BmpBuffer *buffer)
 {
+	if (buffer->read < 0) return 0;
+
 	if (buffer->pos == buffer->read || buffer->pos < 0) AdvanceBuffer(buffer);
 	buffer->real_pos++;
 	return buffer->data[buffer->pos++];
@@ -62,7 +70,9 @@ static inline void SkipBytes(BmpBuffer *buffer, int bytes)
 
 static inline void SetStreamOffset(BmpBuffer *buffer, int offset)
 {
-	fseek(buffer->file, offset, SEEK_SET);
+	if (fseek(buffer->file, offset, SEEK_SET) < 0) {
+		buffer->read = -1;
+	}
 	buffer->pos = -1;
 	buffer->real_pos = offset;
 	AdvanceBuffer(buffer);

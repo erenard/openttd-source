@@ -1,4 +1,4 @@
-/* $Id: script_info.hpp 23613 2011-12-19 20:57:08Z truebrain $ */
+/* $Id: script_info.hpp 26057 2013-11-23 13:12:19Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -32,6 +32,7 @@ static const int MAX_GET_SETTING_OPS    = 100000;
 class ScriptInfo : public SimpleCountedObject {
 public:
 	ScriptInfo() :
+		engine(NULL),
 		SQ_instance(NULL),
 		main_script(NULL),
 		tar_file(NULL),

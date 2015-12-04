@@ -1,4 +1,4 @@
-/* $Id: script_subsidy.cpp 23628 2011-12-19 21:01:12Z truebrain $ */
+/* $Id: script_subsidy.cpp 26482 2014-04-23 20:13:33Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -17,6 +17,8 @@
 #include "script_error.hpp"
 #include "../../subsidy_base.h"
 #include "../../station_base.h"
+
+#include "../../safeguards.h"
 
 /* static */ bool ScriptSubsidy::IsValidSubsidy(SubsidyID subsidy_id)
 {
@@ -48,9 +50,9 @@
 	return (ScriptCompany::CompanyID)((byte)::Subsidy::Get(subsidy_id)->awarded);
 }
 
-/* static */ int32 ScriptSubsidy::GetExpireDate(SubsidyID subsidy_id)
+/* static */ ScriptDate::Date ScriptSubsidy::GetExpireDate(SubsidyID subsidy_id)
 {
-	if (!IsValidSubsidy(subsidy_id)) return -1;
+	if (!IsValidSubsidy(subsidy_id)) return ScriptDate::DATE_INVALID;
 
 	int year = ScriptDate::GetYear(ScriptDate::GetCurrentDate());
 	int month = ScriptDate::GetMonth(ScriptDate::GetCurrentDate());

@@ -1,4 +1,4 @@
-/* $Id: network_command.cpp 24139 2012-04-17 19:44:16Z michi_cc $ */
+/* $Id: network_command.cpp 26482 2014-04-23 20:13:33Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -18,6 +18,8 @@
 #include "../command_func.h"
 #include "../company_func.h"
 #include "../settings_type.h"
+
+#include "../safeguards.h"
 
 /** Table with all the callbacks we'll use for conversion*/
 static CommandCallback * const _callback_table[] = {
@@ -235,7 +237,7 @@ void NetworkFreeLocalCommandQueue()
  * @param cp    The command that has to be distributed.
  * @param owner The client that owns the command,
  */
-static void DistributeCommandPacket(CommandPacket cp, const NetworkClientSocket *owner)
+static void DistributeCommandPacket(CommandPacket &cp, const NetworkClientSocket *owner)
 {
 	CommandCallback *callback = cp.callback;
 	cp.frame = _frame_counter_max + 1;

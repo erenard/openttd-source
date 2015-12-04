@@ -1,4 +1,4 @@
-/* $Id: object_base.h 23735 2012-01-03 20:26:05Z rubidium $ */
+/* $Id: object_base.h 25844 2013-10-12 16:35:50Z frosch $ */
 
 /*
  * This file is part of OpenTTD.
@@ -18,11 +18,12 @@
 #include "town_type.h"
 #include "date_type.h"
 
-typedef Pool<Object, ObjectID, 64, 64000> ObjectPool;
+typedef Pool<Object, ObjectID, 64, 0xFF0000> ObjectPool;
 extern ObjectPool _object_pool;
 
 /** An object, such as transmitter, on the map. */
 struct Object : ObjectPool::PoolItem<&_object_pool> {
+	ObjectType type;    ///< Type of the object
 	Town *town;         ///< Town the object is built in
 	TileArea location;  ///< Location of the object
 	Date build_date;    ///< Date of construction

@@ -1,4 +1,4 @@
-/* $Id: extmidi.h 17875 2009-10-25 21:47:32Z smatz $ */
+/* $Id: extmidi.h 26108 2013-11-25 14:30:22Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -14,7 +14,7 @@
 
 #include "music_driver.hpp"
 
-class MusicDriver_ExtMidi: public MusicDriver {
+class MusicDriver_ExtMidi : public MusicDriver {
 private:
 	char *command;
 	char song[MAX_PATH];
@@ -38,12 +38,10 @@ public:
 	/* virtual */ const char *GetName() const { return "extmidi"; }
 };
 
-class FMusicDriver_ExtMidi: public MusicDriverFactory<FMusicDriver_ExtMidi> {
+class FMusicDriver_ExtMidi : public DriverFactoryBase {
 public:
-	static const int priority = 3;
-	/* virtual */ const char *GetName() { return "extmidi"; }
-	/* virtual */ const char *GetDescription() { return "External MIDI Driver"; }
-	/* virtual */ Driver *CreateInstance() { return new MusicDriver_ExtMidi(); }
+	FMusicDriver_ExtMidi() : DriverFactoryBase(Driver::DT_MUSIC, 3, "extmidi", "External MIDI Driver") {}
+	/* virtual */ Driver *CreateInstance() const { return new MusicDriver_ExtMidi(); }
 };
 
 #endif /* MUSIC_EXTERNAL_H */

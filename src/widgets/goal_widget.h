@@ -1,5 +1,5 @@
 
-/* $Id: goal_widget.h 23827 2012-01-21 12:03:55Z rubidium $ */
+/* $Id: goal_widget.h 25623 2013-07-21 15:59:07Z zuu $ */
 
 /*
  * This file is part of OpenTTD.
@@ -15,8 +15,9 @@
 
 /** Widgets of the #GoalListWindow class. */
 enum GoalListWidgets {
-	WID_GL_PANEL,     ///< Panel of the window.
-	WID_GL_SCROLLBAR, ///< Scrollbar of the panel.
+	WID_GOAL_CAPTION,   ///< Caption of the window.
+	WID_GOAL_LIST,      ///< Goal list.
+	WID_GOAL_SCROLLBAR, ///< Scrollbar of the goal list.
 };
 
 /** Widgets of the #GoalQuestionWindow class. */

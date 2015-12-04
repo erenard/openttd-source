@@ -1,4 +1,4 @@
-/* $Id: 32bpp_simple.cpp 25987 2013-11-13 21:53:40Z rubidium $ */
+/* $Id: 32bpp_simple.cpp 26969 2014-10-06 18:45:51Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -14,6 +14,8 @@
 #include "32bpp_simple.hpp"
 
 #include "../table/sprites.h"
+
+#include "../safeguards.h"
 
 /** Instantiation of the simple 32bpp blitter factory. */
 static FBlitter_32bppSimple iFBlitter_32bppSimple;
@@ -42,6 +44,23 @@ void Blitter_32bppSimple::Draw(Blitter::BlitterParams *bp, BlitterMode mode, Zoo
 						if (src->a != 0) *dst = ComposeColourRGBA(src->r, src->g, src->b, src->a, *dst);
 					} else {
 						if (bp->remap[src->m] != 0) *dst = ComposeColourPA(this->AdjustBrightness(this->LookupColourInPalette(bp->remap[src->m]), src->v), src->a, *dst);
+					}
+					break;
+
+				case BM_CRASH_REMAP:
+					if (src->m == 0) {
+						if (src->a != 0) {
+							uint8 g = MakeDark(src->r, src->g, src->b);
+							*dst = ComposeColourRGBA(g, g, g, src->a, *dst);
+						}
+					} else {
+						if (bp->remap[src->m] != 0) *dst = ComposeColourPA(this->AdjustBrightness(this->LookupColourInPalette(bp->remap[src->m]), src->v), src->a, *dst);
+					}
+					break;
+
+				case BM_BLACK_REMAP:
+					if (src->a != 0) {
+						*dst = Colour(0, 0, 0);
 					}
 					break;
 
@@ -95,7 +114,7 @@ void Blitter_32bppSimple::DrawColourMappingRect(void *dst, int width, int height
 Sprite *Blitter_32bppSimple::Encode(const SpriteLoader::Sprite *sprite, AllocatorProc *allocator)
 {
 	Blitter_32bppSimple::Pixel *dst;
-	Sprite *dest_sprite = (Sprite *)allocator(sizeof(*dest_sprite) + sprite->height * sprite->width * sizeof(*dst));
+	Sprite *dest_sprite = (Sprite *)allocator(sizeof(*dest_sprite) + (size_t)sprite->height * (size_t)sprite->width * sizeof(*dst));
 
 	dest_sprite->height = sprite->height;
 	dest_sprite->width  = sprite->width;

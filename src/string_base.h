@@ -1,4 +1,4 @@
-/* $Id: string_base.h 25979 2013-11-13 21:28:21Z rubidium $ */
+/* $Id: string_base.h 25653 2013-08-05 20:35:31Z michi_cc $ */
 
 /*
  * This file is part of OpenTTD.

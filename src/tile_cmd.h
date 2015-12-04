@@ -1,4 +1,4 @@
-/* $Id: tile_cmd.h 23107 2011-11-04 11:36:10Z rubidium $ */
+/* $Id: tile_cmd.h 26277 2014-01-26 13:50:10Z frosch $ */
 
 /*
  * This file is part of OpenTTD.
@@ -62,7 +62,8 @@ struct TileDesc {
 	StringID airport_tile_name; ///< Name of the airport tile
 	const char *grf;            ///< newGRF used for the tile contents
 	uint64 dparam[2];           ///< Parameters of the \a str string
-	uint16 rail_speed;          ///< Speed limit of rail
+	uint16 rail_speed;          ///< Speed limit of rail (bridges and track)
+	uint16 road_speed;          ///< Speed limit of road (bridges)
 };
 
 /**

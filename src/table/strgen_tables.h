@@ -1,4 +1,4 @@
-/* $Id: strgen_tables.h 25204 2013-04-24 17:54:43Z rubidium $ */
+/* $Id: strgen_tables.h 26050 2013-11-22 21:43:47Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -153,6 +153,9 @@ struct PluralForm {
 	const char *description; ///< Human readable description of the form
 	const char *names;       ///< Plural names
 };
+
+/** The maximum number of plurals. */
+static const int MAX_PLURALS = 5;
 
 /** All plural forms used */
 static const PluralForm _plural_forms[] = {

@@ -1,4 +1,4 @@
-/* $Id: null_v.h 22818 2011-08-24 12:11:10Z rubidium $ */
+/* $Id: null_v.h 26108 2013-11-25 14:30:22Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -15,7 +15,7 @@
 #include "video_driver.hpp"
 
 /** The null video driver. */
-class VideoDriver_Null: public VideoDriver {
+class VideoDriver_Null : public VideoDriver {
 private:
 	uint ticks; ///< Amount of ticks to run.
 
@@ -36,12 +36,10 @@ public:
 };
 
 /** Factory the null video driver. */
-class FVideoDriver_Null: public VideoDriverFactory<FVideoDriver_Null> {
+class FVideoDriver_Null : public DriverFactoryBase {
 public:
-	static const int priority = 0;
-	/* virtual */ const char *GetName() { return "null"; }
-	/* virtual */ const char *GetDescription() { return "Null Video Driver"; }
-	/* virtual */ Driver *CreateInstance() { return new VideoDriver_Null(); }
+	FVideoDriver_Null() : DriverFactoryBase(Driver::DT_VIDEO, 0, "null", "Null Video Driver") {}
+	/* virtual */ Driver *CreateInstance() const { return new VideoDriver_Null(); }
 };
 
 #endif /* VIDEO_NULL_H */

@@ -1,4 +1,4 @@
-/* $Id: yapf.hpp 23640 2011-12-20 17:57:56Z truebrain $ */
+/* $Id: yapf.hpp 25608 2013-07-14 09:20:34Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -29,6 +29,7 @@
 #include "../../misc/dbg_helpers.h"
 #include "nodelist.hpp"
 #include "../follow_track.hpp"
+#include "yapf_type.hpp"
 #include "yapf_base.hpp"
 #include "yapf_node.hpp"
 #include "yapf_common.hpp"

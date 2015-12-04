@@ -1,4 +1,4 @@
-/* $Id: statusbar_gui.h 24900 2013-01-08 22:46:42Z planetmaker $ */
+/* $Id: statusbar_gui.h 25289 2013-05-26 19:24:37Z frosch $ */
 
 /*
  * This file is part of OpenTTD.
@@ -24,7 +24,5 @@ enum StatusBarInvalidate {
 
 bool IsNewsTickerShown();
 void ShowStatusBar();
-
-extern int16 *_preferred_statusbar_size;
 
 #endif /* STATUSBAR_GUI_H */

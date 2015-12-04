@@ -1,4 +1,4 @@
-/* $Id: newgrf_airporttiles.h 24900 2013-01-08 22:46:42Z planetmaker $ */
+/* $Id: newgrf_airporttiles.h 26085 2013-11-24 14:41:19Z frosch $ */
 
 /*
  * This file is part of OpenTTD.
@@ -24,7 +24,7 @@ struct AirportTileScopeResolver : public ScopeResolver {
 	byte airport_id;     ///< Type of airport for which the callback is run.
 	TileIndex tile;      ///< Tile for the callback, only valid for airporttile callbacks.
 
-	AirportTileScopeResolver(ResolverObject *ro, const AirportTileSpec *ats, TileIndex tile, Station *st);
+	AirportTileScopeResolver(ResolverObject &ro, const AirportTileSpec *ats, TileIndex tile, Station *st);
 
 	/* virtual */ uint32 GetRandomBits() const;
 	/* virtual */ uint32 GetVariable(byte variable, uint32 parameter, bool *available) const;

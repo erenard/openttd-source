@@ -1,4 +1,4 @@
-/* $Id: economy_type.h 23595 2011-12-19 17:48:04Z rubidium $ */
+/* $Id: economy_type.h 25788 2013-09-21 13:07:42Z zuu $ */
 
 /*
  * This file is part of OpenTTD.
@@ -164,6 +164,10 @@ enum ExpensesType {
 	EXPENSES_END,                 ///< Number of expense types.
 	INVALID_EXPENSES      = 0xFF, ///< Invalid expense type.
 };
+
+/** Define basic enum properties for ExpensesType */
+template <> struct EnumPropsT<ExpensesType> : MakeEnumPropsT<ExpensesType, byte, EXPENSES_CONSTRUCTION, EXPENSES_END, INVALID_EXPENSES, 8> {};
+typedef TinyEnumT<ExpensesType> ExpensesTypeByte; ///< typedefing-enumification of ExpensesType
 
 /**
  * Categories of a price bases.

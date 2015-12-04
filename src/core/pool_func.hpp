@@ -1,4 +1,4 @@
-/* $Id: pool_func.hpp 24900 2013-01-08 22:46:42Z planetmaker $ */
+/* $Id: pool_func.hpp 26057 2013-11-23 13:12:19Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -35,6 +35,9 @@ DEFINE_POOL_METHOD(inline)::Pool(const char *name) :
 		first_free(0),
 		first_unused(0),
 		items(0),
+#ifdef OTTD_ASSERT
+		checked(0),
+#endif /* OTTD_ASSERT */
 		cleaning(false),
 		data(NULL),
 		alloc_cache(NULL)

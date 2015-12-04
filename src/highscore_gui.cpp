@@ -1,4 +1,4 @@
-/* $Id: highscore_gui.cpp 25982 2013-11-13 21:35:44Z rubidium $ */
+/* $Id: highscore_gui.cpp 26871 2014-09-21 09:12:04Z peter1138 $ */
 
 /*
  * This file is part of OpenTTD.
@@ -25,13 +25,15 @@
 
 #include "widgets/highscore_widget.h"
 
+#include "safeguards.h"
+
 struct EndGameHighScoreBaseWindow : Window {
 	uint32 background_img;
 	int8 rank;
 
-	EndGameHighScoreBaseWindow(const WindowDesc *desc) : Window()
+	EndGameHighScoreBaseWindow(WindowDesc *desc) : Window(desc)
 	{
-		this->InitNested(desc);
+		this->InitNested();
 		CLRBITS(this->flags, WF_WHITE_BORDER);
 		ResizeWindow(this, _screen.width - this->width, _screen.height - this->height);
 	}
@@ -44,17 +46,20 @@ struct EndGameHighScoreBaseWindow : Window {
 
 		this->DrawWidgets();
 
-		Point pt = this->GetTopLeft640x480();
+		/* Standard background slices are 50 pixels high, but it's designed
+		 * for 480 pixels total. 96% of 500 is 480. */
+		Dimension dim = GetSpriteSize(this->background_img);
+		Point pt = this->GetTopLeft(dim.width, dim.height * 96 / 10);
 		/* Center Highscore/Endscreen background */
 		for (uint i = 0; i < 10; i++) { // the image is split into 10 50px high parts
-			DrawSprite(this->background_img + i, PAL_NONE, pt.x, pt.y + (i * 50));
+			DrawSprite(this->background_img + i, PAL_NONE, pt.x, pt.y + (i * dim.height));
 		}
 	}
 
 	/** Return the coordinate of the screen such that a window of 640x480 is centered at the screen. */
-	Point GetTopLeft640x480()
+	Point GetTopLeft(int x, int y)
 	{
-		Point pt = {max(0, (_screen.width  / 2) - (640 / 2)), max(0, (_screen.height / 2) - (480 / 2))};
+		Point pt = {max(0, (_screen.width / 2) - (x / 2)), max(0, (_screen.height / 2) - (y / 2))};
 		return pt;
 	}
 
@@ -89,7 +94,7 @@ struct EndGameHighScoreBaseWindow : Window {
 
 /** End game window shown at the end of the game */
 struct EndGameWindow : EndGameHighScoreBaseWindow {
-	EndGameWindow(const WindowDesc *desc) : EndGameHighScoreBaseWindow(desc)
+	EndGameWindow(WindowDesc *desc) : EndGameHighScoreBaseWindow(desc)
 	{
 		/* Pause in single-player to have a look at the highscore at your own leisure */
 		if (!_networking) DoCommandP(0, PM_PAUSED_NORMAL, 1, CMD_PAUSE);
@@ -127,7 +132,7 @@ struct EndGameWindow : EndGameHighScoreBaseWindow {
 	virtual void OnPaint()
 	{
 		this->SetupHighScoreEndWindow();
-		Point pt = this->GetTopLeft640x480();
+		Point pt = this->GetTopLeft(640, 480);
 
 		const Company *c = Company::GetIfValid(_local_company);
 		if (c == NULL) return;
@@ -150,7 +155,7 @@ struct EndGameWindow : EndGameHighScoreBaseWindow {
 struct HighScoreWindow : EndGameHighScoreBaseWindow {
 	bool game_paused_by_player; ///< True if the game was paused by the player when the highscore window was opened.
 
-	HighScoreWindow(const WindowDesc *desc, int difficulty, int8 ranking) : EndGameHighScoreBaseWindow(desc)
+	HighScoreWindow(WindowDesc *desc, int difficulty, int8 ranking) : EndGameHighScoreBaseWindow(desc)
 	{
 		/* pause game to show the chart */
 		this->game_paused_by_player = _pause_mode == PM_PAUSED_NORMAL;
@@ -177,7 +182,7 @@ struct HighScoreWindow : EndGameHighScoreBaseWindow {
 		const HighScore *hs = _highscore_table[this->window_number];
 
 		this->SetupHighScoreEndWindow();
-		Point pt = this->GetTopLeft640x480();
+		Point pt = this->GetTopLeft(640, 480);
 
 		SetDParam(0, ORIGINAL_END_YEAR);
 		DrawStringMultiLine(pt.x + 70, pt.x + 570, pt.y, pt.y + 140, !_networking ? STR_HIGHSCORE_TOP_COMPANIES_WHO_REACHED : STR_HIGHSCORE_TOP_COMPANIES_NETWORK_GAME, TC_FROMSTRING, SA_CENTER);
@@ -204,15 +209,15 @@ static const NWidgetPart _nested_highscore_widgets[] = {
 	NWidget(WWT_PANEL, COLOUR_BROWN, WID_H_BACKGROUND), SetMinimalSize(641, 481), SetResize(1, 1), EndContainer(),
 };
 
-static const WindowDesc _highscore_desc(
-	WDP_MANUAL, 0, 0,
+static WindowDesc _highscore_desc(
+	WDP_MANUAL, NULL, 0, 0,
 	WC_HIGHSCORE, WC_NONE,
 	0,
 	_nested_highscore_widgets, lengthof(_nested_highscore_widgets)
 );
 
-static const WindowDesc _endgame_desc(
-	WDP_MANUAL, 0, 0,
+static WindowDesc _endgame_desc(
+	WDP_MANUAL, NULL, 0, 0,
 	WC_ENDSCREEN, WC_NONE,
 	0,
 	_nested_highscore_widgets, lengthof(_nested_highscore_widgets)

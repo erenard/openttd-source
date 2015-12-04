@@ -1,4 +1,4 @@
-/* $Id: train_cmd.h 17248 2009-08-21 20:21:05Z rubidium $ */
+/* $Id: train_cmd.h 26130 2013-11-26 16:08:58Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -64,3 +64,7 @@ static const byte _wagon_full_adder[] = {
 	 0,  0, 24, 24, 24, 24,  0,  0,
 	32, 32
 };
+
+assert_compile(lengthof(_engine_sprite_base) == lengthof(_engine_sprite_and));
+assert_compile(lengthof(_engine_sprite_base) == lengthof(_engine_sprite_add));
+assert_compile(lengthof(_engine_sprite_base) == lengthof(_wagon_full_adder));

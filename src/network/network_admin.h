@@ -1,4 +1,4 @@
-/* $Id: network_admin.h 25599 2013-07-13 10:13:55Z rubidium $ */
+/* $Id: network_admin.h 25588 2013-07-11 20:31:39Z planetmaker $ */
 
 /*
  * This file is part of OpenTTD.

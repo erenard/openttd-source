@@ -1,4 +1,4 @@
-/* $Id: vehicle_sl.cpp 24998 2013-02-14 17:24:55Z rubidium $ */
+/* $Id: vehicle_sl.cpp 26872 2014-09-21 11:12:42Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -19,10 +19,13 @@
 #include "../effectvehicle_base.h"
 #include "../company_base.h"
 #include "../company_func.h"
+#include "../disaster_vehicle.h"
 
 #include "saveload.h"
 
 #include <map>
+
+#include "../safeguards.h"
 
 /**
  * Link front and rear multiheaded engines to each other
@@ -197,7 +200,8 @@ void UpdateOldAircraft()
 			if (a->subtype == AIR_HELICOPTER) a->Next()->Next()->cur_speed = 32;
 
 			/* set new position x,y,z */
-			SetAircraftPosition(a, gp.x, gp.y, GetAircraftFlyingAltitude(a));
+			GetAircraftFlightLevelBounds(a, &a->z_pos, NULL);
+			SetAircraftPosition(a, gp.x, gp.y, GetAircraftFlightLevel(a));
 		}
 	}
 }
@@ -376,7 +380,7 @@ void AfterLoadVehicles(bool part_of_load)
 				Train *t = Train::From(v);
 				if (t->IsFrontEngine() || t->IsFreeWagon()) {
 					t->gcache.last_speed = t->cur_speed; // update displayed train speed
-					t->ConsistChanged(false);
+					t->ConsistChanged(CCF_SAVELOAD);
 				}
 				break;
 			}
@@ -457,8 +461,8 @@ void AfterLoadVehicles(bool part_of_load)
 
 		v->UpdateDeltaXY(v->direction);
 		v->coord.left = INVALID_COORD;
-		VehicleUpdatePosition(v);
-		VehicleUpdateViewport(v, false);
+		v->UpdatePosition();
+		v->UpdateViewport(false);
 	}
 }
 
@@ -547,7 +551,7 @@ void FixupTrainLengths()
 			}
 
 			/* Update all cached properties after moving the vehicle chain around. */
-			Train::From(v)->ConsistChanged(true);
+			Train::From(v)->ConsistChanged(CCF_TRACK);
 		}
 	}
 }
@@ -604,6 +608,7 @@ const SaveLoad *GetVehicleDescription(VehicleType vt)
 		     SLE_VAR(Vehicle, vehstatus,             SLE_UINT8),
 		 SLE_CONDVAR(Vehicle, last_station_visited,  SLE_FILE_U8  | SLE_VAR_U16,   0,   4),
 		 SLE_CONDVAR(Vehicle, last_station_visited,  SLE_UINT16,                   5, SL_MAX_VERSION),
+		 SLE_CONDVAR(Vehicle, last_loading_station,  SLE_UINT16,                 182, SL_MAX_VERSION),
 
 		     SLE_VAR(Vehicle, cargo_type,            SLE_UINT8),
 		 SLE_CONDVAR(Vehicle, cargo_subtype,         SLE_UINT8,                   35, SL_MAX_VERSION),
@@ -612,8 +617,10 @@ const SaveLoad *GetVehicleDescription(VehicleType vt)
 		SLEG_CONDVAR(         _cargo_source,         SLE_UINT16,                   7,  67),
 		SLEG_CONDVAR(         _cargo_source_xy,      SLE_UINT32,                  44,  67),
 		     SLE_VAR(Vehicle, cargo_cap,             SLE_UINT16),
+		 SLE_CONDVAR(Vehicle, refit_cap,             SLE_UINT16,                 182, SL_MAX_VERSION),
 		SLEG_CONDVAR(         _cargo_count,          SLE_UINT16,                   0,  67),
 		 SLE_CONDLST(Vehicle, cargo.packets,         REF_CARGO_PACKET,            68, SL_MAX_VERSION),
+		 SLE_CONDARR(Vehicle, cargo.action_counts,   SLE_UINT, VehicleCargoList::NUM_MOVE_TO_ACTION, 181, SL_MAX_VERSION),
 		 SLE_CONDVAR(Vehicle, cargo_age_counter,     SLE_UINT16,                 162, SL_MAX_VERSION),
 
 		     SLE_VAR(Vehicle, day_counter,           SLE_UINT8),
@@ -638,7 +645,7 @@ const SaveLoad *GetVehicleDescription(VehicleType vt)
 
 		/* Refit in current order */
 		 SLE_CONDVAR(Vehicle, current_order.refit_cargo,   SLE_UINT8,             36, SL_MAX_VERSION),
-		 SLE_CONDVAR(Vehicle, current_order.refit_subtype, SLE_UINT8,             36, SL_MAX_VERSION),
+		SLE_CONDNULL(1,                                                           36, 181), // refit_subtype
 
 		/* Timetable in current order */
 		 SLE_CONDVAR(Vehicle, current_order.wait_time,     SLE_UINT16,            67, SL_MAX_VERSION),
@@ -834,8 +841,11 @@ const SaveLoad *GetVehicleDescription(VehicleType vt)
 		 SLE_CONDVAR(Vehicle, age,                   SLE_INT32,                   31, SL_MAX_VERSION),
 		     SLE_VAR(Vehicle, tick_counter,          SLE_UINT8),
 
-		     SLE_VAR(DisasterVehicle, image_override,            SLE_UINT16),
-		     SLE_VAR(DisasterVehicle, big_ufo_destroyer_target,  SLE_UINT16),
+		 SLE_CONDVAR(DisasterVehicle, image_override,            SLE_FILE_U16 | SLE_VAR_U32,   0, 190),
+		 SLE_CONDVAR(DisasterVehicle, image_override,            SLE_UINT32,                 191, SL_MAX_VERSION),
+		 SLE_CONDVAR(DisasterVehicle, big_ufo_destroyer_target,  SLE_FILE_U16 | SLE_VAR_U32,   0, 190),
+		 SLE_CONDVAR(DisasterVehicle, big_ufo_destroyer_target,  SLE_UINT32,                 191, SL_MAX_VERSION),
+		 SLE_CONDVAR(DisasterVehicle, flags,                     SLE_UINT8,                  194, SL_MAX_VERSION),
 
 		SLE_CONDNULL(16,                                                           2, 143), // old reserved space
 
@@ -901,6 +911,8 @@ void Load_VEHS()
 		if (IsSavegameVersionBefore(5) && v->last_station_visited == 0xFF) {
 			v->last_station_visited = INVALID_STATION;
 		}
+
+		if (IsSavegameVersionBefore(182)) v->last_loading_station = INVALID_STATION;
 
 		if (IsSavegameVersionBefore(5)) {
 			/* Convert the current_order.type (which is a mix of type and flags, because

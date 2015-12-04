@@ -1,4 +1,4 @@
-/* $Id: station_gui.h 23735 2012-01-03 20:26:05Z rubidium $ */
+/* $Id: station_gui.h 26083 2013-11-24 14:29:32Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -27,7 +27,7 @@ enum StationCoverageType {
 int DrawStationCoverageAreaText(int left, int right, int top, StationCoverageType sct, int rad, bool supplies);
 void CheckRedrawStationCoverage(const Window *w);
 
-void ShowSelectStationIfNeeded(CommandContainer cmd, TileArea ta);
-void ShowSelectWaypointIfNeeded(CommandContainer cmd, TileArea ta);
+void ShowSelectStationIfNeeded(const CommandContainer &cmd, TileArea ta);
+void ShowSelectWaypointIfNeeded(const CommandContainer &cmd, TileArea ta);
 
 #endif /* STATION_GUI_H */

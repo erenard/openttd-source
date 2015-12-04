@@ -1,4 +1,4 @@
-/* $Id: company_manager_face.h 25500 2013-06-28 19:29:08Z rubidium $ */
+/* $Id: company_manager_face.h 25490 2013-06-27 20:20:13Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.

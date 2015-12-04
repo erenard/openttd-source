@@ -1,4 +1,4 @@
-/* $Id: company_base.h 24619 2012-10-20 22:05:26Z planetmaker $ */
+/* $Id: company_base.h 26081 2013-11-24 09:52:35Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.

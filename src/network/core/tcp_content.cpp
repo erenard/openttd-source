@@ -1,4 +1,4 @@
-/* $Id: tcp_content.cpp 25599 2013-07-13 10:13:55Z rubidium $ */
+/* $Id: tcp_content.cpp 26482 2014-04-23 20:13:33Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -23,6 +23,8 @@
 #include "../../fios.h"
 #endif /* OPENTTD_MSU */
 #include "tcp_content.h"
+
+#include "../../safeguards.h"
 
 /** Clear everything in the struct */
 ContentInfo::ContentInfo()
@@ -151,12 +153,6 @@ void NetworkContentSocketHandler::Close()
 	closesocket(this->sock);
 	this->sock = INVALID_SOCKET;
 }
-
-/**
- * Defines a simple (switch) case for each network packet
- * @param type the packet type to create the case for
- */
-#define CONTENT_COMMAND(type) case type: return this->NetworkPacketReceive_ ## type ## _command(p); break;
 
 /**
  * Handle the given packet, i.e. pass it to the right

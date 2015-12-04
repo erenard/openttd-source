@@ -1,4 +1,4 @@
-/* $Id: script_viewport.hpp 24900 2013-01-08 22:46:42Z planetmaker $ */
+/* $Id: script_viewport.hpp 25594 2013-07-13 06:38:54Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -24,7 +24,7 @@ public:
 	 * Scroll the viewport to the given tile, where the tile will be in the
 	 *  center of the screen.
 	 * @param tile The tile to put in the center of the screen.
-	 * @pre !ScriptGame::IsMultiplayer().
+	 * @pre ! ScriptGame::IsMultiplayer().
 	 * @pre ScriptMap::IsValidTile(tile).
 	 */
 	static void ScrollTo(TileIndex tile);

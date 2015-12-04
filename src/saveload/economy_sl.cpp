@@ -1,4 +1,4 @@
-/* $Id: economy_sl.cpp 21284 2010-11-21 12:47:04Z alberth $ */
+/* $Id: economy_sl.cpp 26482 2014-04-23 20:13:33Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -14,6 +14,8 @@
 #include "../economy_base.h"
 
 #include "saveload.h"
+
+#include "../safeguards.h"
 
 /** Prices in pre 126 savegames */
 static void Load_PRIC()
@@ -63,11 +65,11 @@ static void Load_ECMY()
 }
 
 static const SaveLoad _cargopayment_desc[] = {
-	SLE_REF(CargoPayment, front,         REF_VEHICLE),
-	SLE_VAR(CargoPayment, route_profit,  SLE_INT64),
-	SLE_VAR(CargoPayment, visual_profit, SLE_INT64),
-
-	SLE_END()
+	    SLE_REF(CargoPayment, front,           REF_VEHICLE),
+	    SLE_VAR(CargoPayment, route_profit,    SLE_INT64),
+	    SLE_VAR(CargoPayment, visual_profit,   SLE_INT64),
+	SLE_CONDVAR(CargoPayment, visual_transfer, SLE_INT64, 181, SL_MAX_VERSION),
+	    SLE_END()
 };
 
 static void Save_CAPY()

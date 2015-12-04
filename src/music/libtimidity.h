@@ -1,4 +1,4 @@
-/* $Id: libtimidity.h 22410 2011-05-02 16:14:23Z rubidium $ */
+/* $Id: libtimidity.h 26108 2013-11-25 14:30:22Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -15,7 +15,7 @@
 #include "music_driver.hpp"
 
 /** Music driver making use of libtimidity. */
-class MusicDriver_LibTimidity: public MusicDriver {
+class MusicDriver_LibTimidity : public MusicDriver {
 public:
 	/* virtual */ const char *Start(const char * const *param);
 
@@ -32,12 +32,10 @@ public:
 };
 
 /** Factory for the libtimidity driver. */
-class FMusicDriver_LibTimidity: public MusicDriverFactory<FMusicDriver_LibTimidity> {
+class FMusicDriver_LibTimidity : public DriverFactoryBase {
 public:
-	static const int priority = 5;
-	/* virtual */ const char *GetName() { return "libtimidity"; }
-	/* virtual */ const char *GetDescription() { return "LibTimidity MIDI Driver"; }
-	/* virtual */ Driver *CreateInstance() { return new MusicDriver_LibTimidity(); }
+	FMusicDriver_LibTimidity() : DriverFactoryBase(Driver::DT_MUSIC, 5, "libtimidity", "LibTimidity MIDI Driver") {}
+	/* virtual */ Driver *CreateInstance() const { return new MusicDriver_LibTimidity(); }
 };
 
 #endif /* MUSIC_LIBTIMIDITY_H */

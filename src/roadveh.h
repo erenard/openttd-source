@@ -1,4 +1,4 @@
-/* $Id: roadveh.h 24839 2012-12-23 01:00:25Z michi_cc $ */
+/* $Id: roadveh.h 25185 2013-04-13 13:42:08Z frosch $ */
 
 /*
  * This file is part of OpenTTD.
@@ -157,7 +157,7 @@ protected: // These functions should not be called outside acceleration code.
 	 */
 	inline uint16 GetWeight() const
 	{
-		uint16 weight = (CargoSpec::Get(this->cargo_type)->weight * this->cargo.Count()) / 16;
+		uint16 weight = (CargoSpec::Get(this->cargo_type)->weight * this->cargo.StoredCount()) / 16;
 
 		/* Vehicle weight is not added for articulated parts. */
 		if (!this->IsArticulatedPart()) {

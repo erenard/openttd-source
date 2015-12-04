@@ -1,4 +1,4 @@
-/* $Id: newgrf_airport.h 24900 2013-01-08 22:46:42Z planetmaker $ */
+/* $Id: newgrf_airport.h 25705 2013-08-09 18:43:44Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -91,7 +91,7 @@ enum TTDPAirportType {
 struct HangarTileTable {
 	TileIndexDiffC ti; ///< Tile offset from the top-most airport tile.
 	Direction dir;     ///< Direction of the exit.
-	byte hangar_num;   ///< The hanger to which this tile belongs.
+	byte hangar_num;   ///< The hangar to which this tile belongs.
 };
 
 /**

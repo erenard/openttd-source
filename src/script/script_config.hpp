@@ -1,4 +1,4 @@
-/* $Id: script_config.hpp 25599 2013-07-13 10:13:55Z rubidium $ */
+/* $Id: script_config.hpp 26493 2014-04-24 04:41:54Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -172,7 +172,7 @@ public:
 	 * Convert the custom settings to a string that can be stored in the config
 	 *  file or savegames.
 	 */
-	void SettingsToString(char *string, size_t size) const;
+	void SettingsToString(char *string, const char *last) const;
 
 	/**
 	 * Search a textfile file next to this script.

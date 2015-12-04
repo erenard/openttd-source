@@ -1,4 +1,4 @@
-/* $Id: script_info_docs.hpp 26021 2013-11-17 11:29:44Z rubidium $ */
+/* $Id: script_info_docs.hpp 26038 2013-11-18 20:09:09Z frosch $ */
 
 /*
  * This file is part of OpenTTD.
@@ -148,7 +148,7 @@ public:
 	/**
 	 * Gets the name of main class of the Script so OpenTTD knows
 	 * what class to instantiate. For libraries, this name is also
-	 * used when other scripts import it using @ScriptController::Import.
+	 * used when other scripts import it using ScriptController::Import.
 	 *
 	 * @return The class name of the Script.
 	 * @note This function is required.

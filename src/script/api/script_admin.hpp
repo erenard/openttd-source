@@ -1,4 +1,4 @@
-/* $Id: script_admin.hpp 23737 2012-01-03 20:37:56Z truebrain $ */
+/* $Id: script_admin.hpp 25594 2013-07-13 06:38:54Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -36,7 +36,7 @@ public:
 	 * @note If the resulting JSON of your table is larger than 1450 bytes,
 	 *   nothing will be sent (and false will be returned).
 	 */
-	static bool Send(table);
+	static bool Send(void *table);
 #endif /* DOXYGEN_API */
 
 private:

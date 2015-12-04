@@ -1,4 +1,4 @@
-/* $Id: wnd_quartz.mm 26024 2013-11-17 13:35:48Z rubidium $ */
+/* $Id: wnd_quartz.mm 26108 2013-11-25 14:30:22Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -57,7 +57,7 @@ class WindowQuartzSubdriver;
 - (void)drawRect:(NSRect)invalidRect;
 @end
 
-class WindowQuartzSubdriver: public CocoaSubdriver {
+class WindowQuartzSubdriver : public CocoaSubdriver {
 private:
 	/**
 	 * This function copies 8bpp pixels from the screen buffer in 32bpp windowed mode.

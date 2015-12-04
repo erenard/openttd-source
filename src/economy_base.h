@@ -1,4 +1,4 @@
-/* $Id: economy_base.h 22411 2011-05-02 17:42:12Z rubidium $ */
+/* $Id: economy_base.h 25011 2013-02-17 14:50:54Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -24,9 +24,10 @@ extern CargoPaymentPool _cargo_payment_pool;
  * Helper class to perform the cargo payment.
  */
 struct CargoPayment : CargoPaymentPool::PoolItem<&_cargo_payment_pool> {
-	Vehicle *front;      ///< The front vehicle to do the payment of
-	Money route_profit;  ///< The amount of money to add/remove from the bank account
-	Money visual_profit; ///< The visual profit to show
+	Vehicle *front;        ///< The front vehicle to do the payment of
+	Money route_profit;    ///< The amount of money to add/remove from the bank account
+	Money visual_profit;   ///< The visual profit to show
+	Money visual_transfer; ///< The transfer credits to be shown
 
 	/* Unsaved variables */
 	Company *owner;            ///< The owner of the vehicle

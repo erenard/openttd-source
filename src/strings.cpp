@@ -1,4 +1,4 @@
-/* $Id: strings.cpp 26020 2013-11-17 11:24:39Z rubidium $ */
+/* $Id: strings.cpp 27102 2015-01-01 20:50:43Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -13,7 +13,6 @@
 #include "currency.h"
 #include "station_base.h"
 #include "town.h"
-#include "screenshot.h"
 #include "waypoint_base.h"
 #include "depot_base.h"
 #include "industry.h"
@@ -40,6 +39,8 @@
 
 #include "table/strings.h"
 #include "table/control_codes.h"
+
+#include "safeguards.h"
 
 char _config_language_file[MAX_PATH];             ///< The file (name) stored in the configuration.
 LanguageList _languages;                          ///< The actual list of language meta data.
@@ -163,7 +164,7 @@ void CopyOutDParam(uint64 *dst, const char **strings, StringID string, int num)
 	MemCpyT(dst, _global_string_params.GetPointerToOffset(0), num);
 	for (int i = 0; i < num; i++) {
 		if (_global_string_params.HasTypeInformation() && _global_string_params.GetTypeAtOffset(i) == SCC_RAW_STRING_POINTER) {
-			strings[i] = strdup((const char *)(size_t)_global_string_params.GetParam(i));
+			strings[i] = stredup((const char *)(size_t)_global_string_params.GetParam(i));
 			dst[i] = (size_t)strings[i];
 		} else {
 			strings[i] = NULL;
@@ -192,8 +193,8 @@ const char *GetStringPtr(StringID string)
 {
 	switch (GB(string, TAB_COUNT_OFFSET, TAB_COUNT_BITS)) {
 		case GAME_TEXT_TAB: return GetGameStringPtr(GB(string, TAB_SIZE_OFFSET, TAB_SIZE_BITS));
-		/* GetGRFStringPtr doesn't handle 0xD4xx ids, we need to convert those to 0xD0xx. */
-		case 26: return GetStringPtr(GetGRFStringID(0, 0xD000 + GB(string, TAB_SIZE_OFFSET, 10)));
+		/* 0xD0xx and 0xD4xx IDs have been converted earlier. */
+		case 26: NOT_REACHED();
 		case 28: return GetGRFStringPtr(GB(string, TAB_SIZE_OFFSET, TAB_SIZE_BITS));
 		case 29: return GetGRFStringPtr(GB(string, TAB_SIZE_OFFSET, TAB_SIZE_BITS) + 0x0800);
 		case 30: return GetGRFStringPtr(GB(string, TAB_SIZE_OFFSET, TAB_SIZE_BITS) + 0x1000);
@@ -242,12 +243,7 @@ char *GetStringWithArgs(char *buffr, StringID string, StringParameters *args, co
 			return FormatString(buffr, GetGameStringPtr(index), args, last, case_index, true);
 
 		case 26:
-			/* Include string within newgrf text (format code 81) */
-			if (HasBit(index, 10)) {
-				StringID string = GetGRFStringID(0, 0xD000 + GB(index, 0, 10));
-				return GetStringWithArgs(buffr, string, args, last, case_index);
-			}
-			break;
+			NOT_REACHED();
 
 		case 28:
 			return FormatString(buffr, GetGRFStringPtr(index), args, last, case_index);
@@ -274,14 +270,6 @@ char *GetString(char *buffr, StringID string, const char *last)
 	_global_string_params.ClearTypeInformation();
 	_global_string_params.offset = 0;
 	return GetStringWithArgs(buffr, string, &_global_string_params, last);
-}
-
-
-char *InlineString(char *buf, StringID string)
-{
-	buf += Utf8Encode(buf, SCC_STRING_ID);
-	buf += Utf8Encode(buf, string);
-	return buf;
 }
 
 
@@ -411,7 +399,7 @@ static char *FormatBytes(char *buff, int64 number, const char *last)
 	}
 
 	assert(id < lengthof(iec_prefixes));
-	buff += seprintf(buff, last, " %sB", iec_prefixes[id]);
+	buff += seprintf(buff, last, NBSP "%sB", iec_prefixes[id]);
 
 	return buff;
 }
@@ -421,7 +409,7 @@ static char *FormatYmdString(char *buff, Date date, const char *last, uint case_
 	YearMonthDay ymd;
 	ConvertDateToYMD(date, &ymd);
 
-	int64 args[] = {ymd.day + STR_ORDINAL_NUMBER_1ST - 1, STR_MONTH_ABBREV_JAN + ymd.month, ymd.year};
+	int64 args[] = {ymd.day + STR_DAY_NUMBER_1ST - 1, STR_MONTH_ABBREV_JAN + ymd.month, ymd.year};
 	StringParameters tmp_params(args);
 	return FormatString(buff, GetStringPtr(STR_FORMAT_DATE_LONG), &tmp_params, last, case_index);
 }
@@ -444,8 +432,8 @@ static char *FormatTinyOrISODate(char *buff, Date date, StringID str, const char
 	char day[3];
 	char month[3];
 	/* We want to zero-pad the days and months */
-	snprintf(day,   lengthof(day),   "%02i", ymd.day);
-	snprintf(month, lengthof(month), "%02i", ymd.month + 1);
+	seprintf(day,   lastof(day),   "%02i", ymd.day);
+	seprintf(month, lastof(month), "%02i", ymd.month + 1);
 
 	int64 args[] = {(int64)(size_t)day, (int64)(size_t)month, ymd.year};
 	StringParameters tmp_params(args);
@@ -480,10 +468,10 @@ static char *FormatGenericCurrency(char *buff, const CurrencySpec *spec, Money n
 		 * and 1 000 M is inconsistent, so always use 1 000 M. */
 		if (number >= 1000000000 - 500) {
 			number = (number + 500000) / 1000000;
-			multiplier = "M";
+			multiplier = NBSP "M";
 		} else if (number >= 1000000) {
 			number = (number + 500) / 1000;
-			multiplier = "k";
+			multiplier = NBSP "k";
 		}
 	}
 
@@ -673,49 +661,59 @@ struct UnitConversion {
 	}
 };
 
+/** Information about a specific unit system. */
 struct Units {
-	UnitConversion c_velocity; ///< Conversion for velocity
-	StringID velocity;         ///< String for velocity
-	UnitConversion c_power;    ///< Conversion for power
-	StringID power;            ///< String for power
-	UnitConversion c_weight;   ///< Conversion for weight
-	StringID s_weight;         ///< Short string for weight
-	StringID l_weight;         ///< Long string for weight
-	UnitConversion c_volume;   ///< Conversion for volume
-	StringID s_volume;         ///< Short string for volume
-	StringID l_volume;         ///< Long string for volume
-	UnitConversion c_force;    ///< Conversion for force
-	StringID force;            ///< String for force
-	UnitConversion c_height;   ///< Conversion for height
-	StringID height;           ///< String for height
+	UnitConversion c; ///< Conversion
+	StringID s;       ///< String for the unit
 };
 
-/* Unit conversions */
-static const Units _units[] = {
-	{ // Imperial (Original, mph, hp, metric ton, litre, kN, ft)
-		{   1,  0}, STR_UNITS_VELOCITY_IMPERIAL,
-		{   1,  0}, STR_UNITS_POWER_IMPERIAL,
-		{   1,  0}, STR_UNITS_WEIGHT_SHORT_METRIC, STR_UNITS_WEIGHT_LONG_METRIC,
-		{1000,  0}, STR_UNITS_VOLUME_SHORT_METRIC, STR_UNITS_VOLUME_LONG_METRIC,
-		{   1,  0}, STR_UNITS_FORCE_SI,
-		{   3,  0}, STR_UNITS_HEIGHT_IMPERIAL, // "Wrong" conversion factor for more nicer GUI values
-	},
-	{ // Metric (km/h, hp, metric ton, litre, kN, metre)
-		{ 103,  6}, STR_UNITS_VELOCITY_METRIC,
-		{4153, 12}, STR_UNITS_POWER_METRIC,
-		{   1,  0}, STR_UNITS_WEIGHT_SHORT_METRIC, STR_UNITS_WEIGHT_LONG_METRIC,
-		{1000,  0}, STR_UNITS_VOLUME_SHORT_METRIC, STR_UNITS_VOLUME_LONG_METRIC,
-		{   1,  0}, STR_UNITS_FORCE_SI,
-		{   1,  0}, STR_UNITS_HEIGHT_SI,
-	},
-	{ // SI (m/s, kilowatt, kilogram, cubic metre, kilonewton, metre)
-		{1831, 12}, STR_UNITS_VELOCITY_SI,
-		{6109, 13}, STR_UNITS_POWER_SI,
-		{1000,  0}, STR_UNITS_WEIGHT_SHORT_SI, STR_UNITS_WEIGHT_LONG_SI,
-		{   1,  0}, STR_UNITS_VOLUME_SHORT_SI, STR_UNITS_VOLUME_LONG_SI,
-		{   1,  0}, STR_UNITS_FORCE_SI,
-		{   1,  0}, STR_UNITS_HEIGHT_SI,
-	},
+/** Information about a specific unit system with a long variant. */
+struct UnitsLong {
+	UnitConversion c; ///< Conversion
+	StringID s;       ///< String for the short variant of the unit
+	StringID l;       ///< String for the long variant of the unit
+};
+
+/** Unit conversions for velocity. */
+static const Units _units_velocity[] = {
+	{ {   1,  0}, STR_UNITS_VELOCITY_IMPERIAL },
+	{ { 103,  6}, STR_UNITS_VELOCITY_METRIC   },
+	{ {1831, 12}, STR_UNITS_VELOCITY_SI       },
+};
+
+/** Unit conversions for velocity. */
+static const Units _units_power[] = {
+	{ {   1,  0}, STR_UNITS_POWER_IMPERIAL },
+	{ {4153, 12}, STR_UNITS_POWER_METRIC   },
+	{ {6109, 13}, STR_UNITS_POWER_SI       },
+};
+
+/** Unit conversions for weight. */
+static const UnitsLong _units_weight[] = {
+	{ {4515, 12}, STR_UNITS_WEIGHT_SHORT_IMPERIAL, STR_UNITS_WEIGHT_LONG_IMPERIAL },
+	{ {   1,  0}, STR_UNITS_WEIGHT_SHORT_METRIC,   STR_UNITS_WEIGHT_LONG_METRIC   },
+	{ {1000,  0}, STR_UNITS_WEIGHT_SHORT_SI,       STR_UNITS_WEIGHT_LONG_SI       },
+};
+
+/** Unit conversions for volume. */
+static const UnitsLong _units_volume[] = {
+	{ {4227,  4}, STR_UNITS_VOLUME_SHORT_IMPERIAL, STR_UNITS_VOLUME_LONG_IMPERIAL },
+	{ {1000,  0}, STR_UNITS_VOLUME_SHORT_METRIC,   STR_UNITS_VOLUME_LONG_METRIC   },
+	{ {   1,  0}, STR_UNITS_VOLUME_SHORT_SI,       STR_UNITS_VOLUME_LONG_SI       },
+};
+
+/** Unit conversions for force. */
+static const Units _units_force[] = {
+	{ {3597,  4}, STR_UNITS_FORCE_IMPERIAL },
+	{ {3263,  5}, STR_UNITS_FORCE_METRIC   },
+	{ {   1,  0}, STR_UNITS_FORCE_SI       },
+};
+
+/** Unit conversions for height. */
+static const Units _units_height[] = {
+	{ {   3,  0}, STR_UNITS_HEIGHT_IMPERIAL }, // "Wrong" conversion factor for more nicer GUI values
+	{ {   1,  0}, STR_UNITS_HEIGHT_METRIC   },
+	{ {   1,  0}, STR_UNITS_HEIGHT_SI       },
 };
 
 /**
@@ -728,7 +726,7 @@ uint ConvertSpeedToDisplaySpeed(uint speed)
 	/* For historical reasons we don't want to mess with the
 	 * conversion for speed. So, don't round it and keep the
 	 * original conversion factors instead of the real ones. */
-	return _units[_settings_game.locale.units].c_velocity.ToDisplay(speed, false);
+	return _units_velocity[_settings_game.locale.units_velocity].c.ToDisplay(speed, false);
 }
 
 /**
@@ -738,7 +736,7 @@ uint ConvertSpeedToDisplaySpeed(uint speed)
  */
 uint ConvertDisplaySpeedToSpeed(uint speed)
 {
-	return _units[_settings_game.locale.units].c_velocity.FromDisplay(speed);
+	return _units_velocity[_settings_game.locale.units_velocity].c.FromDisplay(speed);
 }
 
 /**
@@ -748,7 +746,7 @@ uint ConvertDisplaySpeedToSpeed(uint speed)
  */
 uint ConvertKmhishSpeedToDisplaySpeed(uint speed)
 {
-	return _units[_settings_game.locale.units].c_velocity.ToDisplay(speed * 10, false) / 16;
+	return _units_velocity[_settings_game.locale.units_velocity].c.ToDisplay(speed * 10, false) / 16;
 }
 
 /**
@@ -758,7 +756,7 @@ uint ConvertKmhishSpeedToDisplaySpeed(uint speed)
  */
 uint ConvertDisplaySpeedToKmhishSpeed(uint speed)
 {
-	return _units[_settings_game.locale.units].c_velocity.FromDisplay(speed * 16, true, 10);
+	return _units_velocity[_settings_game.locale.units_velocity].c.FromDisplay(speed * 16, true, 10);
 }
 /**
  * Parse most format codes within a string and write the result to a buffer.
@@ -791,7 +789,7 @@ static char *FormatString(char *buff, const char *str_arg, StringParameters *arg
 		/* We have to restore the original offset here to to read the correct values. */
 		args->offset = orig_offset;
 	}
-	WChar b;
+	WChar b = '\0';
 	uint next_substr_case_index = 0;
 	char *buf_start = buff;
 	std::stack<const char *> str_stack;
@@ -807,7 +805,7 @@ static char *FormatString(char *buff, const char *str_arg, StringParameters *arg
 		if (SCC_NEWGRF_FIRST <= b && b <= SCC_NEWGRF_LAST) {
 			/* We need to pass some stuff as it might be modified; oh boy. */
 			//todo: should argve be passed here too?
-			b = RemapNewGRFStringControlCode(b, buf_start, &buff, &str, (int64 *)args->GetDataPointer(), dry_run);
+			b = RemapNewGRFStringControlCode(b, buf_start, &buff, &str, (int64 *)args->GetDataPointer(), args->GetDataLeft(), dry_run);
 			if (b == 0) continue;
 		}
 
@@ -876,7 +874,7 @@ static char *FormatString(char *buff, const char *str_arg, StringParameters *arg
 						bool lookup = (l == SCC_ENCODED);
 						if (lookup) s += len;
 
-						param = (int32)strtoul(s, &p, 16);
+						param = strtoull(s, &p, 16);
 
 						if (lookup) {
 							if (param >= TAB_SIZE) {
@@ -890,7 +888,7 @@ static char *FormatString(char *buff, const char *str_arg, StringParameters *arg
 
 						sub_args.SetParam(i++, param);
 					} else {
-						char *g = strdup(s);
+						char *g = stredup(s);
 						g[p - s] = '\0';
 
 						sub_args_need_free[i] = true;
@@ -1007,11 +1005,6 @@ static char *FormatString(char *buff, const char *str_arg, StringParameters *arg
 				buff = strecpy(buff, _openttd_revision, last);
 				break;
 
-			case SCC_STRING_ID: // {STRINL}
-				if (game_script) break;
-				buff = GetStringWithArgs(buff, Utf8Consume(&str), args, last);
-				break;
-
 			case SCC_RAW_STRING_POINTER: { // {RAW_STRING}
 				if (game_script) break;
 				const char *str = (const char *)(size_t)args->GetInt64(SCC_RAW_STRING_POINTER);
@@ -1025,7 +1018,7 @@ static char *FormatString(char *buff, const char *str_arg, StringParameters *arg
 				/* WARNING. It's prohibited for the included string to consume any arguments.
 				 * For included strings that consume argument, you should use STRING1, STRING2 etc.
 				 * To debug stuff you can set argv to NULL and it will tell you */
-				StringParameters tmp_params(args->GetDataPointer(), args->num_param - args->offset, NULL);
+				StringParameters tmp_params(args->GetDataPointer(), args->GetDataLeft(), NULL);
 				buff = GetStringWithArgs(buff, str, &tmp_params, last, next_substr_case_index, game_script);
 				next_substr_case_index = 0;
 				break;
@@ -1042,7 +1035,7 @@ static char *FormatString(char *buff, const char *str_arg, StringParameters *arg
 				StringID str = args->GetInt32(b);
 				if (game_script && GB(str, TAB_COUNT_OFFSET, TAB_COUNT_BITS) != GAME_TEXT_TAB) break;
 				uint size = b - SCC_STRING1 + 1;
-				if (game_script && size > args->num_param - args->offset) {
+				if (game_script && size > args->GetDataLeft()) {
 					buff = strecat(buff, "(too many parameters)", last);
 				} else {
 					StringParameters sub_args(*args, size);
@@ -1092,11 +1085,11 @@ static char *FormatString(char *buff, const char *str_arg, StringParameters *arg
 				int64 amount = 0;
 				switch (cargo_str) {
 					case STR_TONS:
-						amount = _units[_settings_game.locale.units].c_weight.ToDisplay(args->GetInt64());
+						amount = _units_weight[_settings_game.locale.units_weight].c.ToDisplay(args->GetInt64());
 						break;
 
 					case STR_LITERS:
-						amount = _units[_settings_game.locale.units].c_volume.ToDisplay(args->GetInt64());
+						amount = _units_volume[_settings_game.locale.units_volume].c.ToDisplay(args->GetInt64());
 						break;
 
 					default: {
@@ -1119,18 +1112,18 @@ static char *FormatString(char *buff, const char *str_arg, StringParameters *arg
 				StringID cargo_str = CargoSpec::Get(cargo)->units_volume;
 				switch (cargo_str) {
 					case STR_TONS: {
-						assert(_settings_game.locale.units < lengthof(_units));
-						int64 args_array[] = {_units[_settings_game.locale.units].c_weight.ToDisplay(args->GetInt64())};
+						assert(_settings_game.locale.units_weight < lengthof(_units_weight));
+						int64 args_array[] = {_units_weight[_settings_game.locale.units_weight].c.ToDisplay(args->GetInt64())};
 						StringParameters tmp_params(args_array);
-						buff = FormatString(buff, GetStringPtr(_units[_settings_game.locale.units].l_weight), &tmp_params, last);
+						buff = FormatString(buff, GetStringPtr(_units_weight[_settings_game.locale.units_weight].l), &tmp_params, last);
 						break;
 					}
 
 					case STR_LITERS: {
-						assert(_settings_game.locale.units < lengthof(_units));
-						int64 args_array[] = {_units[_settings_game.locale.units].c_volume.ToDisplay(args->GetInt64())};
+						assert(_settings_game.locale.units_volume < lengthof(_units_volume));
+						int64 args_array[] = {_units_volume[_settings_game.locale.units_volume].c.ToDisplay(args->GetInt64())};
 						StringParameters tmp_params(args_array);
-						buff = FormatString(buff, GetStringPtr(_units[_settings_game.locale.units].l_volume), &tmp_params, last);
+						buff = FormatString(buff, GetStringPtr(_units_volume[_settings_game.locale.units_volume].l), &tmp_params, last);
 						break;
 					}
 
@@ -1213,65 +1206,66 @@ static char *FormatString(char *buff, const char *str_arg, StringParameters *arg
 				break;
 
 			case SCC_FORCE: { // {FORCE}
-				assert(_settings_game.locale.units < lengthof(_units));
-				int64 args_array[1] = {_units[_settings_game.locale.units].c_force.ToDisplay(args->GetInt64())};
+				assert(_settings_game.locale.units_force < lengthof(_units_force));
+				int64 args_array[1] = {_units_force[_settings_game.locale.units_force].c.ToDisplay(args->GetInt64())};
 				StringParameters tmp_params(args_array);
-				buff = FormatString(buff, GetStringPtr(_units[_settings_game.locale.units].force), &tmp_params, last);
+				buff = FormatString(buff, GetStringPtr(_units_force[_settings_game.locale.units_force].s), &tmp_params, last);
 				break;
 			}
 
 			case SCC_HEIGHT: { // {HEIGHT}
-				int64 args_array[] = {_units[_settings_game.locale.units].c_height.ToDisplay(args->GetInt64())};
+				assert(_settings_game.locale.units_height < lengthof(_units_height));
+				int64 args_array[] = {_units_height[_settings_game.locale.units_height].c.ToDisplay(args->GetInt64())};
 				StringParameters tmp_params(args_array);
-				buff = FormatString(buff, GetStringPtr(_units[_settings_game.locale.units].height), &tmp_params, last);
+				buff = FormatString(buff, GetStringPtr(_units_height[_settings_game.locale.units_height].s), &tmp_params, last);
 				break;
 			}
 
 			case SCC_POWER: { // {POWER}
-				assert(_settings_game.locale.units < lengthof(_units));
-				int64 args_array[1] = {_units[_settings_game.locale.units].c_power.ToDisplay(args->GetInt64())};
+				assert(_settings_game.locale.units_power < lengthof(_units_power));
+				int64 args_array[1] = {_units_power[_settings_game.locale.units_power].c.ToDisplay(args->GetInt64())};
 				StringParameters tmp_params(args_array);
-				buff = FormatString(buff, GetStringPtr(_units[_settings_game.locale.units].power), &tmp_params, last);
+				buff = FormatString(buff, GetStringPtr(_units_power[_settings_game.locale.units_power].s), &tmp_params, last);
 				break;
 			}
 
 			case SCC_VELOCITY: { // {VELOCITY}
-				assert(_settings_game.locale.units < lengthof(_units));
+				assert(_settings_game.locale.units_velocity < lengthof(_units_velocity));
 				int64 args_array[] = {ConvertKmhishSpeedToDisplaySpeed(args->GetInt64(SCC_VELOCITY))};
 				StringParameters tmp_params(args_array);
-				buff = FormatString(buff, GetStringPtr(_units[_settings_game.locale.units].velocity), &tmp_params, last);
+				buff = FormatString(buff, GetStringPtr(_units_velocity[_settings_game.locale.units_velocity].s), &tmp_params, last);
 				break;
 			}
 
 			case SCC_VOLUME_SHORT: { // {VOLUME_SHORT}
-				assert(_settings_game.locale.units < lengthof(_units));
-				int64 args_array[1] = {_units[_settings_game.locale.units].c_volume.ToDisplay(args->GetInt64())};
+				assert(_settings_game.locale.units_volume < lengthof(_units_volume));
+				int64 args_array[1] = {_units_volume[_settings_game.locale.units_volume].c.ToDisplay(args->GetInt64())};
 				StringParameters tmp_params(args_array);
-				buff = FormatString(buff, GetStringPtr(_units[_settings_game.locale.units].s_volume), &tmp_params, last);
+				buff = FormatString(buff, GetStringPtr(_units_volume[_settings_game.locale.units_volume].s), &tmp_params, last);
 				break;
 			}
 
 			case SCC_VOLUME_LONG: { // {VOLUME_LONG}
-				assert(_settings_game.locale.units < lengthof(_units));
-				int64 args_array[1] = {_units[_settings_game.locale.units].c_volume.ToDisplay(args->GetInt64(SCC_VOLUME_LONG))};
+				assert(_settings_game.locale.units_volume < lengthof(_units_volume));
+				int64 args_array[1] = {_units_volume[_settings_game.locale.units_volume].c.ToDisplay(args->GetInt64(SCC_VOLUME_LONG))};
 				StringParameters tmp_params(args_array);
-				buff = FormatString(buff, GetStringPtr(_units[_settings_game.locale.units].l_volume), &tmp_params, last);
+				buff = FormatString(buff, GetStringPtr(_units_volume[_settings_game.locale.units_volume].l), &tmp_params, last);
 				break;
 			}
 
 			case SCC_WEIGHT_SHORT: { // {WEIGHT_SHORT}
-				assert(_settings_game.locale.units < lengthof(_units));
-				int64 args_array[1] = {_units[_settings_game.locale.units].c_weight.ToDisplay(args->GetInt64())};
+				assert(_settings_game.locale.units_weight < lengthof(_units_weight));
+				int64 args_array[1] = {_units_weight[_settings_game.locale.units_weight].c.ToDisplay(args->GetInt64())};
 				StringParameters tmp_params(args_array);
-				buff = FormatString(buff, GetStringPtr(_units[_settings_game.locale.units].s_weight), &tmp_params, last);
+				buff = FormatString(buff, GetStringPtr(_units_weight[_settings_game.locale.units_weight].s), &tmp_params, last);
 				break;
 			}
 
 			case SCC_WEIGHT_LONG: { // {WEIGHT_LONG}
-				assert(_settings_game.locale.units < lengthof(_units));
-				int64 args_array[1] = {_units[_settings_game.locale.units].c_weight.ToDisplay(args->GetInt64(SCC_WEIGHT_LONG))};
+				assert(_settings_game.locale.units_weight < lengthof(_units_weight));
+				int64 args_array[1] = {_units_weight[_settings_game.locale.units_weight].c.ToDisplay(args->GetInt64(SCC_WEIGHT_LONG))};
 				StringParameters tmp_params(args_array);
-				buff = FormatString(buff, GetStringPtr(_units[_settings_game.locale.units].l_weight), &tmp_params, last);
+				buff = FormatString(buff, GetStringPtr(_units_weight[_settings_game.locale.units_weight].l), &tmp_params, last);
 				break;
 			}
 
@@ -1687,12 +1681,6 @@ static char *GetSpecialNameString(char *buff, int ind, StringParameters *args, c
 		return buff;
 	}
 
-	/* screenshot format name? */
-	if (IsInsideMM(ind, (SPECSTR_SCREENSHOT_START - 0x70E4), (SPECSTR_SCREENSHOT_END - 0x70E4) + 1)) {
-		int i = ind - (SPECSTR_SCREENSHOT_START - 0x70E4);
-		return strecpy(buff, GetScreenshotFormatDesc(i), last);
-	}
-
 	NOT_REACHED();
 }
 
@@ -1752,7 +1740,12 @@ bool ReadLanguagePack(const LanguageMetadata *lang)
 
 	uint count = 0;
 	for (uint i = 0; i < TAB_COUNT; i++) {
-		uint num = lang_pack->offsets[i];
+		uint16 num = lang_pack->offsets[i];
+		if (num > TAB_SIZE) {
+			free(lang_pack);
+			return false;
+		}
+
 		_langtab_start[i] = count;
 		_langtab_num[i] = num;
 		count += num;
@@ -1871,7 +1864,7 @@ int CDECL StringIDSorter(const StringID *a, const StringID *b)
 	GetString(stra, *a, lastof(stra));
 	GetString(strb, *b, lastof(strb));
 
-	return strcmp(stra, strb);
+	return strnatcmp(stra, strb);
 }
 
 /**
@@ -1954,7 +1947,7 @@ void InitializeLanguagePacks()
 
 	FOR_ALL_SEARCHPATHS(sp) {
 		char path[MAX_PATH];
-		FioAppendDirectory(path, lengthof(path), sp, LANG_DIR);
+		FioAppendDirectory(path, lastof(path), sp, LANG_DIR);
 		GetLanguageList(path);
 	}
 	if (_languages.Length() == 0) usererror("No available language packs (invalid versions?)");
@@ -2124,7 +2117,7 @@ void CheckForMissingGlyphs(bool base_font, MissingGlyphSearcher *searcher)
 		 * properly we have to set the colour of the string, otherwise we end up with a lot of artifacts.
 		 * The colour 'character' might change in the future, so for safety we just Utf8 Encode it into
 		 * the string, which takes exactly three characters, so it replaces the "XXX" with the colour marker. */
-		static char *err_str = strdup("XXXThe current font is missing some of the characters used in the texts for this language. Read the readme to see how to solve this.");
+		static char *err_str = stredup("XXXThe current font is missing some of the characters used in the texts for this language. Read the readme to see how to solve this.");
 		Utf8Encode(err_str, SCC_YELLOW);
 		SetDParamStr(0, err_str);
 		ShowErrorMessage(STR_JUST_RAW_STRING, INVALID_STRING_ID, WL_WARNING);
@@ -2152,7 +2145,7 @@ void CheckForMissingGlyphs(bool base_font, MissingGlyphSearcher *searcher)
 	 * the colour marker.
 	 */
 	if (_current_text_dir != TD_LTR) {
-		static char *err_str = strdup("XXXThis version of OpenTTD does not support right-to-left languages. Recompile with icu enabled.");
+		static char *err_str = stredup("XXXThis version of OpenTTD does not support right-to-left languages. Recompile with icu enabled.");
 		Utf8Encode(err_str, SCC_YELLOW);
 		SetDParamStr(0, err_str);
 		ShowErrorMessage(STR_JUST_RAW_STRING, INVALID_STRING_ID, WL_ERROR);

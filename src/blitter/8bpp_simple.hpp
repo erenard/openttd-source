@@ -1,4 +1,4 @@
-/* $Id: 8bpp_simple.hpp 25987 2013-11-13 21:53:40Z rubidium $ */
+/* $Id: 8bpp_simple.hpp 26209 2014-01-02 22:41:58Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -25,10 +25,9 @@ public:
 };
 
 /** Factory for the most trivial 8bpp blitter. */
-class FBlitter_8bppSimple: public BlitterFactory<FBlitter_8bppSimple> {
+class FBlitter_8bppSimple : public BlitterFactory {
 public:
-	/* virtual */ const char *GetName() { return "8bpp-simple"; }
-	/* virtual */ const char *GetDescription() { return "8bpp Simple Blitter (relative slow, but never wrong)"; }
+	FBlitter_8bppSimple() : BlitterFactory("8bpp-simple", "8bpp Simple Blitter (relative slow, but never wrong)") {}
 	/* virtual */ Blitter *CreateInstance() { return new Blitter_8bppSimple(); }
 };
 

@@ -1,4 +1,4 @@
-/* $Id: fullscreen.mm 26024 2013-11-17 13:35:48Z rubidium $ */
+/* $Id: fullscreen.mm 26709 2014-07-30 20:19:29Z planetmaker $ */
 
 /*
  * This file is part of OpenTTD.
@@ -70,13 +70,13 @@ struct OTTD_QuartzGammaTable {
 - (void) setFrame:(NSRect)frame
 {
 /* The 64 bits libraries don't seem to know about _frame, so this hack won't work. */
-#if !__LP64__
+#ifndef __LP64__
 	_frame = frame;
 #endif
 }
 @end
 
-class FullscreenSubdriver: public CocoaSubdriver {
+class FullscreenSubdriver : public CocoaSubdriver {
 	CGDirectDisplayID  display_id;         ///< 0 == main display (only support single display)
 	CFDictionaryRef    cur_mode;           ///< current mode of the display
 	CFDictionaryRef    save_mode;          ///< original mode of the display

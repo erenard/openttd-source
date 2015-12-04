@@ -1,4 +1,4 @@
-/* $Id: network_admin.cpp 25599 2013-07-13 10:13:55Z rubidium $ */
+/* $Id: network_admin.cpp 26482 2014-04-23 20:13:33Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -24,6 +24,8 @@
 #include "../map_func.h"
 #include "../rev.h"
 #include "../game/game.hpp"
+
+#include "../safeguards.h"
 
 
 /* This file handles all the admin network commands. */
@@ -336,6 +338,11 @@ NetworkRecvStatus ServerNetworkAdminSocketHandler::SendCompanyInfo(const Company
 	p->Send_bool  (NetworkCompanyIsPassworded(c->index));
 	p->Send_uint32(c->inaugurated_year);
 	p->Send_bool  (c->is_ai);
+	p->Send_uint8 (CeilDiv(c->months_of_bankruptcy, 3)); // send as quarters_of_bankruptcy
+
+	for (size_t i = 0; i < lengthof(c->share_owners); i++) {
+		p->Send_uint8(c->share_owners[i]);
+	}
 
 	this->SendPacket(p);
 

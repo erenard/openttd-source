@@ -1,4 +1,4 @@
-/* $Id: debug.h 24900 2013-01-08 22:46:42Z planetmaker $ */
+/* $Id: debug.h 26195 2014-01-02 08:45:28Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -11,6 +11,8 @@
 
 #ifndef DEBUG_H
 #define DEBUG_H
+
+#include "cpu.h"
 
 /* Debugging messages policy:
  * These should be the severities used for direct DEBUG() calls
@@ -64,12 +66,6 @@ const char *GetDebugString();
 
 /* Shorter form for passing filename and linenumber */
 #define FILE_LINE __FILE__, __LINE__
-
-/**
- * Get the tick counter from the CPU (high precision timing).
- * @return The count.
- */
-uint64 ottd_rdtsc();
 
 /* Used for profiling
  *

@@ -1,4 +1,4 @@
-/* $Id: base.hpp 25987 2013-11-13 21:53:40Z rubidium $ */
+/* $Id: base.hpp 26969 2014-10-06 18:45:51Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -20,6 +20,8 @@ enum BlitterMode {
 	BM_NORMAL,       ///< Perform the simple blitting.
 	BM_COLOUR_REMAP, ///< Perform a colour remapping.
 	BM_TRANSPARENT,  ///< Perform transparency colour remapping.
+	BM_CRASH_REMAP,  ///< Perform a crash remapping.
+	BM_BLACK_REMAP,  ///< Perform remapping to a completely blackened sprite
 };
 
 /**
@@ -118,8 +120,9 @@ public:
 	 * @param screen_height The height of the screen you are drawing in (to avoid buffer-overflows).
 	 * @param colour A 8bpp mapping colour.
 	 * @param width Line width.
+	 * @param dash Length of dashes for dashed lines. 0 means solid line.
 	 */
-	virtual void DrawLine(void *video, int x, int y, int x2, int y2, int screen_width, int screen_height, uint8 colour, int width);
+	virtual void DrawLine(void *video, int x, int y, int x2, int y2, int screen_width, int screen_height, uint8 colour, int width, int dash = 0);
 
 	/**
 	 * Copy from a buffer to the screen.

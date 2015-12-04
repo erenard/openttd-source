@@ -1,4 +1,4 @@
-/* $Id: roadveh_gui.cpp 25500 2013-06-28 19:29:08Z rubidium $ */
+/* $Id: roadveh_gui.cpp 27134 2015-02-01 20:54:24Z frosch $ */
 
 /*
  * This file is part of OpenTTD.
@@ -15,8 +15,11 @@
 #include "strings_func.h"
 #include "vehicle_func.h"
 #include "string_func.h"
+#include "zoom_func.h"
 
 #include "table/strings.h"
+
+#include "safeguards.h"
 
 /**
  * Draw the details for the given vehicle at the given position
@@ -28,7 +31,7 @@
  */
 void DrawRoadVehDetails(const Vehicle *v, int left, int right, int y)
 {
-	uint y_offset = v->HasArticulatedPart() ? 15 : 0; // Draw the first line below the sprite of an articulated RV instead of after it.
+	uint y_offset = v->HasArticulatedPart() ? ScaleGUITrad(15) : 0; // Draw the first line below the sprite of an articulated RV instead of after it.
 	StringID str;
 	Money feeder_share = 0;
 
@@ -81,9 +84,9 @@ void DrawRoadVehDetails(const Vehicle *v, int left, int right, int y)
 			if (u->cargo_cap == 0) continue;
 
 			str = STR_VEHICLE_DETAILS_CARGO_EMPTY;
-			if (!u->cargo.Empty()) {
+			if (u->cargo.StoredCount() > 0) {
 				SetDParam(0, u->cargo_type);
-				SetDParam(1, u->cargo.Count());
+				SetDParam(1, u->cargo.StoredCount());
 				SetDParam(2, u->cargo.Source());
 				str = STR_VEHICLE_DETAILS_CARGO_FROM;
 				feeder_share += u->cargo.FeederShare();
@@ -101,9 +104,9 @@ void DrawRoadVehDetails(const Vehicle *v, int left, int right, int y)
 		DrawString(left, right, y + FONT_HEIGHT_NORMAL + y_offset, STR_VEHICLE_INFO_CAPACITY);
 
 		str = STR_VEHICLE_DETAILS_CARGO_EMPTY;
-		if (!v->cargo.Empty()) {
+		if (v->cargo.StoredCount() > 0) {
 			SetDParam(0, v->cargo_type);
-			SetDParam(1, v->cargo.Count());
+			SetDParam(1, v->cargo.StoredCount());
 			SetDParam(2, v->cargo.Source());
 			str = STR_VEHICLE_DETAILS_CARGO_FROM;
 			feeder_share += v->cargo.FeederShare();
@@ -134,7 +137,7 @@ void DrawRoadVehImage(const Vehicle *v, int left, int right, int y, VehicleID se
 	DrawPixelInfo tmp_dpi, *old_dpi;
 	int max_width = right - left + 1;
 
-	if (!FillDrawPixelInfo(&tmp_dpi, left, y, max_width, 14)) return;
+	if (!FillDrawPixelInfo(&tmp_dpi, left, y, max_width, ScaleGUITrad(14))) return;
 
 	old_dpi = _cur_dpi;
 	_cur_dpi = &tmp_dpi;
@@ -146,14 +149,14 @@ void DrawRoadVehImage(const Vehicle *v, int left, int right, int y, VehicleID se
 
 		if (rtl ? px + width > 0 : px - width < max_width) {
 			PaletteID pal = (u->vehstatus & VS_CRASHED) ? PALETTE_CRASH : GetVehiclePalette(u);
-			DrawSprite(u->GetImage(dir, image_type), pal, px + (rtl ? -offset.x : offset.x), 6 + offset.y);
+			DrawSprite(u->GetImage(dir, image_type), pal, px + (rtl ? -offset.x : offset.x), ScaleGUITrad(6) + offset.y);
 		}
 
 		px += rtl ? -width : width;
 	}
 
 	if (v->index == selection) {
-		DrawFrameRect((rtl ? px : 0), 0, (rtl ? max_width : px) - 1, 12, COLOUR_WHITE, FR_BORDERONLY);
+		DrawFrameRect((rtl ? px : 0), 0, (rtl ? max_width : px) - 1, ScaleGUITrad(13) - 1, COLOUR_WHITE, FR_BORDERONLY);
 	}
 
 	_cur_dpi = old_dpi;

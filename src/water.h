@@ -1,4 +1,4 @@
-/* $Id: water.h 23735 2012-01-03 20:26:05Z rubidium $ */
+/* $Id: water.h 25229 2013-05-06 20:48:18Z planetmaker $ */
 
 /*
  * This file is part of OpenTTD.
@@ -40,6 +40,8 @@ void DrawShoreTile(Slope tileh);
 void MakeWaterKeepingClass(TileIndex tile, Owner o);
 
 bool RiverModifyDesertZone(TileIndex tile, void *data);
+
+bool IsWateredTile(TileIndex tile, Direction from);
 
 /**
  * Calculates the maintenance cost of a number of canal tiles.

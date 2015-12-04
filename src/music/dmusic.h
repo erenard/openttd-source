@@ -1,4 +1,4 @@
-/* $Id: dmusic.h 22410 2011-05-02 16:14:23Z rubidium $ */
+/* $Id: dmusic.h 26108 2013-11-25 14:30:22Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -15,8 +15,10 @@
 #include "music_driver.hpp"
 
 /** Music player making use of DirectX. */
-class MusicDriver_DMusic: public MusicDriver {
+class MusicDriver_DMusic : public MusicDriver {
 public:
+	virtual ~MusicDriver_DMusic();
+
 	/* virtual */ const char *Start(const char * const *param);
 
 	/* virtual */ void Stop();
@@ -32,12 +34,10 @@ public:
 };
 
 /** Factory for the DirectX music player. */
-class FMusicDriver_DMusic: public MusicDriverFactory<FMusicDriver_DMusic> {
+class FMusicDriver_DMusic : public DriverFactoryBase {
 public:
-	static const int priority = 10;
-	/* virtual */ const char *GetName() { return "dmusic"; }
-	/* virtual */ const char *GetDescription() { return "DirectMusic MIDI Driver"; }
-	/* virtual */ Driver *CreateInstance() { return new MusicDriver_DMusic(); }
+	FMusicDriver_DMusic() : DriverFactoryBase(Driver::DT_MUSIC, 10, "dmusic", "DirectMusic MIDI Driver") {}
+	/* virtual */ Driver *CreateInstance() const { return new MusicDriver_DMusic(); }
 };
 
 #endif /* MUSIC_DMUSIC_H */

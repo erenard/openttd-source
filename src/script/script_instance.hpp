@@ -1,4 +1,4 @@
-/* $Id: script_instance.hpp 24537 2012-09-21 19:58:18Z zuu $ */
+/* $Id: script_instance.hpp 25342 2013-06-09 12:19:09Z zuu $ */
 
 /*
  * This file is part of OpenTTD.
@@ -106,6 +106,16 @@ public:
 	 * Return a GoalID reply for a DoCommand.
 	 */
 	static void DoCommandReturnGoalID(ScriptInstance *instance);
+
+	/**
+	 * Return a StoryPageID reply for a DoCommand.
+	 */
+	static void DoCommandReturnStoryPageID(ScriptInstance *instance);
+
+	/**
+	 * Return a StoryPageElementID reply for a DoCommand.
+	 */
+	static void DoCommandReturnStoryPageElementID(ScriptInstance *instance);
 
 	/**
 	 * Get the controller attached to the instance.

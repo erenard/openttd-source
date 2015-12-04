@@ -1,4 +1,4 @@
-/* $Id: signal.cpp 24900 2013-01-08 22:46:42Z planetmaker $ */
+/* $Id: signal.cpp 26482 2014-04-23 20:13:33Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -17,6 +17,8 @@
 #include "viewport_func.h"
 #include "train.h"
 #include "company_base.h"
+
+#include "safeguards.h"
 
 
 /** these are the maximums used for updating signal blocks */
@@ -294,6 +296,7 @@ static SigFlags ExploreSegment(Owner owner)
 					}
 				}
 
+				assert(IsValidDiagDirection(enterdir));
 				TrackBits tracks = GetTrackBits(tile); // trackbits of tile
 				TrackBits tracks_masked = (TrackBits)(tracks & _enterdir_to_trackbits[enterdir]); // only incidating trackbits
 

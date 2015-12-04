@@ -1,4 +1,4 @@
-/* $Id: 32bpp_simple.hpp 25987 2013-11-13 21:53:40Z rubidium $ */
+/* $Id: 32bpp_simple.hpp 26209 2014-01-02 22:41:58Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -34,10 +34,9 @@ public:
 };
 
 /** Factory for the simple 32 bpp blitter. */
-class FBlitter_32bppSimple: public BlitterFactory<FBlitter_32bppSimple> {
+class FBlitter_32bppSimple : public BlitterFactory {
 public:
-	/* virtual */ const char *GetName() { return "32bpp-simple"; }
-	/* virtual */ const char *GetDescription() { return "32bpp Simple Blitter (no palette animation)"; }
+	FBlitter_32bppSimple() : BlitterFactory("32bpp-simple", "32bpp Simple Blitter (no palette animation)") {}
 	/* virtual */ Blitter *CreateInstance() { return new Blitter_32bppSimple(); }
 };
 

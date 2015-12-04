@@ -1,4 +1,4 @@
-/* $Id: tree_gui.cpp 24846 2012-12-23 21:09:09Z frosch $ */
+/* $Id: tree_gui.cpp 26482 2014-04-23 20:13:33Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -24,6 +24,8 @@
 #include "table/sprites.h"
 #include "table/strings.h"
 #include "table/tree_land.h"
+
+#include "safeguards.h"
 
 void PlaceTreesRandomly();
 
@@ -52,9 +54,9 @@ class BuildTreesWindow : public Window
 	TreeType tree_to_plant; ///< Tree number to plant, \c TREE_INVALID for a random tree.
 
 public:
-	BuildTreesWindow(const WindowDesc *desc, WindowNumber window_number) : Window()
+	BuildTreesWindow(WindowDesc *desc, WindowNumber window_number) : Window(desc)
 	{
-		this->InitNested(desc, window_number);
+		this->InitNested(window_number);
 		ResetObjectToPlace();
 	}
 
@@ -98,11 +100,6 @@ public:
 			size->width = 0;
 			size->height = 0;
 		}
-	}
-
-	virtual void OnPaint()
-	{
-		this->DrawWidgets();
 	}
 
 	virtual void DrawWidget(const Rect &r, int widget) const
@@ -238,8 +235,8 @@ static const NWidgetPart _nested_build_trees_widgets[] = {
 	EndContainer(),
 };
 
-static const WindowDesc _build_trees_desc(
-	WDP_AUTO, 0, 0,
+static WindowDesc _build_trees_desc(
+	WDP_AUTO, "build_tree", 0, 0,
 	WC_BUILD_TREES, WC_NONE,
 	WDF_CONSTRUCTION,
 	_nested_build_trees_widgets, lengthof(_nested_build_trees_widgets)

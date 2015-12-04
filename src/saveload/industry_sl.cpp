@@ -1,4 +1,4 @@
-/* $Id: industry_sl.cpp 23740 2012-01-03 21:32:51Z rubidium $ */
+/* $Id: industry_sl.cpp 26482 2014-04-23 20:13:33Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -14,6 +14,8 @@
 
 #include "saveload.h"
 #include "newgrf_sl.h"
+
+#include "../safeguards.h"
 
 static OldPersistentStorage _old_ind_persistent_storage;
 
@@ -98,7 +100,7 @@ static void Load_INDY()
 		if (IsSavegameVersionBefore(161) && !IsSavegameVersionBefore(76)) {
 			/* Store the old persistent storage. The GRFID will be added later. */
 			assert(PersistentStorage::CanAllocateItem());
-			i->psa = new PersistentStorage(0);
+			i->psa = new PersistentStorage(0, 0, 0);
 			memcpy(i->psa->storage, _old_ind_persistent_storage.storage, sizeof(i->psa->storage));
 		}
 		Industry::IncIndustryTypeCount(i->type);

@@ -1,4 +1,4 @@
-/* $Id: saveload_internal.h 23411 2011-12-03 23:40:13Z michi_cc $ */
+/* $Id: saveload_internal.h 25620 2013-07-21 13:18:45Z zuu $ */
 
 /*
  * This file is part of OpenTTD.
@@ -31,6 +31,8 @@ void FixupTrainLengths();
 void AfterLoadStations();
 void AfterLoadRoadStops();
 void AfterLoadLabelMaps();
+void AfterLoadStoryBook();
+void AfterLoadLinkGraphs();
 void AfterLoadCompanyStats();
 void UpdateHousesAndTowns();
 

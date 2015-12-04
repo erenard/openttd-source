@@ -1,4 +1,4 @@
-/* $Id: texteff.hpp 22015 2011-02-07 22:22:20Z rubidium $ */
+/* $Id: texteff.hpp 25011 2013-02-17 14:50:54Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -41,6 +41,6 @@ void UpdateFillingPercent(TextEffectID te_id, uint8 percent, StringID colour);
 void HideFillingPercent(TextEffectID *te_id);
 
 void ShowCostOrIncomeAnimation(int x, int y, int z, Money cost);
-void ShowFeederIncomeAnimation(int x, int y, int z, Money cost);
+void ShowFeederIncomeAnimation(int x, int y, int z, Money transfer, Money income);
 
 #endif /* TEXTEFF_HPP */

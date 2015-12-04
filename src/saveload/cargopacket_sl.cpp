@@ -1,4 +1,4 @@
-/* $Id: cargopacket_sl.cpp 24900 2013-01-08 22:46:42Z planetmaker $ */
+/* $Id: cargopacket_sl.cpp 26482 2014-04-23 20:13:33Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -15,6 +15,8 @@
 
 #include "saveload.h"
 
+#include "../safeguards.h"
+
 /**
  * Savegame conversion for cargopackets.
  */
@@ -29,7 +31,7 @@
 		 * to the current tile of the vehicle to prevent excessive profits
 		 */
 		FOR_ALL_VEHICLES(v) {
-			const VehicleCargoList::List *packets = v->cargo.Packets();
+			const CargoPacketList *packets = v->cargo.Packets();
 			for (VehicleCargoList::ConstIterator it(packets->begin()); it != packets->end(); it++) {
 				CargoPacket *cp = *it;
 				cp->source_xy = Station::IsValidID(cp->source) ? Station::Get(cp->source)->xy : v->tile;
@@ -47,7 +49,7 @@
 			for (CargoID c = 0; c < NUM_CARGO; c++) {
 				GoodsEntry *ge = &st->goods[c];
 
-				const StationCargoList::List *packets = ge->cargo.Packets();
+				const StationCargoPacketMap *packets = ge->cargo.Packets();
 				for (StationCargoList::ConstIterator it(packets->begin()); it != packets->end(); it++) {
 					CargoPacket *cp = *it;
 					cp->source_xy = Station::IsValidID(cp->source) ? Station::Get(cp->source)->xy : st->xy;
@@ -76,6 +78,11 @@
 		FOR_ALL_STATIONS(st) {
 			for (CargoID c = 0; c < NUM_CARGO; c++) st->goods[c].cargo.InvalidateCache();
 		}
+	}
+
+	if (IsSavegameVersionBefore(181)) {
+		Vehicle *v;
+		FOR_ALL_VEHICLES(v) v->cargo.KeepAll();
 	}
 }
 

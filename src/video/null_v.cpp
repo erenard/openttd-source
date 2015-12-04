@@ -1,4 +1,4 @@
-/* $Id: null_v.cpp 23119 2011-11-04 23:47:00Z michi_cc $ */
+/* $Id: null_v.cpp 26482 2014-04-23 20:13:33Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -13,6 +13,8 @@
 #include "../gfx_func.h"
 #include "../blitter/factory.hpp"
 #include "null_v.h"
+
+#include "../safeguards.h"
 
 /** Factory for the null video driver. */
 static FVideoDriver_Null iFVideoDriver_Null;
@@ -32,7 +34,7 @@ const char *VideoDriver_Null::Start(const char * const *parm)
 
 	/* Do not render, nor blit */
 	DEBUG(misc, 1, "Forcing blitter 'null'...");
-	BlitterFactoryBase::SelectBlitter("null");
+	BlitterFactory::SelectBlitter("null");
 	return NULL;
 }
 

@@ -1,4 +1,4 @@
-/* $Id: script_object.cpp 26094 2013-11-24 19:57:23Z rubidium $ */
+/* $Id: script_object.cpp 26509 2014-04-25 15:40:32Z rubidium $ */
 
 /*
  * This file is part of OpenTTD.
@@ -23,6 +23,8 @@
 #include "../script_instance.hpp"
 #include "../script_fatalerror.hpp"
 #include "script_error.hpp"
+
+#include "../../safeguards.h"
 
 /**
  * Get the storage associated with the current ScriptInstance.
@@ -144,6 +146,8 @@ ScriptObject::ActiveInstance::~ActiveInstance()
 	SetNewSignID(_new_sign_id);
 	SetNewGroupID(_new_group_id);
 	SetNewGoalID(_new_goal_id);
+	SetNewStoryPageID(_new_story_page_id);
+	SetNewStoryPageElementID(_new_story_page_element_id);
 }
 
 /* static */ bool ScriptObject::GetLastCommandRes()
@@ -189,6 +193,26 @@ ScriptObject::ActiveInstance::~ActiveInstance()
 /* static */ GroupID ScriptObject::GetNewGoalID()
 {
 	return GetStorage()->new_goal_id;
+}
+
+/* static */ void ScriptObject::SetNewStoryPageID(StoryPageID story_page_id)
+{
+	GetStorage()->new_story_page_id = story_page_id;
+}
+
+/* static */ GroupID ScriptObject::GetNewStoryPageID()
+{
+	return GetStorage()->new_story_page_id;
+}
+
+/* static */ void ScriptObject::SetNewStoryPageElementID(StoryPageElementID story_page_element_id)
+{
+	GetStorage()->new_story_page_element_id = story_page_element_id;
+}
+
+/* static */ GroupID ScriptObject::GetNewStoryPageElementID()
+{
+	return GetStorage()->new_story_page_element_id;
 }
 
 /* static */ void ScriptObject::SetAllowDoCommand(bool allow)
@@ -240,7 +264,7 @@ ScriptObject::ActiveInstance::~ActiveInstance()
 	char buffer[64];
 	::GetString(buffer, string, lastof(buffer));
 	::str_validate(buffer, lastof(buffer), SVS_NONE);
-	return ::strdup(buffer);
+	return ::stredup(buffer);
 }
 
 /* static */ void ScriptObject::SetCallbackVariable(int index, int value)

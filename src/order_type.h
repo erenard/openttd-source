@@ -1,4 +1,4 @@
-/* $Id: order_type.h 24776 2012-12-01 13:12:39Z alberth $ */
+/* $Id: order_type.h 25735 2013-08-20 20:05:31Z fonsinchen $ */
 
 /*
  * This file is part of OpenTTD.
@@ -26,6 +26,12 @@ static const VehicleOrderID MAX_VEH_ORDER_ID     = INVALID_VEH_ORDER_ID - 1;
 
 /** Invalid order (sentinel) */
 static const OrderID INVALID_ORDER = 0xFFFF;
+
+/**
+ * Maximum number of orders in implicit-only lists before we start searching
+ * harder for duplicates.
+ */
+static const uint IMPLICIT_ORDER_ONLY_CAP = 32;
 
 /** Order types */
 enum OrderType {

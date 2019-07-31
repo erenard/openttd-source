@@ -1,4 +1,4 @@
-/* $Id: 8bpp_simple.cpp 27863 2017-05-03 20:09:51Z frosch $ */
+/* $Id$ */
 
 /*
  * This file is part of OpenTTD.

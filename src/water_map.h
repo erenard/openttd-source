@@ -1,4 +1,4 @@
-/* $Id: water_map.h 26878 2014-09-21 11:23:33Z rubidium $ */
+/* $Id$ */
 
 /*
  * This file is part of OpenTTD.
@@ -94,7 +94,7 @@ static inline WaterTileType GetWaterTileType(TileIndex t)
  */
 static inline bool HasTileWaterClass(TileIndex t)
 {
-	return IsTileType(t, MP_WATER) || IsTileType(t, MP_STATION) || IsTileType(t, MP_INDUSTRY) || IsTileType(t, MP_OBJECT);
+	return IsTileType(t, MP_WATER) || IsTileType(t, MP_STATION) || IsTileType(t, MP_INDUSTRY) || IsTileType(t, MP_OBJECT) || IsTileType(t, MP_TREES);
 }
 
 /**
@@ -204,7 +204,7 @@ static inline bool IsCoast(TileIndex t)
  */
 static inline bool IsCoastTile(TileIndex t)
 {
-	return IsTileType(t, MP_WATER) && IsCoast(t);
+	return (IsTileType(t, MP_WATER) && IsCoast(t)) || (IsTileType(t, MP_TREES) && GetWaterClass(t) != WATER_CLASS_INVALID);
 }
 
 /**

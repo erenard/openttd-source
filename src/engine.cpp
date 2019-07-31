@@ -1,4 +1,4 @@
-/* $Id: engine.cpp 27700 2016-12-20 12:35:36Z frosch $ */
+/* $Id$ */
 
 /*
  * This file is part of OpenTTD.
@@ -431,9 +431,9 @@ uint Engine::GetDisplayMaxTractiveEffort() const
 	/* Only trains and road vehicles have 'tractive effort'. */
 	switch (this->type) {
 		case VEH_TRAIN:
-			return (10 * this->GetDisplayWeight() * GetEngineProperty(this->index, PROP_TRAIN_TRACTIVE_EFFORT, this->u.rail.tractive_effort)) / 256;
+			return (GROUND_ACCELERATION * this->GetDisplayWeight() * GetEngineProperty(this->index, PROP_TRAIN_TRACTIVE_EFFORT, this->u.rail.tractive_effort)) / 256 / 1000;
 		case VEH_ROAD:
-			return (10 * this->GetDisplayWeight() * GetEngineProperty(this->index, PROP_ROADVEH_TRACTIVE_EFFORT, this->u.road.tractive_effort)) / 256;
+			return (GROUND_ACCELERATION * this->GetDisplayWeight() * GetEngineProperty(this->index, PROP_ROADVEH_TRACTIVE_EFFORT, this->u.road.tractive_effort)) / 256 / 1000;
 
 		default: NOT_REACHED();
 	}
@@ -464,7 +464,26 @@ uint16 Engine::GetRange() const
 }
 
 /**
- * Initializes the EngineOverrideManager with the default engines.
+ * Get the name of the aircraft type for display purposes.
+ * @return Aircraft type string.
+ */
+StringID Engine::GetAircraftTypeText() const
+{
+	switch (this->type) {
+		case VEH_AIRCRAFT:
+			switch (this->u.air.subtype) {
+				case AIR_HELI: return STR_LIVERY_HELICOPTER;
+				case AIR_CTOL: return STR_LIVERY_SMALL_PLANE;
+				case AIR_CTOL | AIR_FAST: return STR_LIVERY_LARGE_PLANE;
+				default: NOT_REACHED();
+			}
+
+		default: NOT_REACHED();
+	}
+}
+
+/**
+ * Initializes the #EngineOverrideManager with the default engines.
  */
 void EngineOverrideManager::ResetToDefaultMapping()
 {
@@ -554,7 +573,7 @@ static bool IsWagon(EngineID index)
 }
 
 /**
- * Update #reliability of engine \a e, (if needed) update the engine GUIs.
+ * Update #Engine::reliability and (if needed) update the engine GUIs.
  * @param e %Engine to update.
  */
 static void CalcEngineReliability(Engine *e)
@@ -633,7 +652,14 @@ void StartupOneEngine(Engine *e, Date aging_date)
 	/* Don't randomise the start-date in the first two years after gamestart to ensure availability
 	 * of engines in early starting games.
 	 * Note: TTDP uses fixed 1922 */
+	SavedRandomSeeds saved_seeds;
+	SaveRandomSeeds(&saved_seeds);
+	SetRandomSeed(_settings_game.game_creation.generation_seed ^
+	              ei->base_intro ^
+	              e->type ^
+	              e->GetGRFID());
 	uint32 r = Random();
+
 	e->intro_date = ei->base_intro <= ConvertYMDToDate(_settings_game.game_creation.starting_year + 2, 0, 1) ? ei->base_intro : (Date)GB(r, 0, 9) + ei->base_intro;
 	if (e->intro_date <= _date) {
 		e->age = (aging_date - e->intro_date) >> 5;
@@ -653,6 +679,7 @@ void StartupOneEngine(Engine *e, Date aging_date)
 
 	e->reliability_spd_dec = ei->decay_speed << 2;
 
+	RestoreRandomSeeds(saved_seeds);
 	CalcEngineReliability(e);
 
 	/* prevent certain engines from ever appearing. */
@@ -733,7 +760,7 @@ static CompanyID GetPreviewCompany(Engine *e)
 	CompanyID best_company = INVALID_COMPANY;
 
 	/* For trains the cargomask has no useful meaning, since you can attach other wagons */
-	uint32 cargomask = e->type != VEH_TRAIN ? GetUnionOfArticulatedRefitMasks(e->index, true) : (uint32)-1;
+	CargoTypes cargomask = e->type != VEH_TRAIN ? GetUnionOfArticulatedRefitMasks(e->index, true) : ALL_CARGOTYPES;
 
 	int32 best_hist = -1;
 	const Company *c;
@@ -1098,7 +1125,9 @@ bool IsEngineRefittable(EngineID engine)
 
 	/* Is there any cargo except the default cargo? */
 	CargoID default_cargo = e->GetDefaultCargoType();
-	return default_cargo != CT_INVALID && ei->refit_mask != 1U << default_cargo;
+	CargoTypes default_cargo_mask = 0;
+	SetBit(default_cargo_mask, default_cargo);
+	return default_cargo != CT_INVALID && ei->refit_mask != default_cargo_mask;
 }
 
 /**

@@ -1,4 +1,4 @@
-/* $Id: rail.cpp 26482 2014-04-23 20:13:33Z rubidium $ */
+/* $Id$ */
 
 /*
  * This file is part of OpenTTD.
@@ -56,7 +56,7 @@ extern const Trackdir _next_trackdir[TRACKDIR_END] = {
 };
 
 /* Maps a trackdir to all trackdirs that make 90 deg turns with it. */
-extern const TrackdirBits _track_crosses_trackdirs[TRACKDIR_END] = {
+extern const TrackdirBits _track_crosses_trackdirs[TRACK_END] = {
 	TRACKDIR_BIT_Y_SE     | TRACKDIR_BIT_Y_NW,                                                   // TRACK_X
 	TRACKDIR_BIT_X_NE     | TRACKDIR_BIT_X_SW,                                                   // TRACK_Y
 	TRACKDIR_BIT_RIGHT_N  | TRACKDIR_BIT_RIGHT_S  | TRACKDIR_BIT_LEFT_N  | TRACKDIR_BIT_LEFT_S,  // TRACK_UPPER
@@ -180,14 +180,24 @@ RailType GetTileRailType(TileIndex tile)
 }
 
 /**
- * Finds out if a company has a certain railtype available
+ * Finds out if a company has a certain buildable railtype available.
  * @param company the company in question
  * @param railtype requested RailType
  * @return true if company has requested RailType available
  */
 bool HasRailtypeAvail(const CompanyID company, const RailType railtype)
 {
-	return HasBit(Company::Get(company)->avail_railtypes, railtype);
+	return !HasBit(_railtypes_hidden_mask, railtype) && HasBit(Company::Get(company)->avail_railtypes, railtype);
+}
+
+/**
+ * Test if any buildable railtype is available for a company.
+ * @param company the company in question
+ * @return true if company has any RailTypes available
+ */
+bool HasAnyRailtypesAvail(const CompanyID company)
+{
+	return (Company::Get(company)->avail_railtypes & ~_railtypes_hidden_mask) != 0;
 }
 
 /**
@@ -251,7 +261,7 @@ RailTypes AddDateIntroducedRailTypes(RailTypes current, Date date)
 
 /**
  * Get the rail types the given company can build.
- * @param c the company to get the rail types for.
+ * @param company the company to get the rail types for.
  * @return the rail types.
  */
 RailTypes GetCompanyRailtypes(CompanyID company)

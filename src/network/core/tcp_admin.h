@@ -1,4 +1,4 @@
-/* $Id: tcp_admin.h 25588 2013-07-11 20:31:39Z planetmaker $ */
+/* $Id$ */
 
 /*
  * This file is part of OpenTTD.
@@ -363,7 +363,7 @@ protected:
 	 * uint8   ID of the company.
 	 * uint64  Money.
 	 * uint64  Loan.
-	 * uint64  Income.
+	 * int64   Income.
 	 * uint16  Delivered cargo (this quarter).
 	 * uint64  Company value (last quarter).
 	 * uint16  Performance (last quarter).

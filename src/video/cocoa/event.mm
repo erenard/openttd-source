@@ -1,4 +1,4 @@
-/* $Id: event.mm 27167 2015-02-22 23:06:45Z frosch $ */
+/* $Id$ */
 
 /*
  * This file is part of OpenTTD.
@@ -100,10 +100,10 @@ static void QZ_WarpCursor(int x, int y)
 	NSPoint p = NSMakePoint(x, y);
 	CGPoint cgp = _cocoa_subdriver->PrivateLocalToCG(&p);
 
-	/* this is the magic call that fixes cursor "freezing" after warp */
-	CGSetLocalEventsSuppressionInterval(0.0);
 	/* Do the actual warp */
 	CGWarpMouseCursorPosition(cgp);
+	/* this is the magic call that fixes cursor "freezing" after warp */
+	CGAssociateMouseAndMouseCursorPosition(true);
 }
 
 
@@ -575,9 +575,28 @@ static bool QZ_PollEvent()
 				_cursor.wheel++;
 			} /* else: deltaY was 0.0 and we don't want to do anything */
 
-			/* Set the scroll count for scrollwheel scrolling */
-			_cursor.h_wheel -= (int)([ event deltaX ] * 5 * _settings_client.gui.scrollwheel_multiplier);
-			_cursor.v_wheel -= (int)([ event deltaY ] * 5 * _settings_client.gui.scrollwheel_multiplier);
+			/* Update the scroll count for 2D scrolling */
+			CGFloat deltaX;
+			CGFloat deltaY;
+
+			/* Use precise scrolling-specific deltas if they're supported. */
+#if (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7)
+			if ([event respondsToSelector:@selector(hasPreciseScrollingDeltas)]) {
+				/* No precise deltas indicates a scroll wheel is being used, so we don't want 2D scrolling. */
+				if (![ event hasPreciseScrollingDeltas ]) break;
+
+				deltaX = [ event scrollingDeltaX ] * 0.5f;
+				deltaY = [ event scrollingDeltaY ] * 0.5f;
+			} else
+#endif
+			{
+				deltaX = [ event deltaX ] * 5;
+				deltaY = [ event deltaY ] * 5;
+			}
+
+			_cursor.h_wheel -= (int)(deltaX * _settings_client.gui.scrollwheel_multiplier);
+			_cursor.v_wheel -= (int)(deltaY * _settings_client.gui.scrollwheel_multiplier);
+
 			break;
 
 #if (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_5)
@@ -587,12 +606,12 @@ static bool QZ_PollEvent()
 
 			while (_current_magnification >= 1.0f) {
 				_current_magnification -= 1.0f;
-				_cursor.wheel++;
+				_cursor.wheel--;
 				HandleMouseEvents();
 			}
 			while (_current_magnification <= -1.0f) {
 				_current_magnification += 1.0f;
-				_cursor.wheel--;
+				_cursor.wheel++;
 				HandleMouseEvents();
 			}
 			break;
@@ -610,7 +629,7 @@ static bool QZ_PollEvent()
 			 * the mouse position programmatically, which would trigger OS X to show
 			 * the default arrow cursor if the events are propagated. */
 			if (_cursor.fix_at) break;
-			/* FALL THROUGH */
+			FALLTHROUGH;
 
 		default:
 			[ NSApp sendEvent:event ];

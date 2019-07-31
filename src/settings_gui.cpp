@@ -1,4 +1,4 @@
-/* $Id: settings_gui.cpp 27863 2017-05-03 20:09:51Z frosch $ */
+/* $Id$ */
 
 /*
  * This file is part of OpenTTD.
@@ -36,6 +36,7 @@
 #include "textfile_gui.h"
 #include "stringfilter_type.h"
 #include "querystring_gui.h"
+#include "fontcache.h"
 
 #include <vector>
 
@@ -61,6 +62,13 @@ static const StringID _gui_zoom_dropdown[] = {
 	STR_GAME_OPTIONS_GUI_ZOOM_DROPDOWN_NORMAL,
 	STR_GAME_OPTIONS_GUI_ZOOM_DROPDOWN_2X_ZOOM,
 	STR_GAME_OPTIONS_GUI_ZOOM_DROPDOWN_4X_ZOOM,
+	INVALID_STRING_ID,
+};
+
+static const StringID _font_zoom_dropdown[] = {
+	STR_GAME_OPTIONS_FONT_ZOOM_DROPDOWN_NORMAL,
+	STR_GAME_OPTIONS_FONT_ZOOM_DROPDOWN_2X_ZOOM,
+	STR_GAME_OPTIONS_FONT_ZOOM_DROPDOWN_4X_ZOOM,
 	INVALID_STRING_ID,
 };
 
@@ -114,17 +122,22 @@ static int GetCurRes()
 static void ShowCustCurrency();
 
 template <class T>
-static DropDownList *BuiltSetDropDownList(int *selected_index)
+static DropDownList *BuildSetDropDownList(int *selected_index, bool allow_selection)
 {
 	int n = T::GetNumSets();
 	*selected_index = T::GetIndexOfUsedSet();
 
 	DropDownList *list = new DropDownList();
 	for (int i = 0; i < n; i++) {
-		*list->Append() = new DropDownListCharStringItem(T::GetSet(i)->name, i, (_game_mode == GM_MENU) ? false : (*selected_index != i));
+		*list->Append() = new DropDownListCharStringItem(T::GetSet(i)->name, i, !allow_selection && (*selected_index != i));
 	}
 
 	return list;
+}
+
+DropDownList *BuildMusicSetDropDownList(int *selected_index)
+{
+	return BuildSetDropDownList<BaseMusic>(selected_index, true);
 }
 
 /** Window for displaying the textfile of a BaseSet. */
@@ -157,7 +170,7 @@ struct BaseSetTextfileWindow : public TextfileWindow {
 template <class TBaseSet>
 void ShowBaseSetTextfileWindow(TextfileType file_type, const TBaseSet* baseset, StringID content_type)
 {
-	DeleteWindowByClass(WC_TEXTFILE);
+	DeleteWindowById(WC_TEXTFILE, file_type);
 	new BaseSetTextfileWindow<TBaseSet>(file_type, baseset, content_type);
 }
 
@@ -177,6 +190,7 @@ struct GameOptionsWindow : Window {
 	~GameOptionsWindow()
 	{
 		DeleteWindowById(WC_CUSTOM_CURRENCY, 0);
+		DeleteWindowByClass(WC_TEXTFILE);
 		if (this->reload) _switch_mode = SM_MENU;
 	}
 
@@ -296,16 +310,26 @@ struct GameOptionsWindow : Window {
 				break;
 			}
 
+			case WID_GO_FONT_ZOOM_DROPDOWN: {
+				list = new DropDownList();
+				*selected_index = ZOOM_LVL_OUT_4X - _font_zoom;
+				const StringID *items = _font_zoom_dropdown;
+				for (int i = 0; *items != INVALID_STRING_ID; items++, i++) {
+					*list->Append() = new DropDownListStringItem(*items, i, false);
+				}
+				break;
+			}
+
 			case WID_GO_BASE_GRF_DROPDOWN:
-				list = BuiltSetDropDownList<BaseGraphics>(selected_index);
+				list = BuildSetDropDownList<BaseGraphics>(selected_index, (_game_mode == GM_MENU));
 				break;
 
 			case WID_GO_BASE_SFX_DROPDOWN:
-				list = BuiltSetDropDownList<BaseSounds>(selected_index);
+				list = BuildSetDropDownList<BaseSounds>(selected_index, (_game_mode == GM_MENU));
 				break;
 
 			case WID_GO_BASE_MUSIC_DROPDOWN:
-				list = BuiltSetDropDownList<BaseMusic>(selected_index);
+				list = BuildMusicSetDropDownList(selected_index);
 				break;
 
 			default:
@@ -325,6 +349,7 @@ struct GameOptionsWindow : Window {
 			case WID_GO_LANG_DROPDOWN:       SetDParamStr(0, _current_language->own_name); break;
 			case WID_GO_RESOLUTION_DROPDOWN: SetDParam(0, GetCurRes() == _num_resolutions ? STR_GAME_OPTIONS_RESOLUTION_OTHER : SPECSTR_RESOLUTION_START + GetCurRes()); break;
 			case WID_GO_GUI_ZOOM_DROPDOWN:   SetDParam(0, _gui_zoom_dropdown[ZOOM_LVL_OUT_4X - _gui_zoom]); break;
+			case WID_GO_FONT_ZOOM_DROPDOWN:  SetDParam(0, _font_zoom_dropdown[ZOOM_LVL_OUT_4X - _font_zoom]); break;
 			case WID_GO_BASE_GRF_DROPDOWN:   SetDParamStr(0, BaseGraphics::GetUsedSet()->name); break;
 			case WID_GO_BASE_GRF_STATUS:     SetDParam(0, BaseGraphics::GetUsedSet()->GetNumInvalid()); break;
 			case WID_GO_BASE_SFX_DROPDOWN:   SetDParamStr(0, BaseSounds::GetUsedSet()->name); break;
@@ -531,6 +556,14 @@ struct GameOptionsWindow : Window {
 				GfxClearSpriteCache();
 				_gui_zoom = (ZoomLevel)(ZOOM_LVL_OUT_4X - index);
 				UpdateCursorSize();
+				UpdateAllVirtCoords();
+				ReInitAllWindows();
+				break;
+
+			case WID_GO_FONT_ZOOM_DROPDOWN:
+				GfxClearSpriteCache();
+				_font_zoom = (ZoomLevel)(ZOOM_LVL_OUT_4X - index);
+				ClearFontCache();
 				LoadStringWidthTable();
 				UpdateAllVirtCoords();
 				break;
@@ -544,7 +577,7 @@ struct GameOptionsWindow : Window {
 				break;
 
 			case WID_GO_BASE_MUSIC_DROPDOWN:
-				this->SetMediaSet<BaseMusic>(index);
+				ChangeMusicSet(index);
 				break;
 		}
 	}
@@ -610,6 +643,9 @@ static const NWidgetPart _nested_game_options_widgets[] = {
 					NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_GO_CURRENCY_DROPDOWN), SetMinimalSize(150, 12), SetDataTip(STR_BLACK_STRING, STR_GAME_OPTIONS_CURRENCY_UNITS_DROPDOWN_TOOLTIP), SetFill(1, 0),
 				EndContainer(),
 				NWidget(NWID_SPACER), SetMinimalSize(0, 0), SetFill(0, 1),
+				NWidget(WWT_FRAME, COLOUR_GREY), SetDataTip(STR_GAME_OPTIONS_FONT_ZOOM, STR_NULL),
+					NWidget(WWT_DROPDOWN, COLOUR_GREY, WID_GO_FONT_ZOOM_DROPDOWN), SetMinimalSize(150, 12), SetDataTip(STR_BLACK_STRING, STR_GAME_OPTIONS_FONT_ZOOM_DROPDOWN_TOOLTIP), SetFill(1, 0),
+				EndContainer(),
 			EndContainer(),
 		EndContainer(),
 
@@ -1502,14 +1538,14 @@ static SettingsContainer &GetSettingsTree()
 				general->Add(new SettingEntry("gui.errmsg_duration"));
 				general->Add(new SettingEntry("gui.window_snap_radius"));
 				general->Add(new SettingEntry("gui.window_soft_limit"));
+				general->Add(new SettingEntry("gui.right_mouse_wnd_close"));
 			}
 
 			SettingsPage *viewports = interface->Add(new SettingsPage(STR_CONFIG_SETTING_INTERFACE_VIEWPORTS));
 			{
 				viewports->Add(new SettingEntry("gui.auto_scrolling"));
-				viewports->Add(new SettingEntry("gui.reverse_scroll"));
+				viewports->Add(new SettingEntry("gui.scroll_mode"));
 				viewports->Add(new SettingEntry("gui.smooth_scroll"));
-				viewports->Add(new SettingEntry("gui.left_mouse_btn_scrolling"));
 				/* While the horizontal scrollwheel scrolling is written as general code, only
 				 *  the cocoa (OSX) driver generates input for it.
 				 *  Since it's also able to completely disable the scrollwheel will we display it on all platforms anyway */
@@ -1579,6 +1615,7 @@ static SettingsContainer &GetSettingsTree()
 			company->Add(new SettingEntry("gui.drag_signals_fixed_distance"));
 			company->Add(new SettingEntry("gui.new_nonstop"));
 			company->Add(new SettingEntry("gui.stop_location"));
+			company->Add(new SettingEntry("gui.starting_colour"));
 			company->Add(new SettingEntry("company.engine_renew"));
 			company->Add(new SettingEntry("company.engine_renew_months"));
 			company->Add(new SettingEntry("company.engine_renew_money"));

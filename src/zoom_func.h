@@ -1,4 +1,4 @@
-/* $Id: zoom_func.h 27417 2015-10-29 19:23:21Z frosch $ */
+/* $Id$ */
 
 /*
  * This file is part of OpenTTD.
@@ -82,6 +82,26 @@ static inline int UnScaleGUI(int value)
 static inline int ScaleGUITrad(int value)
 {
 	return UnScaleGUI(value * ZOOM_LVL_BASE);
+}
+
+/**
+ * Short-hand to apply font zoom level.
+ * @param value Pixel amount at #ZOOM_LVL_BEGIN (full zoom in).
+ * @return Pixel amount at #ZOOM_LVL_FONT (current interface size).
+ */
+static inline int UnScaleFont(int value)
+{
+	return UnScaleByZoom(value, ZOOM_LVL_FONT);
+}
+
+/**
+ * Scale traditional pixel dimensions to Font zoom level.
+ * @param value Pixel amount at #ZOOM_LVL_BASE (traditional "normal" interface size).
+ * @return Pixel amount at #ZOOM_LVL_FONT (current interface size).
+ */
+static inline int ScaleFontTrad(int value)
+{
+	return UnScaleFont(value * ZOOM_LVL_BASE);
 }
 
 #endif /* ZOOM_FUNC_H */

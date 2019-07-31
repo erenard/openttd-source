@@ -1,4 +1,4 @@
-/* $Id: ai_config.hpp 23735 2012-01-03 20:26:05Z rubidium $ */
+/* $Id$ */
 
 /*
  * This file is part of OpenTTD.
@@ -26,9 +26,7 @@ public:
 		ScriptConfig()
 	{}
 
-	AIConfig(const AIConfig *config) :
-		ScriptConfig(config)
-	{}
+	AIConfig(const AIConfig *config);
 
 	class AIInfo *GetInfo() const;
 

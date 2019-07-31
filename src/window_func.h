@@ -1,4 +1,4 @@
-/* $Id: window_func.h 25681 2013-08-05 20:37:14Z michi_cc $ */
+/* $Id$ */
 
 /*
  * This file is part of OpenTTD.
@@ -40,6 +40,7 @@ void InvalidateWindowClassesData(WindowClass cls, int data = 0, bool gui_scope =
 
 void DeleteNonVitalWindows();
 void DeleteAllNonVitalWindows();
+void DeleteAllMessages();
 void DeleteConstructionWindows();
 void HideVitalWindows();
 void ShowVitalWindows();

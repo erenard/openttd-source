@@ -1,4 +1,4 @@
-/* $Id: newgrf_railtype.cpp 27342 2015-07-26 12:25:37Z frosch $ */
+/* $Id$ */
 
 /*
  * This file is part of OpenTTD.
@@ -68,18 +68,6 @@
 }
 
 /**
- * Constructor of the railtype scope resolvers.
- * @param ro Surrounding resolver.
- * @param tile %Tile containing the track. For track on a bridge this is the southern bridgehead.
- * @param context Are we resolving sprites for the upper halftile, or on a bridge?
- */
-RailTypeScopeResolver::RailTypeScopeResolver(ResolverObject &ro, TileIndex tile, TileContext context) : ScopeResolver(ro)
-{
-	this->tile = tile;
-	this->context = context;
-}
-
-/**
  * Resolver object for rail types.
  * @param rti Railtype. NULL in NewGRF Inspect window.
  * @param tile %Tile containing the track. For track on a bridge this is the southern bridgehead.
@@ -99,8 +87,8 @@ RailTypeResolverObject::RailTypeResolverObject(const RailtypeInfo *rti, TileInde
  * @param rti The rail type data (spec).
  * @param tile The tile to get the sprite for.
  * @param rtsg The type of sprite to draw.
- * @param content Where are we drawing the tile?
- * @param [out] num_results If not NULL, return the number of sprites in the spriteset.
+ * @param context Where are we drawing the tile?
+ * @param[out] num_results If not NULL, return the number of sprites in the spriteset.
  * @return The sprite to draw.
  */
 SpriteID GetCustomRailSprite(const RailtypeInfo *rti, TileIndex tile, RailTypeSpriteGroup rtsg, TileContext context, uint *num_results)

@@ -1,4 +1,4 @@
-/* $Id: object_cmd.cpp 27656 2016-09-18 14:07:52Z frosch $ */
+/* $Id$ */
 
 /*
  * This file is part of OpenTTD.
@@ -540,7 +540,7 @@ static CommandCost ClearTile_Object(TileIndex tile, DoCommandFlag flags)
 	return cost;
 }
 
-static void AddAcceptedCargo_Object(TileIndex tile, CargoArray &acceptance, uint32 *always_accepted)
+static void AddAcceptedCargo_Object(TileIndex tile, CargoArray &acceptance, CargoTypes *always_accepted)
 {
 	if (!IsObjectType(tile, OBJECT_HQ)) return;
 
@@ -772,9 +772,10 @@ static void ChangeTileOwner_Object(TileIndex tile, Owner old_owner, Owner new_ow
 
 	bool do_clear = false;
 
-	if (IsObjectType(tile, OBJECT_OWNED_LAND) && new_owner != INVALID_OWNER) {
+	ObjectType type = GetObjectType(tile);
+	if ((type == OBJECT_OWNED_LAND || type >= NEW_OBJECT_OFFSET) && new_owner != INVALID_OWNER) {
 		SetTileOwner(tile, new_owner);
-	} else if (IsObjectType(tile, OBJECT_STATUE)) {
+	} else if (type == OBJECT_STATUE) {
 		Town *t = Object::GetByTile(tile)->town;
 		ClrBit(t->statues, old_owner);
 		if (new_owner != INVALID_OWNER && !HasBit(t->statues, new_owner)) {

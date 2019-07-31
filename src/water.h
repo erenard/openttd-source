@@ -1,4 +1,4 @@
-/* $Id: water.h 25229 2013-05-06 20:48:18Z planetmaker $ */
+/* $Id$ */
 
 /*
  * This file is part of OpenTTD.
@@ -40,6 +40,7 @@ void DrawShoreTile(Slope tileh);
 void MakeWaterKeepingClass(TileIndex tile, Owner o);
 
 bool RiverModifyDesertZone(TileIndex tile, void *data);
+static const uint RIVER_OFFSET_DESERT_DISTANCE = 5; ///< Circular tile search radius to create non-desert around a river tile.
 
 bool IsWateredTile(TileIndex tile, Direction from);
 

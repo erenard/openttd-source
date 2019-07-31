@@ -1,4 +1,4 @@
-/* $Id: rail_cmd.cpp 27862 2017-05-03 20:05:52Z frosch $ */
+/* $Id$ */
 
 /*
  * This file is part of OpenTTD.
@@ -46,6 +46,7 @@ typedef SmallVector<Train *, 16> TrainList;
 RailtypeInfo _railtypes[RAILTYPE_END];
 RailType _sorted_railtypes[RAILTYPE_END];
 uint8 _sorted_railtypes_size;
+RailTypes _railtypes_hidden_mask;
 
 /** Enum holding the signal offset in the sprite sheet according to the side it is representing. */
 enum SignalOffsets {
@@ -78,6 +79,8 @@ void ResetRailTypes()
 		RailTypeLabelList(), 0, 0, RAILTYPES_NONE, RAILTYPES_NONE, 0,
 		{}, {} };
 	for (; i < lengthof(_railtypes);          i++) _railtypes[i] = empty_railtype;
+
+	_railtypes_hidden_mask = RAILTYPES_NONE;
 }
 
 void ResolveRailTypeGUISprites(RailtypeInfo *rti)
@@ -140,11 +143,12 @@ void InitRailTypes()
 	for (RailType rt = RAILTYPE_BEGIN; rt != RAILTYPE_END; rt++) {
 		RailtypeInfo *rti = &_railtypes[rt];
 		ResolveRailTypeGUISprites(rti);
+		if (HasBit(rti->flags, RTF_HIDDEN)) SetBit(_railtypes_hidden_mask, rt);
 	}
 
 	_sorted_railtypes_size = 0;
 	for (RailType rt = RAILTYPE_BEGIN; rt != RAILTYPE_END; rt++) {
-		if (_railtypes[rt].label != 0) {
+		if (_railtypes[rt].label != 0 && !HasBit(_railtypes_hidden_mask, rt)) {
 			_sorted_railtypes[_sorted_railtypes_size++] = rt;
 		}
 	}
@@ -166,11 +170,11 @@ RailType AllocateRailType(RailTypeLabel label)
 			rti->alternate_labels.Clear();
 
 			/* Make us compatible with ourself. */
-			rti->powered_railtypes    = (RailTypes)(1 << rt);
-			rti->compatible_railtypes = (RailTypes)(1 << rt);
+			rti->powered_railtypes    = (RailTypes)(1LL << rt);
+			rti->compatible_railtypes = (RailTypes)(1LL << rt);
 
 			/* We also introduce ourself. */
-			rti->introduces_railtypes = (RailTypes)(1 << rt);
+			rti->introduces_railtypes = (RailTypes)(1LL << rt);
 
 			/* Default sort order; order of allocation, but with some
 			 * offsets so it's easier for NewGRF to pick a spot without
@@ -441,7 +445,7 @@ static inline bool ValParamTrackOrientation(Track track)
  */
 CommandCost CmdBuildSingleRail(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
 {
-	RailType railtype = Extract<RailType, 0, 4>(p1);
+	RailType railtype = Extract<RailType, 0, 6>(p1);
 	Track track = Extract<Track, 0, 3>(p2);
 	CommandCost cost(EXPENSES_CONSTRUCTION);
 
@@ -554,7 +558,7 @@ CommandCost CmdBuildSingleRail(TileIndex tile, DoCommandFlag flags, uint32 p1, u
 			if (IsLevelCrossing(tile) && GetCrossingRailBits(tile) == trackbit) {
 				return_cmd_error(STR_ERROR_ALREADY_BUILT);
 			}
-			/* FALL THROUGH */
+			FALLTHROUGH;
 		}
 
 		default: {
@@ -854,19 +858,19 @@ static CommandCost ValidateAutoDrag(Trackdir *trackdir, TileIndex start, TileInd
  * @param flags operation to perform
  * @param p1 end tile of drag
  * @param p2 various bitstuffed elements
- * - p2 = (bit 0-3) - railroad type normal/maglev (0 = normal, 1 = mono, 2 = maglev), only used for building
- * - p2 = (bit 4-6) - track-orientation, valid values: 0-5 (Track enum)
- * - p2 = (bit 7)   - 0 = build, 1 = remove tracks
- * - p2 = (bit 8)   - 0 = build up to an obstacle, 1 = fail if an obstacle is found (used for AIs).
+ * - p2 = (bit 0-5) - railroad type normal/maglev (0 = normal, 1 = mono, 2 = maglev), only used for building
+ * - p2 = (bit 6-8) - track-orientation, valid values: 0-5 (Track enum)
+ * - p2 = (bit 9)   - 0 = build, 1 = remove tracks
+ * - p2 = (bit 10)  - 0 = build up to an obstacle, 1 = fail if an obstacle is found (used for AIs).
  * @param text unused
  * @return the cost of this operation or an error
  */
 static CommandCost CmdRailTrackHelper(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
 {
 	CommandCost total_cost(EXPENSES_CONSTRUCTION);
-	Track track = Extract<Track, 4, 3>(p2);
-	bool remove = HasBit(p2, 7);
-	RailType railtype = Extract<RailType, 0, 4>(p2);
+	Track track = Extract<Track, 6, 3>(p2);
+	bool remove = HasBit(p2, 9);
+	RailType railtype = Extract<RailType, 0, 6>(p2);
 
 	if ((!remove && !ValParamRailtype(railtype)) || !ValParamTrackOrientation(track)) return CMD_ERROR;
 	if (p1 >= MapSize()) return CMD_ERROR;
@@ -884,7 +888,7 @@ static CommandCost CmdRailTrackHelper(TileIndex tile, DoCommandFlag flags, uint3
 		if (ret.Failed()) {
 			last_error = ret;
 			if (last_error.GetErrorMessage() != STR_ERROR_ALREADY_BUILT && !remove) {
-				if (HasBit(p2, 8)) return last_error;
+				if (HasBit(p2, 10)) return last_error;
 				break;
 			}
 
@@ -914,16 +918,16 @@ static CommandCost CmdRailTrackHelper(TileIndex tile, DoCommandFlag flags, uint3
  * @param flags operation to perform
  * @param p1 end tile of drag
  * @param p2 various bitstuffed elements
- * - p2 = (bit 0-3) - railroad type normal/maglev (0 = normal, 1 = mono, 2 = maglev)
- * - p2 = (bit 4-6) - track-orientation, valid values: 0-5 (Track enum)
- * - p2 = (bit 7)   - 0 = build, 1 = remove tracks
+ * - p2 = (bit 0-5) - railroad type normal/maglev (0 = normal, 1 = mono, 2 = maglev)
+ * - p2 = (bit 6-8) - track-orientation, valid values: 0-5 (Track enum)
+ * - p2 = (bit 9)   - 0 = build, 1 = remove tracks
  * @param text unused
  * @return the cost of this operation or an error
  * @see CmdRailTrackHelper
  */
 CommandCost CmdBuildRailroadTrack(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
 {
-	return CmdRailTrackHelper(tile, flags, p1, ClrBit(p2, 7), text);
+	return CmdRailTrackHelper(tile, flags, p1, ClrBit(p2, 9), text);
 }
 
 /**
@@ -933,16 +937,16 @@ CommandCost CmdBuildRailroadTrack(TileIndex tile, DoCommandFlag flags, uint32 p1
  * @param flags operation to perform
  * @param p1 end tile of drag
  * @param p2 various bitstuffed elements
- * - p2 = (bit 0-3) - railroad type normal/maglev (0 = normal, 1 = mono, 2 = maglev), only used for building
- * - p2 = (bit 4-6) - track-orientation, valid values: 0-5 (Track enum)
- * - p2 = (bit 7)   - 0 = build, 1 = remove tracks
+ * - p2 = (bit 0-5) - railroad type normal/maglev (0 = normal, 1 = mono, 2 = maglev), only used for building
+ * - p2 = (bit 6-8) - track-orientation, valid values: 0-5 (Track enum)
+ * - p2 = (bit 9)   - 0 = build, 1 = remove tracks
  * @param text unused
  * @return the cost of this operation or an error
  * @see CmdRailTrackHelper
  */
 CommandCost CmdRemoveRailroadTrack(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
 {
-	return CmdRailTrackHelper(tile, flags, p1, SetBit(p2, 7), text);
+	return CmdRailTrackHelper(tile, flags, p1, SetBit(p2, 9), text);
 }
 
 /**
@@ -960,12 +964,14 @@ CommandCost CmdRemoveRailroadTrack(TileIndex tile, DoCommandFlag flags, uint32 p
 CommandCost CmdBuildTrainDepot(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
 {
 	/* check railtype and valid direction for depot (0 through 3), 4 in total */
-	RailType railtype = Extract<RailType, 0, 4>(p1);
+	RailType railtype = Extract<RailType, 0, 6>(p1);
 	if (!ValParamRailtype(railtype)) return CMD_ERROR;
 
 	Slope tileh = GetTileSlope(tile);
 
 	DiagDirection dir = Extract<DiagDirection, 0, 2>(p2);
+
+	CommandCost cost(EXPENSES_CONSTRUCTION);
 
 	/* Prohibit construction if
 	 * The tile is non-flat AND
@@ -974,14 +980,14 @@ CommandCost CmdBuildTrainDepot(TileIndex tile, DoCommandFlag flags, uint32 p1, u
 	 * 3) the exit points in the wrong direction
 	 */
 
-	if (tileh != SLOPE_FLAT && (
-				!_settings_game.construction.build_on_slopes ||
-				!CanBuildDepotByTileh(dir, tileh)
-			)) {
-		return_cmd_error(STR_ERROR_FLAT_LAND_REQUIRED);
+	if (tileh != SLOPE_FLAT) {
+		if (!_settings_game.construction.build_on_slopes || !CanBuildDepotByTileh(dir, tileh)) {
+			return_cmd_error(STR_ERROR_FLAT_LAND_REQUIRED);
+		}
+		cost.AddCost(_price[PR_BUILD_FOUNDATION]);
 	}
 
-	CommandCost cost = DoCommand(tile, 0, 0, flags, CMD_LANDSCAPE_CLEAR);
+	cost.AddCost(DoCommand(tile, 0, 0, flags, CMD_LANDSCAPE_CLEAR));
 	if (cost.Failed()) return cost;
 
 	if (IsBridgeAbove(tile)) return_cmd_error(STR_ERROR_MUST_DEMOLISH_BRIDGE_FIRST);
@@ -1540,17 +1546,17 @@ static Vehicle *UpdateTrainPowerProc(Vehicle *v, void *data)
  * @param flags operation to perform
  * @param p1 start tile of drag
  * @param p2 various bitstuffed elements:
- * - p2 = (bit  0- 3) new railtype to convert to.
- * - p2 = (bit  4)    build diagonally or not.
+ * - p2 = (bit  0- 5) new railtype to convert to.
+ * - p2 = (bit  6)    build diagonally or not.
  * @param text unused
  * @return the cost of this operation or an error
  */
 CommandCost CmdConvertRail(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
 {
-	RailType totype = Extract<RailType, 0, 4>(p2);
+	RailType totype = Extract<RailType, 0, 6>(p2);
 	TileIndex area_start = p1;
 	TileIndex area_end = tile;
-	bool diagonal = HasBit(p2, 4);
+	bool diagonal = HasBit(p2, 6);
 
 	if (!ValParamRailtype(totype)) return CMD_ERROR;
 	if (area_start >= MapSize()) return CMD_ERROR;
@@ -2444,33 +2450,60 @@ static void DrawTile_Track(TileInfo *ti)
 			SpriteID ground = GetCustomRailSprite(rti, ti->tile, RTSG_GROUND);
 
 			switch (GetRailDepotDirection(ti->tile)) {
-				case DIAGDIR_NE: if (!IsInvisibilitySet(TO_BUILDINGS)) break; // else FALL THROUGH
-				case DIAGDIR_SW: DrawGroundSprite(ground + RTO_X, PAL_NONE); break;
-				case DIAGDIR_NW: if (!IsInvisibilitySet(TO_BUILDINGS)) break; // else FALL THROUGH
-				case DIAGDIR_SE: DrawGroundSprite(ground + RTO_Y, PAL_NONE); break;
-				default: break;
+				case DIAGDIR_NE:
+					if (!IsInvisibilitySet(TO_BUILDINGS)) break;
+					FALLTHROUGH;
+				case DIAGDIR_SW:
+					DrawGroundSprite(ground + RTO_X, PAL_NONE);
+					break;
+				case DIAGDIR_NW:
+					if (!IsInvisibilitySet(TO_BUILDINGS)) break;
+					FALLTHROUGH;
+				case DIAGDIR_SE:
+					DrawGroundSprite(ground + RTO_Y, PAL_NONE);
+					break;
+				default:
+					break;
 			}
 
 			if (_settings_client.gui.show_track_reservation && HasDepotReservation(ti->tile)) {
 				SpriteID overlay = GetCustomRailSprite(rti, ti->tile, RTSG_OVERLAY);
 
 				switch (GetRailDepotDirection(ti->tile)) {
-					case DIAGDIR_NE: if (!IsInvisibilitySet(TO_BUILDINGS)) break; // else FALL THROUGH
-					case DIAGDIR_SW: DrawGroundSprite(overlay + RTO_X, PALETTE_CRASH); break;
-					case DIAGDIR_NW: if (!IsInvisibilitySet(TO_BUILDINGS)) break; // else FALL THROUGH
-					case DIAGDIR_SE: DrawGroundSprite(overlay + RTO_Y, PALETTE_CRASH); break;
-					default: break;
+					case DIAGDIR_NE:
+						if (!IsInvisibilitySet(TO_BUILDINGS)) break;
+						FALLTHROUGH;
+					case DIAGDIR_SW:
+						DrawGroundSprite(overlay + RTO_X, PALETTE_CRASH);
+						break;
+					case DIAGDIR_NW:
+						if (!IsInvisibilitySet(TO_BUILDINGS)) break;
+						FALLTHROUGH;
+					case DIAGDIR_SE:
+						DrawGroundSprite(overlay + RTO_Y, PALETTE_CRASH);
+						break;
+					default:
+						break;
 				}
 			}
 		} else {
 			/* PBS debugging, draw reserved tracks darker */
 			if (_game_mode != GM_MENU && _settings_client.gui.show_track_reservation && HasDepotReservation(ti->tile)) {
 				switch (GetRailDepotDirection(ti->tile)) {
-					case DIAGDIR_NE: if (!IsInvisibilitySet(TO_BUILDINGS)) break; // else FALL THROUGH
-					case DIAGDIR_SW: DrawGroundSprite(rti->base_sprites.single_x, PALETTE_CRASH); break;
-					case DIAGDIR_NW: if (!IsInvisibilitySet(TO_BUILDINGS)) break; // else FALL THROUGH
-					case DIAGDIR_SE: DrawGroundSprite(rti->base_sprites.single_y, PALETTE_CRASH); break;
-					default: break;
+					case DIAGDIR_NE:
+						if (!IsInvisibilitySet(TO_BUILDINGS)) break;
+						FALLTHROUGH;
+					case DIAGDIR_SW:
+						DrawGroundSprite(rti->base_sprites.single_x, PALETTE_CRASH);
+						break;
+					case DIAGDIR_NW:
+						if (!IsInvisibilitySet(TO_BUILDINGS)) break;
+						FALLTHROUGH;
+					case DIAGDIR_SE:
+						DrawGroundSprite(rti->base_sprites.single_y, PALETTE_CRASH);
+						break;
+					default:
+						break;
 				}
 			}
 		}
@@ -2868,11 +2901,9 @@ int TicksToLeaveDepot(const Train *v)
 		case DIAGDIR_NE: return  ((int)(v->x_pos & 0x0F) - ((_fractcoords_enter[dir] & 0x0F) - (length + 1)));
 		case DIAGDIR_SE: return -((int)(v->y_pos & 0x0F) - ((_fractcoords_enter[dir] >> 4)   + (length + 1)));
 		case DIAGDIR_SW: return -((int)(v->x_pos & 0x0F) - ((_fractcoords_enter[dir] & 0x0F) + (length + 1)));
-		default:
 		case DIAGDIR_NW: return  ((int)(v->y_pos & 0x0F) - ((_fractcoords_enter[dir] >> 4)   - (length + 1)));
+		default: NOT_REACHED();
 	}
-
-	return 0; // make compilers happy
 }
 
 /**
@@ -2881,48 +2912,48 @@ int TicksToLeaveDepot(const Train *v)
  */
 static VehicleEnterTileStatus VehicleEnter_Track(Vehicle *u, TileIndex tile, int x, int y)
 {
-	/* this routine applies only to trains in depot tiles */
+	/* This routine applies only to trains in depot tiles. */
 	if (u->type != VEH_TRAIN || !IsRailDepotTile(tile)) return VETSB_CONTINUE;
 
-	Train *v = Train::From(u);
-
-	/* depot direction */
+	/* Depot direction. */
 	DiagDirection dir = GetRailDepotDirection(tile);
-
-	/* Calculate the point where the following wagon should be activated. */
-	int length = v->CalcNextVehicleOffset();
-
-	byte fract_coord_leave =
-		((_fractcoords_enter[dir] & 0x0F) + // x
-			(length + 1) * _deltacoord_leaveoffset[dir]) +
-		(((_fractcoords_enter[dir] >> 4) +  // y
-			((length + 1) * _deltacoord_leaveoffset[dir + 4])) << 4);
 
 	byte fract_coord = (x & 0xF) + ((y & 0xF) << 4);
 
-	if (_fractcoords_behind[dir] == fract_coord) {
-		/* make sure a train is not entering the tile from behind */
-		return VETSB_CANNOT_ENTER;
-	} else if (_fractcoords_enter[dir] == fract_coord) {
-		if (DiagDirToDir(ReverseDiagDir(dir)) == v->direction) {
-			/* enter the depot */
-			v->track = TRACK_BIT_DEPOT,
-			v->vehstatus |= VS_HIDDEN; // hide it
-			v->direction = ReverseDir(v->direction);
-			if (v->Next() == NULL) VehicleEnterDepot(v->First());
-			v->tile = tile;
+	/* Make sure a train is not entering the tile from behind. */
+	if (_fractcoords_behind[dir] == fract_coord) return VETSB_CANNOT_ENTER;
 
-			InvalidateWindowData(WC_VEHICLE_DEPOT, v->tile);
-			return VETSB_ENTERED_WORMHOLE;
-		}
-	} else if (fract_coord_leave == fract_coord) {
-		if (DiagDirToDir(dir) == v->direction) {
-			/* leave the depot? */
+	Train *v = Train::From(u);
+
+	/* Leaving depot? */
+	if (v->direction == DiagDirToDir(dir)) {
+		/* Calculate the point where the following wagon should be activated. */
+		int length = v->CalcNextVehicleOffset();
+
+		byte fract_coord_leave =
+			((_fractcoords_enter[dir] & 0x0F) + // x
+				(length + 1) * _deltacoord_leaveoffset[dir]) +
+			(((_fractcoords_enter[dir] >> 4) +  // y
+				((length + 1) * _deltacoord_leaveoffset[dir + 4])) << 4);
+
+		if (fract_coord_leave == fract_coord) {
+			/* Leave the depot. */
 			if ((v = v->Next()) != NULL) {
 				v->vehstatus &= ~VS_HIDDEN;
 				v->track = (DiagDirToAxis(dir) == AXIS_X ? TRACK_BIT_X : TRACK_BIT_Y);
 			}
 		}
+	} else if (_fractcoords_enter[dir] == fract_coord) {
+		/* Entering depot. */
+		assert(DiagDirToDir(ReverseDiagDir(dir)) == v->direction);
+		v->track = TRACK_BIT_DEPOT,
+		v->vehstatus |= VS_HIDDEN;
+		v->direction = ReverseDir(v->direction);
+		if (v->Next() == NULL) VehicleEnterDepot(v->First());
+		v->tile = tile;
+
+		InvalidateWindowData(WC_VEHICLE_DEPOT, v->tile);
+		return VETSB_ENTERED_WORMHOLE;
 	}
 
 	return VETSB_CONTINUE;

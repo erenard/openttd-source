@@ -1,4 +1,4 @@
-/* $Id: order_gui.cpp 27425 2015-10-30 17:23:16Z frosch $ */
+/* $Id$ */
 
 /*
  * This file is part of OpenTTD.
@@ -152,6 +152,7 @@ static const StringID _order_goto_dropdown_aircraft[] = {
 static const OrderConditionVariable _order_conditional_variable[] = {
 	OCV_LOAD_PERCENTAGE,
 	OCV_RELIABILITY,
+	OCV_MAX_RELIABILITY,
 	OCV_MAX_SPEED,
 	OCV_AGE,
 	OCV_REMAINING_LIFETIME,
@@ -841,7 +842,7 @@ public:
 			case VIWD_AUTOREPLACE:
 				/* Autoreplace replaced the vehicle */
 				this->vehicle = Vehicle::Get(this->window_number);
-				/* FALL THROUGH */
+				FALLTHROUGH;
 
 			case VIWD_CONSIST_CHANGED:
 				/* Vehicle composition was changed. */

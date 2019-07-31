@@ -1,4 +1,4 @@
-/* $Id: script_company.cpp 27026 2014-10-21 16:58:15Z rubidium $ */
+/* $Id$ */
 
 /*
  * This file is part of OpenTTD.
@@ -295,4 +295,34 @@
 	if (company == COMPANY_INVALID) return 0;
 
 	return ::Company::Get((CompanyID)company)->settings.engine_renew_money;
+}
+
+/* static */ bool ScriptCompany::SetPrimaryLiveryColour(LiveryScheme scheme, Colours colour)
+{
+	return ScriptObject::DoCommand(0, scheme, colour, CMD_SET_COMPANY_COLOUR);
+}
+
+/* static */ bool ScriptCompany::SetSecondaryLiveryColour(LiveryScheme scheme, Colours colour)
+{
+	return ScriptObject::DoCommand(0, scheme | 1 << 8, colour, CMD_SET_COMPANY_COLOUR);
+}
+
+/* static */ ScriptCompany::Colours ScriptCompany::GetPrimaryLiveryColour(ScriptCompany::LiveryScheme scheme)
+{
+	if ((::LiveryScheme)scheme < LS_BEGIN || (::LiveryScheme)scheme >= LS_END) return COLOUR_INVALID;
+
+	const Company *c = ::Company::GetIfValid(_current_company);
+	if (c == NULL) return COLOUR_INVALID;
+
+	return (ScriptCompany::Colours)c->livery[scheme].colour1;
+}
+
+/* static */ ScriptCompany::Colours ScriptCompany::GetSecondaryLiveryColour(ScriptCompany::LiveryScheme scheme)
+{
+	if ((::LiveryScheme)scheme < LS_BEGIN || (::LiveryScheme)scheme >= LS_END) return COLOUR_INVALID;
+
+	const Company *c = ::Company::GetIfValid(_current_company);
+	if (c == NULL) return COLOUR_INVALID;
+
+	return (ScriptCompany::Colours)c->livery[scheme].colour2;
 }

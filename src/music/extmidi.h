@@ -1,4 +1,4 @@
-/* $Id: extmidi.h 26108 2013-11-25 14:30:22Z rubidium $ */
+/* $Id$ */
 
 /*
  * This file is part of OpenTTD.
@@ -16,7 +16,7 @@
 
 class MusicDriver_ExtMidi : public MusicDriver {
 private:
-	char *command;
+	char **params;
 	char song[MAX_PATH];
 	pid_t pid;
 
@@ -28,7 +28,7 @@ public:
 
 	/* virtual */ void Stop();
 
-	/* virtual */ void PlaySong(const char *filename);
+	/* virtual */ void PlaySong(const MusicSongInfo &song);
 
 	/* virtual */ void StopSong();
 

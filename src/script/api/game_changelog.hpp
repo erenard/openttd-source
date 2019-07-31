@@ -1,4 +1,4 @@
-/* $Id: game_changelog.hpp 27942 2017-12-11 20:14:55Z frosch $ */
+/* $Id$ */
 
 /*
  * This file is part of OpenTTD.
@@ -14,6 +14,25 @@
  * bug fixes can be found in the normal changelog. Note that removed API
  * functions may still be available if you return an older API version
  * in GetAPIVersion() in info.nut.
+ *
+ * \b 1.9.0
+ *
+ * API additions:
+ * \li GSAirport::GetMonthlyMaintenanceCost
+ * \li GSClient
+ * \li GSClientList
+ * \li GSClientList_Company
+ * \li GSViewport::ScrollEveryoneTo
+ * \li GSViewport::ScrollCompanyClientsTo
+ * \li GSViewport::ScrollClientTo
+ * \li GSGoal::QuestionClient
+ *
+ * Other changes:
+ * \li GSBridge::GetName takes one extra parameter to refer the vehicle type
+ *
+ * \b 1.8.0
+ *
+ * No changes
  *
  * \b 1.7.0 - 1.7.2
  *

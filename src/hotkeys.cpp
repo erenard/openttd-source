@@ -1,4 +1,4 @@
-/* $Id: hotkeys.cpp 26509 2014-04-25 15:40:32Z rubidium $ */
+/* $Id$ */
 
 /*
  * This file is part of OpenTTD.
@@ -41,6 +41,7 @@ static const KeycodeNames _keycode_to_name[] = {
 	{"GLOBAL", WKC_GLOBAL_HOTKEY},
 	{"ESC", WKC_ESC},
 	{"DEL", WKC_DELETE},
+	{"BACKSPACE", WKC_BACKSPACE},
 	{"RETURN", WKC_RETURN},
 	{"BACKQUOTE", WKC_BACKQUOTE},
 	{"F1", WKC_F1},
@@ -311,7 +312,7 @@ int HotkeyList::CheckMatch(uint16 keycode, bool global_only) const
 static void SaveLoadHotkeys(bool save)
 {
 	IniFile *ini = new IniFile();
-	ini->LoadFromDisk(_hotkeys_file, BASE_DIR);
+	ini->LoadFromDisk(_hotkeys_file, NO_DIRECTORY);
 
 	for (HotkeyList **list = _hotkey_lists->Begin(); list != _hotkey_lists->End(); ++list) {
 		if (save) {

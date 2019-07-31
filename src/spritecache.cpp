@@ -1,4 +1,4 @@
-/* $Id: spritecache.cpp 27732 2017-01-14 18:30:26Z frosch $ */
+/* $Id$ */
 
 /*
  * This file is part of OpenTTD.
@@ -462,13 +462,13 @@ static void *ReadSprite(const SpriteCache *sc, SpriteID id, SpriteType sprite_ty
 		return (void*)GetRawSprite(SPR_IMG_QUERY, ST_NORMAL, allocator);
 	}
 
-	if (sprite->type == ST_FONT && ZOOM_LVL_GUI != ZOOM_LVL_NORMAL) {
-		/* Make ZOOM_LVL_GUI be ZOOM_LVL_NORMAL */
-		sprite[ZOOM_LVL_NORMAL].width  = sprite[ZOOM_LVL_GUI].width;
-		sprite[ZOOM_LVL_NORMAL].height = sprite[ZOOM_LVL_GUI].height;
-		sprite[ZOOM_LVL_NORMAL].x_offs = sprite[ZOOM_LVL_GUI].x_offs;
-		sprite[ZOOM_LVL_NORMAL].y_offs = sprite[ZOOM_LVL_GUI].y_offs;
-		sprite[ZOOM_LVL_NORMAL].data   = sprite[ZOOM_LVL_GUI].data;
+	if (sprite->type == ST_FONT && ZOOM_LVL_FONT != ZOOM_LVL_NORMAL) {
+		/* Make ZOOM_LVL_NORMAL be ZOOM_LVL_FONT */
+		sprite[ZOOM_LVL_NORMAL].width  = sprite[ZOOM_LVL_FONT].width;
+		sprite[ZOOM_LVL_NORMAL].height = sprite[ZOOM_LVL_FONT].height;
+		sprite[ZOOM_LVL_NORMAL].x_offs = sprite[ZOOM_LVL_FONT].x_offs;
+		sprite[ZOOM_LVL_NORMAL].y_offs = sprite[ZOOM_LVL_FONT].y_offs;
+		sprite[ZOOM_LVL_NORMAL].data   = sprite[ZOOM_LVL_FONT].data;
 	}
 
 	return BlitterFactory::GetCurrentBlitter()->Encode(sprite, allocator);
@@ -818,7 +818,7 @@ static void *HandleInvalidSpriteRequest(SpriteID sprite, SpriteType requested, S
 	switch (requested) {
 		case ST_NORMAL:
 			if (sprite == SPR_IMG_QUERY) usererror("Uhm, would you be so kind not to load a NewGRF that makes the 'query' sprite a non-normal sprite?");
-			/* FALL THROUGH */
+			FALLTHROUGH;
 		case ST_FONT:
 			return GetRawSprite(SPR_IMG_QUERY, ST_NORMAL, allocator);
 		case ST_RECOLOUR:

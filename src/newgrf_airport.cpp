@@ -1,4 +1,4 @@
-/* $Id: newgrf_airport.cpp 26482 2014-04-23 20:13:33Z rubidium $ */
+/* $Id$ */
 
 /*
  * This file is part of OpenTTD.
@@ -26,7 +26,18 @@ struct AirportScopeResolver : public ScopeResolver {
 	byte layout;        ///< Layout of the airport to build.
 	TileIndex tile;     ///< Tile for the callback, only valid for airporttile callbacks.
 
-	AirportScopeResolver(ResolverObject &ro, TileIndex tile, Station *st, byte airport_id, byte layout);
+	/**
+	 * Constructor of the scope resolver for an airport.
+	 * @param ro Surrounding resolver.
+	 * @param tile %Tile for the callback, only valid for airporttile callbacks.
+	 * @param st %Station of the airport for which the callback is run, or \c NULL for build gui.
+	 * @param airport_id Type of airport for which the callback is run.
+	 * @param layout Layout of the airport to build.
+	 */
+	AirportScopeResolver(ResolverObject &ro, TileIndex tile, Station *st, byte airport_id, byte layout)
+			: ScopeResolver(ro), st(st), airport_id(airport_id), layout(layout), tile(tile)
+	{
+	}
 
 	/* virtual */ uint32 GetRandomBits() const;
 	/* virtual */ uint32 GetVariable(byte variable, uint32 parameter, bool *available) const;
@@ -89,6 +100,7 @@ AirportSpec AirportSpec::specs[NUM_AIRPORTS]; ///< Airport specifications.
 	assert(type < lengthof(AirportSpec::specs));
 	const AirportSpec *as = &AirportSpec::specs[type];
 	if (type >= NEW_AIRPORT_OFFSET && !as->enabled) {
+		if (_airport_mngr.GetGRFID(type) == 0) return as;
 		byte subst_id = _airport_mngr.GetSubstituteID(type);
 		if (subst_id == AT_INVALID) return as;
 		as = &AirportSpec::specs[subst_id];
@@ -205,7 +217,6 @@ void AirportOverrideManager::SetEntitySpec(AirportSpec *as)
 
 /**
  * Store a value into the object's persistent storage.
- * @param object Object that we want to query.
  * @param pos Position in the persistent storage to use.
  * @param value Value to store.
  */
@@ -240,22 +251,6 @@ AirportResolverObject::AirportResolverObject(TileIndex tile, Station *st, byte a
 	: ResolverObject(AirportSpec::Get(airport_id)->grf_prop.grffile, callback, param1, param2), airport_scope(*this, tile, st, airport_id, layout)
 {
 	this->root_spritegroup = AirportSpec::Get(airport_id)->grf_prop.spritegroup[0];
-}
-
-/**
- * Constructor of the scope resolver for an airport.
- * @param ro Surrounding resolver.
- * @param tile %Tile for the callback, only valid for airporttile callbacks.
- * @param st %Station of the airport for which the callback is run, or \c NULL for build gui.
- * @param airport_id Type of airport for which the callback is run.
- * @param layout Layout of the airport to build.
- */
-AirportScopeResolver::AirportScopeResolver(ResolverObject &ro, TileIndex tile, Station *st, byte airport_id, byte layout) : ScopeResolver(ro)
-{
-	this->st = st;
-	this->airport_id = airport_id;
-	this->layout = layout;
-	this->tile = tile;
 }
 
 SpriteID GetCustomAirportSprite(const AirportSpec *as, byte layout)

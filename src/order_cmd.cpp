@@ -1,4 +1,4 @@
-/* $Id: order_cmd.cpp 26694 2014-07-16 22:24:55Z frosch $ */
+/* $Id$ */
 
 /*
  * This file is part of OpenTTD.
@@ -23,6 +23,7 @@
 #include "core/random_func.hpp"
 #include "aircraft.h"
 #include "roadveh.h"
+#include "ship.h"
 #include "station_base.h"
 #include "waypoint_base.h"
 #include "company_base.h"
@@ -772,7 +773,8 @@ CommandCost CmdInsertOrder(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
 				case OSL_PLATFORM_NEAR_END:
 				case OSL_PLATFORM_MIDDLE:
 					if (v->type != VEH_TRAIN) return CMD_ERROR;
-					/* FALL THROUGH */
+					FALLTHROUGH;
+
 				case OSL_PLATFORM_FAR_END:
 					break;
 
@@ -880,7 +882,8 @@ CommandCost CmdInsertOrder(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
 				case OCV_LOAD_PERCENTAGE:
 				case OCV_RELIABILITY:
 					if (new_order.GetConditionValue() > 100) return CMD_ERROR;
-					/* FALL THROUGH */
+					FALLTHROUGH;
+
 				default:
 					if (occ == OCC_IS_TRUE || occ == OCC_IS_FALSE) return CMD_ERROR;
 					break;
@@ -927,7 +930,7 @@ CommandCost CmdInsertOrder(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
 				dist = GetOrderDistance(prev, &new_order, v);
 			}
 
-			if (dist >= 130) {
+			if (dist >= SHIP_MAX_ORDER_DISTANCE) {
 				return_cmd_error(STR_ERROR_TOO_FAR_FROM_PREVIOUS_DESTINATION);
 			}
 		}
@@ -1466,7 +1469,8 @@ CommandCost CmdModifyOrder(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
 					case OCV_LOAD_PERCENTAGE:
 					case OCV_RELIABILITY:
 						if (order->GetConditionValue() > 100) order->SetConditionValue(100);
-						/* FALL THROUGH */
+						FALLTHROUGH;
+
 					default:
 						if (occ == OCC_IS_TRUE || occ == OCC_IS_FALSE) order->SetConditionComparator(OCC_EQUALS);
 						break;
@@ -1794,7 +1798,6 @@ void CheckOrders(const Vehicle *v)
 				} else if (v->type == VEH_AIRCRAFT &&
 							(AircraftVehInfo(v->engine_type)->subtype & AIR_FAST) &&
 							(st->airport.GetFTA()->flags & AirportFTAClass::SHORT_STRIP) &&
-							_settings_game.vehicle.plane_crashes != 0 &&
 							!_cheats.no_jetcrash.value &&
 							message == INVALID_STRING_ID) {
 					message = STR_NEWS_PLANE_USES_TOO_SHORT_RUNWAY;
@@ -1830,8 +1833,11 @@ void CheckOrders(const Vehicle *v)
  * Removes an order from all vehicles. Triggers when, say, a station is removed.
  * @param type The type of the order (OT_GOTO_[STATION|DEPOT|WAYPOINT]).
  * @param destination The destination. Can be a StationID, DepotID or WaypointID.
+ * @param hangar Only used for airports in the destination.
+ *               When false, remove airport and hangar orders.
+ *               When true, remove either airport or hangar order.
  */
-void RemoveOrderFromAllVehicles(OrderType type, DestinationID destination)
+void RemoveOrderFromAllVehicles(OrderType type, DestinationID destination, bool hangar)
 {
 	Vehicle *v;
 
@@ -1844,8 +1850,8 @@ void RemoveOrderFromAllVehicles(OrderType type, DestinationID destination)
 		Order *order;
 
 		order = &v->current_order;
-		if ((v->type == VEH_AIRCRAFT && order->IsType(OT_GOTO_DEPOT) ? OT_GOTO_STATION : order->GetType()) == type &&
-				v->current_order.GetDestination() == destination) {
+		if ((v->type == VEH_AIRCRAFT && order->IsType(OT_GOTO_DEPOT) && !hangar ? OT_GOTO_STATION : order->GetType()) == type &&
+				(!hangar || v->type == VEH_AIRCRAFT) && v->current_order.GetDestination() == destination) {
 			order->MakeDummy();
 			SetWindowDirty(WC_VEHICLE_VIEW, v->index);
 		}
@@ -1858,7 +1864,8 @@ restart:
 
 			OrderType ot = order->GetType();
 			if (ot == OT_GOTO_DEPOT && (order->GetDepotActionType() & ODATFB_NEAREST_DEPOT) != 0) continue;
-			if (ot == OT_IMPLICIT || (v->type == VEH_AIRCRAFT && ot == OT_GOTO_DEPOT)) ot = OT_GOTO_STATION;
+			if (ot == OT_GOTO_DEPOT && hangar && v->type != VEH_AIRCRAFT) continue; // Not an aircraft? Can't have a hangar order.
+			if (ot == OT_IMPLICIT || (v->type == VEH_AIRCRAFT && ot == OT_GOTO_DEPOT && !hangar)) ot = OT_GOTO_STATION;
 			if (ot == type && order->GetDestination() == destination) {
 				/* We want to clear implicit orders, but we don't want to make them
 				 * dummy orders. They should just vanish. Also check the actual order
@@ -1892,7 +1899,7 @@ restart:
 		}
 	}
 
-	OrderBackup::RemoveOrder(type, destination);
+	OrderBackup::RemoveOrder(type, destination, hangar);
 }
 
 /**
@@ -1945,7 +1952,6 @@ void DeleteVehicleOrders(Vehicle *v, bool keep_orderlist, bool reset_order_indic
  * Clamp the service interval to the correct min/max. The actual min/max values
  * depend on whether it's in percent or days.
  * @param interval proposed service interval
- * @param company_id the owner of the vehicle
  * @return Clamped service interval
  */
 uint16 GetServiceIntervalClamped(uint interval, bool ispercent)
@@ -2015,6 +2021,7 @@ VehicleOrderID ProcessConditionalOrder(const Order *order, const Vehicle *v)
 	switch (order->GetConditionVariable()) {
 		case OCV_LOAD_PERCENTAGE:    skip_order = OrderConditionCompare(occ, CalcPercentVehicleFilled(v, NULL), value); break;
 		case OCV_RELIABILITY:        skip_order = OrderConditionCompare(occ, ToPercent16(v->reliability),       value); break;
+		case OCV_MAX_RELIABILITY:    skip_order = OrderConditionCompare(occ, ToPercent16(v->GetEngine()->reliability),   value); break;
 		case OCV_MAX_SPEED:          skip_order = OrderConditionCompare(occ, v->GetDisplayMaxSpeed() * 10 / 16, value); break;
 		case OCV_AGE:                skip_order = OrderConditionCompare(occ, v->age / DAYS_IN_LEAP_YEAR,        value); break;
 		case OCV_REQUIRES_SERVICE:   skip_order = OrderConditionCompare(occ, v->NeedsServicing(),               value); break;
@@ -2037,13 +2044,13 @@ bool UpdateOrderDest(Vehicle *v, const Order *order, int conditional_depth, bool
 {
 	if (conditional_depth > v->GetNumOrders()) {
 		v->current_order.Free();
-		v->dest_tile = 0;
+		v->SetDestTile(0);
 		return false;
 	}
 
 	switch (order->GetType()) {
 		case OT_GOTO_STATION:
-			v->dest_tile = v->GetOrderStationLocation(order->GetDestination());
+			v->SetDestTile(v->GetOrderStationLocation(order->GetDestination()));
 			return true;
 
 		case OT_GOTO_DEPOT:
@@ -2064,7 +2071,7 @@ bool UpdateOrderDest(Vehicle *v, const Order *order, int conditional_depth, bool
 					/* PBS reservations cannot reverse */
 					if (pbs_look_ahead && reverse) return false;
 
-					v->dest_tile = location;
+					v->SetDestTile(location);
 					v->current_order.MakeGoToDepot(destination, v->current_order.GetDepotOrderType(), v->current_order.GetNonStopType(), (OrderDepotActionFlags)(v->current_order.GetDepotActionType() & ~ODATFB_NEAREST_DEPOT), v->current_order.GetRefitCargo());
 
 					/* If there is no depot in front, reverse automatically (trains only) */
@@ -2088,14 +2095,21 @@ bool UpdateOrderDest(Vehicle *v, const Order *order, int conditional_depth, bool
 				v->IncrementRealOrderIndex();
 			} else {
 				if (v->type != VEH_AIRCRAFT) {
-					v->dest_tile = Depot::Get(order->GetDestination())->xy;
+					v->SetDestTile(Depot::Get(order->GetDestination())->xy);
+				} else {
+					Aircraft *a = Aircraft::From(v);
+					DestinationID destination = a->current_order.GetDestination();
+					if (a->targetairport != destination) {
+						/* The aircraft is now heading for a different hangar than the next in the orders */
+						a->SetDestTile(a->GetOrderStationLocation(destination));
+					}
 				}
 				return true;
 			}
 			break;
 
 		case OT_GOTO_WAYPOINT:
-			v->dest_tile = Waypoint::Get(order->GetDestination())->xy;
+			v->SetDestTile(Waypoint::Get(order->GetDestination())->xy);
 			return true;
 
 		case OT_CONDITIONAL: {
@@ -2123,7 +2137,7 @@ bool UpdateOrderDest(Vehicle *v, const Order *order, int conditional_depth, bool
 		}
 
 		default:
-			v->dest_tile = 0;
+			v->SetDestTile(0);
 			return false;
 	}
 
@@ -2139,7 +2153,7 @@ bool UpdateOrderDest(Vehicle *v, const Order *order, int conditional_depth, bool
 
 	if (order == NULL) {
 		v->current_order.Free();
-		v->dest_tile = 0;
+		v->SetDestTile(0);
 		return false;
 	}
 
@@ -2215,7 +2229,7 @@ bool ProcessOrders(Vehicle *v)
 		}
 
 		v->current_order.Free();
-		v->dest_tile = 0;
+		v->SetDestTile(0);
 		return false;
 	}
 

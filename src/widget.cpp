@@ -1,4 +1,4 @@
-/* $Id: widget.cpp 27863 2017-05-03 20:09:51Z frosch $ */
+/* $Id$ */
 
 /*
  * This file is part of OpenTTD.
@@ -99,7 +99,7 @@ static void ScrollbarClickPositioning(Window *w, NWidgetScrollbar *sb, int x, in
 			_scroller_click_timeout = 3;
 			sb->UpdatePosition(rtl ? 1 : -1);
 		}
-		w->scrolling_scrollbar = sb->index;
+		w->mouse_capture_widget = sb->index;
 	} else if (pos >= ma - button_size) {
 		/* Pressing the lower button? */
 		SetBit(sb->disp_flags, NDB_SCROLLBAR_DOWN);
@@ -108,7 +108,7 @@ static void ScrollbarClickPositioning(Window *w, NWidgetScrollbar *sb, int x, in
 			_scroller_click_timeout = 3;
 			sb->UpdatePosition(rtl ? -1 : 1);
 		}
-		w->scrolling_scrollbar = sb->index;
+		w->mouse_capture_widget = sb->index;
 	} else {
 		Point pt = HandleScrollbarHittest(sb, mi, ma, sb->type == NWID_HSCROLLBAR);
 
@@ -119,7 +119,7 @@ static void ScrollbarClickPositioning(Window *w, NWidgetScrollbar *sb, int x, in
 		} else {
 			_scrollbar_start_pos = pt.x - mi - button_size;
 			_scrollbar_size = ma - mi - button_size * 2;
-			w->scrolling_scrollbar = sb->index;
+			w->mouse_capture_widget = sb->index;
 			_cursorpos_drag_start = _cursor.pos;
 		}
 	}
@@ -221,7 +221,8 @@ static inline void DrawImageButtons(const Rect &r, WidgetType type, Colours colo
 	DrawFrameRect(r.left, r.top, r.right, r.bottom, colour, (clicked) ? FR_LOWERED : FR_NONE);
 
 	if ((type & WWT_MASK) == WWT_IMGBTN_2 && clicked) img++; // Show different image when clicked for #WWT_IMGBTN_2.
-	DrawSprite(img, PAL_NONE, r.left + WD_IMGBTN_LEFT + clicked, r.top + WD_IMGBTN_TOP + clicked);
+	Dimension d = GetSpriteSize(img);
+	DrawSprite(img, PAL_NONE, CenterBounds(r.left, r.right, d.width) + clicked, CenterBounds(r.top, r.bottom, d.height) + clicked);
 }
 
 /**
@@ -459,8 +460,7 @@ static inline void DrawFrame(const Rect &r, Colours colour, StringID str)
  */
 static inline void DrawShadeBox(const Rect &r, Colours colour, bool clicked)
 {
-	DrawFrameRect(r.left, r.top, r.right, r.bottom, colour, (clicked) ? FR_LOWERED : FR_NONE);
-	DrawSprite((clicked) ? SPR_WINDOW_SHADE : SPR_WINDOW_UNSHADE, PAL_NONE, r.left + WD_SHADEBOX_LEFT + clicked, r.top + WD_SHADEBOX_TOP + clicked);
+	DrawImageButtons(r, WWT_SHADEBOX, colour, clicked, clicked ? SPR_WINDOW_SHADE: SPR_WINDOW_UNSHADE);
 }
 
 /**
@@ -471,8 +471,7 @@ static inline void DrawShadeBox(const Rect &r, Colours colour, bool clicked)
  */
 static inline void DrawStickyBox(const Rect &r, Colours colour, bool clicked)
 {
-	DrawFrameRect(r.left, r.top, r.right, r.bottom, colour, (clicked) ? FR_LOWERED : FR_NONE);
-	DrawSprite((clicked) ? SPR_PIN_UP : SPR_PIN_DOWN, PAL_NONE, r.left + WD_STICKYBOX_LEFT + clicked, r.top + WD_STICKYBOX_TOP + clicked);
+	DrawImageButtons(r, WWT_STICKYBOX, colour, clicked, clicked ? SPR_PIN_UP : SPR_PIN_DOWN);
 }
 
 /**
@@ -483,8 +482,7 @@ static inline void DrawStickyBox(const Rect &r, Colours colour, bool clicked)
  */
 static inline void DrawDefSizeBox(const Rect &r, Colours colour, bool clicked)
 {
-	DrawFrameRect(r.left, r.top, r.right, r.bottom, colour, (clicked) ? FR_LOWERED : FR_NONE);
-	DrawSprite(SPR_WINDOW_DEFSIZE, PAL_NONE, r.left + WD_DEFSIZEBOX_LEFT + clicked, r.top + WD_DEFSIZEBOX_TOP + clicked);
+	DrawImageButtons(r, WWT_DEFSIZEBOX, colour, clicked, SPR_WINDOW_DEFSIZE);
 }
 
 /**
@@ -495,8 +493,7 @@ static inline void DrawDefSizeBox(const Rect &r, Colours colour, bool clicked)
  */
 static inline void DrawDebugBox(const Rect &r, Colours colour, bool clicked)
 {
-	DrawFrameRect(r.left, r.top, r.right, r.bottom, colour, (clicked) ? FR_LOWERED : FR_NONE);
-	DrawSprite(SPR_WINDOW_DEBUG, PAL_NONE, r.left + WD_DEBUGBOX_LEFT + clicked, r.top + WD_DEBUGBOX_TOP + clicked);
+	DrawImageButtons(r, WWT_DEBUGBOX, colour, clicked, SPR_WINDOW_DEBUG);
 }
 
 /**
@@ -528,7 +525,9 @@ static inline void DrawResizeBox(const Rect &r, Colours colour, bool at_left, bo
 static inline void DrawCloseBox(const Rect &r, Colours colour)
 {
 	if (colour != COLOUR_WHITE) DrawFrameRect(r.left, r.top, r.right, r.bottom, colour, FR_NONE);
-	DrawSprite(SPR_CLOSEBOX, (colour != COLOUR_WHITE ? TC_BLACK : TC_SILVER) | (1 << PALETTE_TEXT_RECOLOUR), r.left + WD_CLOSEBOX_LEFT, r.top + WD_CLOSEBOX_TOP);
+	Dimension d = GetSpriteSize(SPR_CLOSEBOX);
+	int s = UnScaleGUI(1); /* Offset to account for shadow of SPR_CLOSEBOX */
+	DrawSprite(SPR_CLOSEBOX, (colour != COLOUR_WHITE ? TC_BLACK : TC_SILVER) | (1 << PALETTE_TEXT_RECOLOUR), CenterBounds(r.left, r.right, d.width - s), CenterBounds(r.top, r.bottom, d.height - s));
 }
 
 /**
@@ -756,7 +755,7 @@ NWidgetBase::NWidgetBase(WidgetType tp) : ZeroedMemoryAllocator()
  */
 
 /**
- * @fn void FillNestedArray(NWidgetBase **array, uint length)
+ * @fn void NWidgetBase::FillNestedArray(NWidgetBase **array, uint length)
  * Fill the Window::nested_array array with pointers to nested widgets in the tree.
  * @param array Base pointer of the array.
  * @param length Length of the array.
@@ -1674,10 +1673,10 @@ NWidgetCore *NWidgetMatrix::GetWidgetFromPos(int x, int y)
 
 /**
  * Get the different offsets that are influenced by scrolling.
- * @param [out] start_x     The start position in columns (index of the left-most column, swapped in RTL).
- * @param [out] start_y     The start position in rows.
- * @param [out] base_offs_x The base horizontal offset in pixels (X position of the column \a start_x).
- * @param [out] base_offs_y The base vertical offset in pixels (Y position of the column \a start_y).
+ * @param[out] start_x     The start position in columns (index of the left-most column, swapped in RTL).
+ * @param[out] start_y     The start position in rows.
+ * @param[out] base_offs_x The base horizontal offset in pixels (X position of the column \a start_x).
+ * @param[out] base_offs_y The base vertical offset in pixels (Y position of the column \a start_y).
  */
 void NWidgetMatrix::GetScrollOffsets(int &start_x, int &start_y, int &base_offs_x, int &base_offs_y)
 {
@@ -2039,7 +2038,7 @@ void NWidgetScrollbar::Draw(const Window *w)
 
 	bool up_lowered = HasBit(this->disp_flags, NDB_SCROLLBAR_UP);
 	bool down_lowered = HasBit(this->disp_flags, NDB_SCROLLBAR_DOWN);
-	bool middle_lowered = !(this->disp_flags & ND_SCROLLBAR_BTN) && w->scrolling_scrollbar == this->index;
+	bool middle_lowered = !(this->disp_flags & ND_SCROLLBAR_BTN) && w->mouse_capture_widget == this->index;
 
 	if (this->type == NWID_HSCROLLBAR) {
 		DrawHorizontalScrollbar(r, this->colour, up_lowered, middle_lowered, down_lowered, this);
@@ -2288,8 +2287,8 @@ void NWidgetLeaf::SetupSmallestSize(Window *w, bool init_array)
 			Dimension sprite_size = GetSpriteSize(_current_text_dir == TD_RTL ? SPR_IMG_DELETE_RIGHT : SPR_IMG_DELETE_LEFT);
 			size.width = max(size.width, 30 + sprite_size.width);
 			size.height = max(sprite_size.height, GetStringBoundingBox("_").height + WD_FRAMERECT_TOP + WD_FRAMERECT_BOTTOM);
-			/* FALL THROUGH */
 		}
+		FALLTHROUGH;
 		case WWT_PUSHBTN: {
 			static const Dimension extra = {WD_FRAMERECT_LEFT + WD_FRAMERECT_RIGHT, WD_FRAMERECT_TOP + WD_FRAMERECT_BOTTOM};
 			padding = &extra;
@@ -2806,7 +2805,7 @@ NWidgetContainer *MakeNWidgets(const NWidgetPart *parts, int count, int *biggest
  * @param parts Array with parts of the widgets.
  * @param count Length of the \a parts array.
  * @param biggest_index Pointer to biggest nested widget index collected in the tree.
- * @param [out] shade_select Pointer to the inserted shade selection widget (\c NULL if not unserted).
+ * @param[out] shade_select Pointer to the inserted shade selection widget (\c NULL if not unserted).
  * @return Root of the nested widget tree, a vertical container containing the entire GUI.
  * @ingroup NestedWidgetParts
  * @pre \c biggest_index != NULL

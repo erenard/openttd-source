@@ -1,4 +1,4 @@
-/* $Id: ai_changelog.hpp 27942 2017-12-11 20:14:55Z frosch $ */
+/* $Id$ */
 
 /*
  * This file is part of OpenTTD.
@@ -14,6 +14,25 @@
  * bug fixes can be found in the normal changelog. Note that removed API
  * functions may still be available if you return an older API version
  * in GetAPIVersion() in info.nut.
+ *
+ * \b 1.9.0
+ *
+ * API additions:
+ * \li AIAirport::GetMonthlyMaintenanceCost
+ * \li AIGroup::SetParent
+ * \li AIGroup::GetParent
+ * \li AICompany::SetPrimaryLiveryColour
+ * \li AICompany::SetSecondaryLiveryColour
+ * \li AICompany::GetPrimaryLiveryColour
+ * \li AICompany::GetSecondaryLiveryColour
+ *
+ * Other changes:
+ * \li AIBridge::GetName takes one extra parameter to refer the vehicle type
+ * \li AIGroup::CreateGroup gains parent_group_id parameter
+ *
+ * \b 1.8.0
+ *
+ * No changes
  *
  * \b 1.7.0 - 1.7.2
  *

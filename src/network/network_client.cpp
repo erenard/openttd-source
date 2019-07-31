@@ -1,4 +1,4 @@
-/* $Id: network_client.cpp 27653 2016-09-04 16:06:50Z alberth $ */
+/* $Id$ */
 
 /*
  * This file is part of OpenTTD.
@@ -120,6 +120,20 @@ struct PacketReader : LoadFilter {
 
 
 /**
+ * Create an emergency savegame when the network connection is lost.
+ */
+void ClientNetworkEmergencySave()
+{
+	if (!_settings_client.gui.autosave_on_network_disconnect) return;
+	if (!_networking) return;
+
+	const char *filename = "netsave.sav";
+	DEBUG(net, 0, "Client: Performing emergency save (%s)", filename);
+	SaveOrLoad(filename, SLO_SAVE, DFT_GAME_FILE, AUTOSAVE_DIR, false);
+}
+
+
+/**
  * Create a new socket for the client side of the game connection.
  * @param s The socket to connect with.
  */
@@ -198,6 +212,8 @@ void ClientNetworkGameSocketHandler::ClientError(NetworkRecvStatus res)
 			res != NETWORK_RECV_STATUS_SERVER_BANNED) {
 		SendError(errorno);
 	}
+
+	ClientNetworkEmergencySave();
 
 	_switch_mode = SM_MENU;
 	this->CloseConnection(res);
@@ -330,7 +346,7 @@ NetworkRecvStatus ClientNetworkGameSocketHandler::SendJoin()
 	SetWindowDirty(WC_NETWORK_STATUS_WINDOW, WN_NETWORK_STATUS_WINDOW_JOIN);
 
 	Packet *p = new Packet(PACKET_CLIENT_JOIN);
-	p->Send_string(_openttd_revision);
+	p->Send_string(GetNetworkRevisionString());
 	p->Send_uint32(_openttd_newgrf_version);
 	p->Send_string(_settings_client.network.client_name); // Client name
 	p->Send_uint8 (_network_join_as);     // PlayAs
@@ -670,6 +686,9 @@ NetworkRecvStatus ClientNetworkGameSocketHandler::Receive_SERVER_ERROR(Packet *p
 
 	ShowErrorMessage(err, INVALID_STRING_ID, WL_CRITICAL);
 
+	/* Perform an emergency save if we had already entered the game */
+	if (this->status == STATUS_ACTIVE) ClientNetworkEmergencySave();
+
 	DeleteWindowById(WC_NETWORK_STATUS_WINDOW, WN_NETWORK_STATUS_WINDOW_JOIN);
 
 	return NETWORK_RECV_STATUS_SERVER_ERROR;
@@ -862,7 +881,7 @@ NetworkRecvStatus ClientNetworkGameSocketHandler::Receive_SERVER_MAP_DONE(Packet
 			 * the server will give us a client-id and let us in */
 			_network_join_status = NETWORK_JOIN_STATUS_REGISTERING;
 			ShowJoinStatusWindow();
-			NetworkSendCommand(0, 0, 0, CMD_COMPANY_CTRL, NULL, NULL, _local_company);
+			NetworkSendCommand(0, CCA_NEW, 0, CMD_COMPANY_CTRL, NULL, NULL, _local_company);
 		}
 	} else {
 		/* take control over an existing company */
@@ -965,7 +984,8 @@ NetworkRecvStatus ClientNetworkGameSocketHandler::Receive_SERVER_CHAT(Packet *p)
 			/* For speaking to company or giving money, we need the company-name */
 			case NETWORK_ACTION_GIVE_MONEY:
 				if (!Company::IsValidID(ci_to->client_playas)) return NETWORK_RECV_STATUS_OKAY;
-				/* FALL THROUGH */
+				FALLTHROUGH;
+
 			case NETWORK_ACTION_CHAT_COMPANY: {
 				StringID str = Company::IsValidID(ci_to->client_playas) ? STR_COMPANY_NAME : STR_NETWORK_SPECTATORS;
 				SetDParam(0, ci_to->client_playas);
@@ -1050,6 +1070,8 @@ NetworkRecvStatus ClientNetworkGameSocketHandler::Receive_SERVER_SHUTDOWN(Packet
 		ShowErrorMessage(STR_NETWORK_MESSAGE_SERVER_SHUTDOWN, INVALID_STRING_ID, WL_CRITICAL);
 	}
 
+	if (this->status == STATUS_ACTIVE) ClientNetworkEmergencySave();
+
 	return NETWORK_RECV_STATUS_SERVER_ERROR;
 }
 
@@ -1064,6 +1086,8 @@ NetworkRecvStatus ClientNetworkGameSocketHandler::Receive_SERVER_NEWGAME(Packet 
 		_network_reconnect = _network_own_client_id % 16;
 		ShowErrorMessage(STR_NETWORK_MESSAGE_SERVER_REBOOT, INVALID_STRING_ID, WL_CRITICAL);
 	}
+
+	if (this->status == STATUS_ACTIVE) ClientNetworkEmergencySave();
 
 	return NETWORK_RECV_STATUS_SERVER_ERROR;
 }
@@ -1151,7 +1175,6 @@ void ClientNetworkGameSocketHandler::CheckConnection()
 	 * the server will forcefully disconnect you. */
 	if (lag > 20) {
 		this->NetworkGameSocketHandler::CloseConnection();
-		ShowErrorMessage(STR_NETWORK_ERROR_LOSTCONNECTION, INVALID_STRING_ID, WL_CRITICAL);
 		return;
 	}
 

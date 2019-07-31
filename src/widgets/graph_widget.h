@@ -1,4 +1,4 @@
-/* $Id: graph_widget.h 23735 2012-01-03 20:26:05Z rubidium $ */
+/* $Id$ */
 
 /*
  * This file is part of OpenTTD.
@@ -49,7 +49,8 @@ enum CargoPaymentRatesWidgets {
 	WID_CPR_FOOTER,          ///< Footer.
 	WID_CPR_ENABLE_CARGOES,  ///< Enable cargoes button.
 	WID_CPR_DISABLE_CARGOES, ///< Disable cargoes button.
-	WID_CPR_CARGO_FIRST,     ///< First cargo in the list.
+	WID_CPR_MATRIX,          ///< Cargo list.
+	WID_CPR_MATRIX_SCROLLBAR,///< Cargo list scrollbar.
 };
 
 /** Widget of the #CompanyLeagueWindow class. */

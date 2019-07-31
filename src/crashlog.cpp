@@ -1,4 +1,4 @@
-/* $Id: crashlog.cpp 27653 2016-09-04 16:06:50Z alberth $ */
+/* $Id$ */
 
 /*
  * This file is part of OpenTTD.
@@ -27,6 +27,7 @@
 #include "network/network.h"
 #include "language.h"
 #include "fontcache.h"
+#include "news_gui.h"
 
 #include "ai/ai_info.hpp"
 #include "game/game.hpp"
@@ -61,7 +62,6 @@
 #include <lzo/lzo1x.h>
 #endif
 #ifdef WITH_SDL
-#	include "sdl.h"
 #	include <SDL.h>
 #endif /* WITH_SDL */
 #ifdef WITH_ZLIB
@@ -194,7 +194,7 @@ char *CrashLog::LogConfiguration(char *buffer, const char *last) const
 			FontCache::Get(FS_MONO)->GetFontName()
 	);
 
-	buffer += seprintf(buffer, last, "AI Configuration (local: %i):\n", (int)_local_company);
+	buffer += seprintf(buffer, last, "AI Configuration (local: %i) (current: %i):\n", (int)_local_company, (int)_current_company);
 	const Company *c;
 	FOR_ALL_COMPANIES(c) {
 		if (c->ai_info == NULL) {
@@ -267,14 +267,8 @@ char *CrashLog::LogLibraries(char *buffer, const char *last) const
 #endif /* WITH_PNG */
 
 #ifdef WITH_SDL
-#ifdef DYNAMICALLY_LOADED_SDL
-	if (SDL_CALL SDL_Linked_Version != NULL) {
-#else
-	{
-#endif
-		const SDL_version *v = SDL_CALL SDL_Linked_Version();
-		buffer += seprintf(buffer, last, " SDL:        %d.%d.%d\n", v->major, v->minor, v->patch);
-	}
+	const SDL_version *v = SDL_Linked_Version();
+	buffer += seprintf(buffer, last, " SDL:        %d.%d.%d\n", v->major, v->minor, v->patch);
 #endif /* WITH_SDL */
 
 #ifdef WITH_ZLIB
@@ -309,6 +303,27 @@ char *CrashLog::LogGamelog(char *buffer, const char *last) const
 }
 
 /**
+ * Writes any recent news messages to the buffer.
+ * @param buffer The begin where to write at.
+ * @param last   The last position in the buffer to write to.
+ * @return the position of the \c '\0' character after the buffer.
+ */
+char *CrashLog::LogRecentNews(char *buffer, const char *last) const
+{
+	buffer += seprintf(buffer, last, "Recent news messages:\n");
+
+	for (NewsItem *news = _oldest_news; news != NULL; news = news->next) {
+		YearMonthDay ymd;
+		ConvertDateToYMD(news->date, &ymd);
+		buffer += seprintf(buffer, last, "(%i-%02i-%02i) StringID: %u, Type: %u, Ref1: %u, %u, Ref2: %u, %u\n",
+		                   ymd.year, ymd.month + 1, ymd.day, news->string_id, news->type,
+		                   news->reftype1, news->ref1, news->reftype2, news->ref2);
+	}
+	buffer += seprintf(buffer, last, "\n");
+	return buffer;
+}
+
+/**
  * Fill the crash log buffer with all data of a crash log.
  * @param buffer The begin where to write at.
  * @param last   The last position in the buffer to write to.
@@ -334,6 +349,7 @@ char *CrashLog::FillCrashLog(char *buffer, const char *last) const
 	buffer = this->LogLibraries(buffer, last);
 	buffer = this->LogModules(buffer, last);
 	buffer = this->LogGamelog(buffer, last);
+	buffer = this->LogRecentNews(buffer, last);
 
 	buffer += seprintf(buffer, last, "*** End of OpenTTD Crash Report ***\n");
 	return buffer;

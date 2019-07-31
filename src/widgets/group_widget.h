@@ -1,4 +1,4 @@
-/* $Id: group_widget.h 23600 2011-12-19 20:46:17Z truebrain $ */
+/* $Id$ */
 
 /*
  * This file is part of OpenTTD.
@@ -31,7 +31,9 @@ enum GroupListWidgets {
 	WID_GL_CREATE_GROUP,             ///< Create group button.
 	WID_GL_DELETE_GROUP,             ///< Delete group button.
 	WID_GL_RENAME_GROUP,             ///< Rename group button.
+	WID_GL_LIVERY_GROUP,             ///< Group livery button.
 	WID_GL_REPLACE_PROTECTION,       ///< Replace protection button.
+	WID_GL_INFO,                     ///< Group info.
 };
 
 #endif /* WIDGETS_GROUP_WIDGET_H */

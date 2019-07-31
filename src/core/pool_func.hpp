@@ -1,4 +1,4 @@
-/* $Id: pool_func.hpp 27381 2015-08-10 20:24:13Z michi_cc $ */
+/* $Id$ */
 
 /*
  * This file is part of OpenTTD.
@@ -152,18 +152,20 @@ DEFINE_POOL_METHOD(void *)::GetNew(size_t size)
  * @param size size of item
  * @param index index of item
  * @return pointer to allocated item
- * @note usererror() on failure! (index out of range or already used)
+ * @note SlErrorCorruptFmt() on failure! (index out of range or already used)
  */
 DEFINE_POOL_METHOD(void *)::GetNew(size_t size, size_t index)
 {
+	extern void NORETURN SlErrorCorruptFmt(const char *format, ...);
+
 	if (index >= Tmax_size) {
-		usererror("failed loading savegame: %s index " PRINTF_SIZE " out of range (" PRINTF_SIZE ")", this->name, index, Tmax_size);
+		SlErrorCorruptFmt("%s index " PRINTF_SIZE " out of range (" PRINTF_SIZE ")", this->name, index, Tmax_size);
 	}
 
 	if (index >= this->size) this->ResizeFor(index);
 
 	if (this->data[index] != NULL) {
-		usererror("failed loading savegame: %s index " PRINTF_SIZE " already in use", this->name, index);
+		SlErrorCorruptFmt("%s index " PRINTF_SIZE " already in use", this->name, index);
 	}
 
 	return this->AllocateItem(size, index);

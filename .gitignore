@@ -1,6 +1,8 @@
-.classpath
-.project
-build.xml
-manifest.mf
-nbproject/
-
+.github
+azure-pipelines
+bin
+docs
+os
+projects
+media
+/*

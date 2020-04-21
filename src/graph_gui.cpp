@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -56,7 +54,7 @@ struct GraphLegendWindow : Window {
 		}
 	}
 
-	virtual void DrawWidget(const Rect &r, int widget) const
+	void DrawWidget(const Rect &r, int widget) const override
 	{
 		if (!IsInsideMM(widget, WID_GL_FIRST_COMPANY, MAX_COMPANIES + WID_GL_FIRST_COMPANY)) return;
 
@@ -74,7 +72,7 @@ struct GraphLegendWindow : Window {
 		DrawString(r.left + (rtl ? (uint)WD_FRAMERECT_LEFT : (d.width + 4)), r.right - (rtl ? (d.width + 4) : (uint)WD_FRAMERECT_RIGHT), r.top + (r.bottom - r.top + 1 - FONT_HEIGHT_NORMAL) / 2, STR_COMPANY_NAME_COMPANY_NUM, HasBit(_legend_excluded_companies, cid) ? TC_BLACK : TC_WHITE);
 	}
 
-	virtual void OnClick(Point pt, int widget, int click_count)
+	void OnClick(Point pt, int widget, int click_count) override
 	{
 		if (!IsInsideMM(widget, WID_GL_FIRST_COMPANY, MAX_COMPANIES + WID_GL_FIRST_COMPANY)) return;
 
@@ -93,7 +91,7 @@ struct GraphLegendWindow : Window {
 	 * @param data Information about the changed data.
 	 * @param gui_scope Whether the call is done from GUI scope. You may not do everything when not in GUI scope. See #InvalidateWindowData() for details.
 	 */
-	virtual void OnInvalidateData(int data = 0, bool gui_scope = true)
+	void OnInvalidateData(int data = 0, bool gui_scope = true) override
 	{
 		if (!gui_scope) return;
 		if (Company::IsValidID(data)) return;
@@ -485,7 +483,7 @@ protected:
 	}
 
 public:
-	virtual void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize)
+	void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
 	{
 		if (widget != this->graph_widget) return;
 
@@ -521,7 +519,7 @@ public:
 		size->height = max<uint>(size->height, size->width / 3);
 	}
 
-	virtual void DrawWidget(const Rect &r, int widget) const
+	void DrawWidget(const Rect &r, int widget) const override
 	{
 		if (widget != this->graph_widget) return;
 
@@ -533,13 +531,13 @@ public:
 		return INVALID_DATAPOINT;
 	}
 
-	virtual void OnClick(Point pt, int widget, int click_count)
+	void OnClick(Point pt, int widget, int click_count) override
 	{
 		/* Clicked on legend? */
 		if (widget == WID_CV_KEY_BUTTON) ShowGraphLegend();
 	}
 
-	virtual void OnGameTick()
+	void OnGameTick() override
 	{
 		this->UpdateStatistics(false);
 	}
@@ -549,7 +547,7 @@ public:
 	 * @param data Information about the changed data.
 	 * @param gui_scope Whether the call is done from GUI scope. You may not do everything when not in GUI scope. See #InvalidateWindowData() for details.
 	 */
-	virtual void OnInvalidateData(int data = 0, bool gui_scope = true)
+	void OnInvalidateData(int data = 0, bool gui_scope = true) override
 	{
 		if (!gui_scope) return;
 		this->UpdateStatistics(true);
@@ -569,8 +567,7 @@ public:
 		}
 
 		byte nums = 0;
-		const Company *c;
-		FOR_ALL_COMPANIES(c) {
+		for (const Company *c : Company::Iterate()) {
 			nums = min(this->num_vert_lines, max(nums, c->num_valid_stat_ent));
 		}
 
@@ -594,8 +591,8 @@ public:
 
 		int numd = 0;
 		for (CompanyID k = COMPANY_FIRST; k < MAX_COMPANIES; k++) {
-			c = Company::GetIfValid(k);
-			if (c != NULL) {
+			const Company *c = Company::GetIfValid(k);
+			if (c != nullptr) {
 				this->colours[numd] = _colour_gradient[c->colour][6];
 				for (int j = this->num_on_x_axis, i = 0; --j >= 0;) {
 					this->cost[numd][i] = (j >= c->num_valid_stat_ent) ? INVALID_DATAPOINT : GetGraphData(c, j);
@@ -621,7 +618,7 @@ struct OperatingProfitGraphWindow : BaseGraphWindow {
 		this->InitializeWindow(window_number);
 	}
 
-	virtual OverflowSafeInt64 GetGraphData(const Company *c, int j)
+	OverflowSafeInt64 GetGraphData(const Company *c, int j) override
 	{
 		return c->old_economy[j].income + c->old_economy[j].expenses;
 	}
@@ -672,7 +669,7 @@ struct IncomeGraphWindow : BaseGraphWindow {
 		this->InitializeWindow(window_number);
 	}
 
-	virtual OverflowSafeInt64 GetGraphData(const Company *c, int j)
+	OverflowSafeInt64 GetGraphData(const Company *c, int j) override
 	{
 		return c->old_economy[j].income;
 	}
@@ -721,7 +718,7 @@ struct DeliveredCargoGraphWindow : BaseGraphWindow {
 		this->InitializeWindow(window_number);
 	}
 
-	virtual OverflowSafeInt64 GetGraphData(const Company *c, int j)
+	OverflowSafeInt64 GetGraphData(const Company *c, int j) override
 	{
 		return c->old_economy[j].delivered_cargo.GetSum<OverflowSafeInt64>();
 	}
@@ -770,12 +767,12 @@ struct PerformanceHistoryGraphWindow : BaseGraphWindow {
 		this->InitializeWindow(window_number);
 	}
 
-	virtual OverflowSafeInt64 GetGraphData(const Company *c, int j)
+	OverflowSafeInt64 GetGraphData(const Company *c, int j) override
 	{
 		return c->old_economy[j].performance_history;
 	}
 
-	virtual void OnClick(Point pt, int widget, int click_count)
+	void OnClick(Point pt, int widget, int click_count) override
 	{
 		if (widget == WID_PHG_DETAILED_PERFORMANCE) ShowPerformanceRatingDetail();
 		this->BaseGraphWindow::OnClick(pt, widget, click_count);
@@ -826,7 +823,7 @@ struct CompanyValueGraphWindow : BaseGraphWindow {
 		this->InitializeWindow(window_number);
 	}
 
-	virtual OverflowSafeInt64 GetGraphData(const Company *c, int j)
+	OverflowSafeInt64 GetGraphData(const Company *c, int j) override
 	{
 		return c->old_economy[j].company_value;
 	}
@@ -903,7 +900,7 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 		}
 	}
 
-	virtual void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize)
+	void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
 	{
 		if (widget != WID_CPR_MATRIX) {
 			BaseGraphWindow::UpdateWidgetSize(widget, size, padding, fill, resize);
@@ -926,7 +923,7 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 		resize->height = this->line_height;
 	}
 
-	virtual void DrawWidget(const Rect &r, int widget) const
+	void DrawWidget(const Rect &r, int widget) const override
 	{
 		if (widget != WID_CPR_MATRIX) {
 			BaseGraphWindow::DrawWidget(r, widget);
@@ -963,7 +960,7 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 		}
 	}
 
-	virtual void OnClick(Point pt, int widget, int click_count)
+	void OnClick(Point pt, int widget, int click_count) override
 	{
 		switch (widget) {
 			case WID_CPR_ENABLE_CARGOES:
@@ -1004,12 +1001,12 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 		}
 	}
 
-	virtual void OnResize()
+	void OnResize() override
 	{
 		this->vscroll->SetCapacityFromWidget(this, WID_CPR_MATRIX);
 	}
 
-	virtual void OnGameTick()
+	void OnGameTick() override
 	{
 		/* Override default OnGameTick */
 	}
@@ -1019,13 +1016,13 @@ struct PaymentRatesGraphWindow : BaseGraphWindow {
 	 * @param data Information about the changed data.
 	 * @param gui_scope Whether the call is done from GUI scope. You may not do everything when not in GUI scope. See #InvalidateWindowData() for details.
 	 */
-	virtual void OnInvalidateData(int data = 0, bool gui_scope = true)
+	void OnInvalidateData(int data = 0, bool gui_scope = true) override
 	{
 		if (!gui_scope) return;
 		this->OnHundredthTick();
 	}
 
-	virtual void OnHundredthTick()
+	void OnHundredthTick() override
 	{
 		this->UpdateExcludedData();
 
@@ -1136,21 +1133,20 @@ private:
 	{
 		if (!this->companies.NeedRebuild()) return;
 
-		this->companies.Clear();
+		this->companies.clear();
 
-		const Company *c;
-		FOR_ALL_COMPANIES(c) {
-			*this->companies.Append() = c;
+		for (const Company *c : Company::Iterate()) {
+			this->companies.push_back(c);
 		}
 
-		this->companies.Compact();
+		this->companies.shrink_to_fit();
 		this->companies.RebuildDone();
 	}
 
 	/** Sort the company league by performance history */
-	static int CDECL PerformanceSorter(const Company * const *c1, const Company * const *c2)
+	static bool PerformanceSorter(const Company * const &c1, const Company * const &c2)
 	{
-		return (*c2)->old_economy[0].performance_history - (*c1)->old_economy[0].performance_history;
+		return c2->old_economy[0].performance_history < c1->old_economy[0].performance_history;
 	}
 
 public:
@@ -1161,7 +1157,7 @@ public:
 		this->companies.NeedResort();
 	}
 
-	virtual void OnPaint()
+	void OnPaint() override
 	{
 		this->BuildCompanyList();
 		this->companies.Sort(&PerformanceSorter);
@@ -1169,7 +1165,7 @@ public:
 		this->DrawWidgets();
 	}
 
-	virtual void DrawWidget(const Rect &r, int widget) const
+	void DrawWidget(const Rect &r, int widget) const override
 	{
 		if (widget != WID_CL_BACKGROUND) return;
 
@@ -1183,7 +1179,7 @@ public:
 		uint text_left     = rtl ? r.left + WD_FRAMERECT_LEFT : r.right - WD_FRAMERECT_LEFT - this->text_width;
 		uint text_right    = rtl ? r.left + WD_FRAMERECT_LEFT + this->text_width : r.right - WD_FRAMERECT_LEFT;
 
-		for (uint i = 0; i != this->companies.Length(); i++) {
+		for (uint i = 0; i != this->companies.size(); i++) {
 			const Company *c = this->companies[i];
 			DrawString(ordinal_left, ordinal_right, y, i + STR_ORDINAL_NUMBER_1ST, i == 0 ? TC_WHITE : TC_YELLOW);
 
@@ -1197,7 +1193,7 @@ public:
 		}
 	}
 
-	virtual void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize)
+	void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
 	{
 		if (widget != WID_CL_BACKGROUND) return;
 
@@ -1221,8 +1217,7 @@ public:
 		this->icon_width = d.width + 2;
 		this->line_height = max<int>(d.height + 2, FONT_HEIGHT_NORMAL);
 
-		const Company *c;
-		FOR_ALL_COMPANIES(c) {
+		for (const Company *c : Company::Iterate()) {
 			SetDParam(0, c->index);
 			SetDParam(1, c->index);
 			SetDParam(2, _performance_titles[widest_title]);
@@ -1236,7 +1231,7 @@ public:
 	}
 
 
-	virtual void OnGameTick()
+	void OnGameTick() override
 	{
 		if (this->companies.NeedResort()) {
 			this->SetDirty();
@@ -1248,7 +1243,7 @@ public:
 	 * @param data Information about the changed data.
 	 * @param gui_scope Whether the call is done from GUI scope. You may not do everything when not in GUI scope. See #InvalidateWindowData() for details.
 	 */
-	virtual void OnInvalidateData(int data = 0, bool gui_scope = true)
+	void OnInvalidateData(int data = 0, bool gui_scope = true) override
 	{
 		if (data == 0) {
 			/* This needs to be done in command-scope to enforce rebuilding before resorting invalid data */
@@ -1301,8 +1296,7 @@ struct PerformanceRatingDetailWindow : Window {
 	{
 		/* Update all company stats with the current data
 		 * (this is because _score_info is not saved to a savegame) */
-		Company *c;
-		FOR_ALL_COMPANIES(c) {
+		for (Company *c : Company::Iterate()) {
 			UpdateCompanyRatingAndValue(c, false);
 		}
 
@@ -1318,7 +1312,7 @@ struct PerformanceRatingDetailWindow : Window {
 	uint score_detail_left;
 	uint score_detail_right;
 
-	virtual void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize)
+	void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
 	{
 		switch (widget) {
 			case WID_PRD_SCORE_FIRST:
@@ -1376,7 +1370,7 @@ struct PerformanceRatingDetailWindow : Window {
 		}
 	}
 
-	virtual void DrawWidget(const Rect &r, int widget) const
+	void DrawWidget(const Rect &r, int widget) const override
 	{
 		/* No need to draw when there's nothing to draw */
 		if (this->company == INVALID_COMPANY) return;
@@ -1455,7 +1449,7 @@ struct PerformanceRatingDetailWindow : Window {
 		}
 	}
 
-	virtual void OnClick(Point pt, int widget, int click_count)
+	void OnClick(Point pt, int widget, int click_count) override
 	{
 		/* Check which button is clicked */
 		if (IsInsideMM(widget, WID_PRD_COMPANY_FIRST, WID_PRD_COMPANY_LAST + 1)) {
@@ -1469,7 +1463,7 @@ struct PerformanceRatingDetailWindow : Window {
 		}
 	}
 
-	virtual void OnGameTick()
+	void OnGameTick() override
 	{
 		/* Update the company score every 5 days */
 		if (--this->timeout == 0) {
@@ -1483,7 +1477,7 @@ struct PerformanceRatingDetailWindow : Window {
 	 * @param data the company ID of the company that is going to be removed
 	 * @param gui_scope Whether the call is done from GUI scope. You may not do everything when not in GUI scope. See #InvalidateWindowData() for details.
 	 */
-	virtual void OnInvalidateData(int data = 0, bool gui_scope = true)
+	void OnInvalidateData(int data = 0, bool gui_scope = true) override
 	{
 		if (!gui_scope) return;
 		/* Disable the companies who are not active */
@@ -1499,8 +1493,7 @@ struct PerformanceRatingDetailWindow : Window {
 		}
 
 		if (this->company == INVALID_COMPANY) {
-			const Company *c;
-			FOR_ALL_COMPANIES(c) {
+			for (const Company *c : Company::Iterate()) {
 				this->company = c->index;
 				break;
 			}

@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -26,11 +24,18 @@
 #define TTD_BIG_ENDIAN 1
 
 /* Windows has always LITTLE_ENDIAN */
-#if defined(_WIN32) || defined(__OS2__)
+#if defined(_WIN32) || defined(__OS2__) || defined(__HAIKU__)
 #	define TTD_ENDIAN TTD_LITTLE_ENDIAN
 #elif defined(OSX)
 #	include <sys/types.h>
 #	if __DARWIN_BYTE_ORDER == __DARWIN_LITTLE_ENDIAN
+#		define TTD_ENDIAN TTD_LITTLE_ENDIAN
+#	else
+#		define TTD_ENDIAN TTD_BIG_ENDIAN
+#	endif
+#elif defined(__OpenBSD__)
+#	include <endian.h>
+#	if BYTE_ORDER == LITTLE_ENDIAN
 #		define TTD_ENDIAN TTD_LITTLE_ENDIAN
 #	else
 #		define TTD_ENDIAN TTD_BIG_ENDIAN

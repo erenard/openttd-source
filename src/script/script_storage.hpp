@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -68,8 +66,8 @@ private:
 
 public:
 	ScriptStorage() :
-		mode              (NULL),
-		mode_instance     (NULL),
+		mode              (nullptr),
+		mode_instance     (nullptr),
 		root_company      (INVALID_OWNER),
 		company           (INVALID_OWNER),
 		delay             (1),
@@ -91,8 +89,8 @@ public:
 		/* calback_value (can't be set) */
 		road_type         (INVALID_ROADTYPE),
 		rail_type         (INVALID_RAILTYPE),
-		event_data        (NULL),
-		log_data          (NULL)
+		event_data        (nullptr),
+		log_data          (nullptr)
 	{ }
 
 	~ScriptStorage();

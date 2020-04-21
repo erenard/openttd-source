@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -64,6 +62,7 @@
 #include "../script/api/game/game_rail.hpp.sq"
 #include "../script/api/game/game_railtypelist.hpp.sq"
 #include "../script/api/game/game_road.hpp.sq"
+#include "../script/api/game/game_roadtypelist.hpp.sq"
 #include "../script/api/game/game_sign.hpp.sq"
 #include "../script/api/game/game_signlist.hpp.sq"
 #include "../script/api/game/game_station.hpp.sq"
@@ -174,6 +173,7 @@ void GameInstance::RegisterAPI()
 	SQGSRail_Register(this->engine);
 	SQGSRailTypeList_Register(this->engine);
 	SQGSRoad_Register(this->engine);
+	SQGSRoadTypeList_Register(this->engine);
 	SQGSSign_Register(this->engine);
 	SQGSSignList_Register(this->engine);
 	SQGSStation_Register(this->engine);
@@ -239,10 +239,10 @@ void GameInstance::Died()
 	ShowAIDebugWindow(OWNER_DEITY);
 
 	const GameInfo *info = Game::GetInfo();
-	if (info != NULL) {
+	if (info != nullptr) {
 		ShowErrorMessage(STR_ERROR_AI_PLEASE_REPORT_CRASH, INVALID_STRING_ID, WL_WARNING);
 
-		if (info->GetURL() != NULL) {
+		if (info->GetURL() != nullptr) {
 			ScriptLog::Info("Please report the error to the following URL:");
 			ScriptLog::Info(info->GetURL());
 		}

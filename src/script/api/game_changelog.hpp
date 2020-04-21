@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -14,6 +12,19 @@
  * bug fixes can be found in the normal changelog. Note that removed API
  * functions may still be available if you return an older API version
  * in GetAPIVersion() in info.nut.
+ *
+ * \b 1.10.0
+ *
+ * API additions:
+ * \li GSVehicle::BuildVehicleWithRefit
+ * \li GSVehicle::GetBuildWithRefitCapacity
+ * \li GSRoad::GetName
+ * \li GSRoad::RoadVehCanRunOnRoad
+ * \li GSRoad::RoadVehHasPowerOnRoad
+ * \li GSRoad::ConvertRoadType
+ * \li GSRoad::GetMaxSpeed
+ * \li GSEngine::EnableForCompany
+ * \li GSEngine::DisableForCompany
  *
  * \b 1.9.0
  *
@@ -33,6 +44,9 @@
  * \b 1.8.0
  *
  * No changes
+ *
+ * API additions:
+ * \li GSRoad::ERR_ROADTYPE_DISALLOWS_CROSSING
  *
  * \b 1.7.0 - 1.7.2
  *

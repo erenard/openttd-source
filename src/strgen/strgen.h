@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  * This file is part of OpenTTD.
  * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
@@ -73,7 +71,7 @@ struct StringReader {
 	 * Read a single line from the source of strings.
 	 * @param buffer The buffer to read the data in to.
 	 * @param last   The last element in the buffer.
-	 * @return The buffer, or NULL if at the end of the file.
+	 * @return The buffer, or nullptr if at the end of the file.
 	 */
 	virtual char *ReadLine(char *buffer, const char *last) = 0;
 
